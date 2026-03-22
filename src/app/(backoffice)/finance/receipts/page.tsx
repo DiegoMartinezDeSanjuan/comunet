@@ -1,4 +1,5 @@
 import { requireAuth } from '@/lib/auth'
+import { requirePermission } from '@/lib/permissions'
 import {
   findReceiptsPageByOffice,
   type ReceiptFilters,
@@ -68,6 +69,9 @@ export default async function ReceiptsPage({
   const page = parsePositiveInt(getSingleParam(params.page), 1)
   const pageSize = 20
 
+  const canExportReceipts = requirePermission(session, 'finances.read')
+  const canGenerateReceipts = requirePermission(session, 'finances.manage')
+
   const filters: ReceiptFilters = {
     communityId,
     status,
@@ -103,6 +107,7 @@ export default async function ReceiptsPage({
     const query = new URLSearchParams()
 
     if (communityId) query.set('communityId', communityId)
+    if (status) query.set('status', status)
 
     const queryString = query.toString()
     return queryString
@@ -123,25 +128,25 @@ export default async function ReceiptsPage({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <a
-            href={csvHref}
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
-          </a>
+          {canExportReceipts && (
+            <a
+              href={csvHref}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
+            </a>
+          )}
 
-          {['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT', 'MANAGER'].includes(
-            session.role,
-          ) && (
-              <Link
-                href="/finance/receipts/generate"
-                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Generar Recibos
-              </Link>
-            )}
+          {canGenerateReceipts && (
+            <Link
+              href="/finance/receipts/generate"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Generar Recibos
+            </Link>
+          )}
         </div>
       </div>
 

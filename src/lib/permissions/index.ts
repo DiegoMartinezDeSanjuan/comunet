@@ -11,6 +11,20 @@ export interface PermissionContext {
   incidentId?: string
 }
 
+const FINANCE_READ_ROLES: UserRole[] = [
+  'SUPERADMIN',
+  'OFFICE_ADMIN',
+  'MANAGER',
+  'ACCOUNTANT',
+  'VIEWER',
+]
+
+const FINANCE_MANAGE_ROLES: UserRole[] = [
+  'SUPERADMIN',
+  'OFFICE_ADMIN',
+  'ACCOUNTANT',
+]
+
 // ─── Community Permissions ──────────────────────────────
 
 export async function canReadCommunity(session: Session, communityId: string): Promise<boolean> {
@@ -99,8 +113,7 @@ export async function canReadOwner(session: Session, ownerId: string): Promise<b
 // ─── Finance Permissions ────────────────────────────────
 
 export function canManageFinance(session: Session): boolean {
-  const financeRoles: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT']
-  return financeRoles.includes(session.role)
+  return FINANCE_MANAGE_ROLES.includes(session.role)
 }
 
 // ─── Incident Permissions ───────────────────────────────
@@ -194,8 +207,10 @@ export function requirePermission(session: Session, permission: string, _context
     'communities.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
     'owners.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT', 'VIEWER'],
     'owners.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
-    'finance.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT', 'VIEWER'],
-    'finance.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT'],
+    'finance.read': FINANCE_READ_ROLES,
+    'finances.read': FINANCE_READ_ROLES,
+    'finance.manage': FINANCE_MANAGE_ROLES,
+    'finances.manage': FINANCE_MANAGE_ROLES,
     'incidents.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT', 'VIEWER'],
     'incidents.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
     'meetings.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT', 'VIEWER'],
