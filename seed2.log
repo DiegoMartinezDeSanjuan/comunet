@@ -1,0 +1,19 @@
+🌱 Starting seed...
+❌ Error in seed: PrismaClientKnownRequestError: 
+Invalid `prisma.office.deleteMany()` invocation in
+C:\Users\didim\source\repos\comunet\prisma\seed.ts:30:23
+
+  27 await prisma.user.deleteMany()
+  28 await prisma.owner.deleteMany()
+  29 await prisma.provider.deleteMany()
+→ 30 await prisma.office.deleteMany(
+Foreign key constraint violated on the constraint: `audit_logs_officeId_fkey`
+    at ei.handleRequestError (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async main (C:\Users\didim\source\repos\comunet\prisma\seed.ts:30:3) {
+  code: 'P2003',
+  meta: { modelName: 'Office', constraint: 'audit_logs_officeId_fkey' },
+  clientVersion: '6.19.2'
+}

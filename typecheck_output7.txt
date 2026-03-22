@@ -1,0 +1,4 @@
+
+> comunet@0.1.0 typecheck C:\Users\didim\source\repos\comunet
+> tsc --noEmit
+

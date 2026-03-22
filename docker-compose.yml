@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: comunet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: comunet
+      POSTGRES_PASSWORD: comunet_dev_2024
+      POSTGRES_DB: comunet
+    ports:
+      - '5432:5432'
+    volumes:
+      - comunet_pgdata:/var/lib/postgresql/data
+
+volumes:
+  comunet_pgdata:

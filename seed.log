@@ -1,0 +1,24 @@
+
+> comunet@0.1.0 seed C:\Users\didim\source\repos\comunet
+> tsx prisma/seed.ts
+
+🌱 Starting seed...
+❌ Error in seed: PrismaClientKnownRequestError: 
+Invalid `prisma.office.create()` invocation in
+C:\Users\didim\source\repos\comunet\prisma\seed.ts:12:38
+
+   9 const passwordHash = await bcrypt.hash('Demo1234!', 12)
+  10 
+  11 // 1. Office
+→ 12 const office = await prisma.office.create(
+Unique constraint failed on the fields: (`slug`)
+    at ei.handleRequestError (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (C:\Users\didim\source\repos\comunet\node_modules\.pnpm\@prisma+client@6.19.2_prism_6b2b1af085fe6797f5a5ea830937a8e3\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async main (C:\Users\didim\source\repos\comunet\prisma\seed.ts:12:18) {
+  code: 'P2002',
+  meta: { modelName: 'Office', target: [ 'slug' ] },
+  clientVersion: '6.19.2'
+}
+ ELIFECYCLE  Command failed with exit code 1.

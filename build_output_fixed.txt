@@ -1,0 +1,59 @@
+
+> comunet@0.1.0 build C:\Users\didim\source\repos\comunet
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 1535ms
+  Running TypeScript ...
+  Finished TypeScript in 2.2s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/6) ...
+  Generating static pages using 15 workers (1/6) 
+  Generating static pages using 15 workers (2/6) 
+  Generating static pages using 15 workers (4/6) 
+✓ Generating static pages using 15 workers (6/6) in 85ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/export/[entity]
+├ ƒ /api/health
+├ ƒ /api/mock/email
+├ ƒ /communities
+├ ƒ /communities/[id]
+├ ƒ /communities/[id]/board
+├ ƒ /communities/[id]/edit
+├ ƒ /communities/[id]/units
+├ ƒ /communities/[id]/units/[unitId]/edit
+├ ƒ /communities/[id]/units/[unitId]/ownership
+├ ƒ /communities/[id]/units/new
+├ ƒ /communities/[id]/units/new-building
+├ ƒ /communities/new
+├ ƒ /dashboard
+├ ○ /login
+├ ƒ /owners
+├ ƒ /owners/[id]
+├ ƒ /owners/[id]/edit
+├ ƒ /owners/new
+├ ƒ /portal
+├ ƒ /portal/community
+├ ƒ /portal/documents
+├ ƒ /portal/incidents
+├ ƒ /portal/meetings
+├ ƒ /portal/receipts
+├ ƒ /tenants
+├ ƒ /tenants/[id]
+├ ƒ /tenants/[id]/edit
+└ ƒ /tenants/new
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
