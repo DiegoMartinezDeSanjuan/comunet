@@ -9,8 +9,17 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+type FeeRuleOption = {
+  id: string
+  communityId: string
+  name: string
+  calculationBase: string | null
+  fixedAmount: number | null
+}
+
 export default async function GenerateReceiptsPage() {
   const session = await requireAuth()
+
   if (!requirePermission(session, 'finances.manage')) {
     redirect('/dashboard')
   }
@@ -18,29 +27,37 @@ export default async function GenerateReceiptsPage() {
   const communities = await prisma.community.findMany({
     where: { officeId: session.officeId },
     select: { id: true, name: true },
-    orderBy: { name: 'asc' }
+    orderBy: { name: 'asc' },
   })
 
-  // Get active fee rules for all those communities
-  const feeRules = await findFeeRulesByOffice(session.officeId)
+  const feeRulesRaw = await findFeeRulesByOffice(session.officeId)
+
+  const feeRules: FeeRuleOption[] = feeRulesRaw.map((rule) => ({
+    id: rule.id,
+    communityId: rule.communityId,
+    name: rule.name,
+    calculationBase: rule.calculationBase,
+    fixedAmount: rule.fixedAmount == null ? null : Number(rule.fixedAmount),
+  }))
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link 
-          href="/finance/receipts" 
+        <Link
+          href="/finance/receipts"
           className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
+
         <div>
           <h1 className="text-2xl font-bold text-foreground">Generación Masiva de Recibos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Emite recibos para todos los propietarios basándote en una regla de cuota.
           </p>
         </div>
       </div>
-      
+
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <GenerateReceiptsForm communities={communities} feeRules={feeRules} />
       </div>

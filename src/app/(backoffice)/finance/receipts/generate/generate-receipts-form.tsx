@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { generateReceiptsSchema, type GenerateReceiptsInput } from '@/modules/finances/schema'
 import { generateReceiptsAction } from '@/modules/finances/server/actions'
@@ -13,11 +13,11 @@ import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form'
 import {
   Select,
@@ -25,20 +25,33 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { AlertCircle } from 'lucide-react'
 
+type CommunityOption = {
+  id: string
+  name: string
+}
+
+type FeeRuleOption = {
+  id: string
+  communityId: string
+  name: string
+  calculationBase: string | null
+  fixedAmount: number | null
+}
+
 interface FormProps {
-  communities: { id: string; name: string }[]
-  feeRules: any[]
+  communities: CommunityOption[]
+  feeRules: FeeRuleOption[]
 }
 
 export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [resultMsg, setResultMsg] = useState<{count: number, message: string} | null>(null)
+  const [resultMsg, setResultMsg] = useState<{ count: number; message: string } | null>(null)
 
   const defaultDate = new Date().toISOString().substring(0, 10)
 
@@ -59,30 +72,43 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
 
   const filteredRules = useMemo(() => {
     if (!selectedCommunity) return []
-    return feeRules.filter(r => r.communityId === selectedCommunity)
+    return feeRules.filter((rule) => rule.communityId === selectedCommunity)
   }, [selectedCommunity, feeRules])
 
   const selectedRule = useMemo(() => {
-    return feeRules.find(r => r.id === selectedRuleId)
+    if (!selectedRuleId) return null
+    return feeRules.find((rule) => rule.id === selectedRuleId) ?? null
   }, [selectedRuleId, feeRules])
 
   const onSubmit = async (data: GenerateReceiptsInput) => {
     try {
       setIsSubmitting(true)
       setResultMsg(null)
-      const res = await generateReceiptsAction(data)
-      setResultMsg(res)
-      if (res.count > 0) {
-        toast({ title: "Generación Completada", description: res.message })
+
+      const result = await generateReceiptsAction(data)
+      setResultMsg(result)
+
+      if (result.count > 0) {
+        toast({
+          title: 'Generación completada',
+          description: result.message,
+        })
+
         setTimeout(() => router.push('/finance/receipts'), 2000)
-      } else {
-        toast({ title: "Sin resultados", description: res.message, variant: 'default' })
+        return
       }
-    } catch (error: any) {
+
       toast({
-        title: "Error de Validación",
-        description: error.message,
-        variant: "destructive",
+        title: 'Sin resultados',
+        description: result.message,
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No se pudieron generar los recibos.'
+
+      toast({
+        title: 'Error de validación',
+        description: message,
+        variant: 'destructive',
       })
     } finally {
       setIsSubmitting(false)
@@ -92,22 +118,21 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        
         {resultMsg && resultMsg.count === 0 && (
-          <div className="bg-orange-50/50 border border-orange-200 text-orange-800 rounded-lg p-4 flex gap-3 text-sm">
+          <div className="flex gap-3 rounded-lg border border-orange-200 bg-orange-50/50 p-4 text-sm text-orange-800">
             <AlertCircle className="h-5 w-5 shrink-0 text-orange-500" />
             <p>{resultMsg.message}</p>
           </div>
         )}
 
         {resultMsg && resultMsg.count > 0 && (
-          <div className="bg-success/10 border border-success/30 text-success rounded-lg p-4 flex gap-3 text-sm font-medium">
+          <div className="flex gap-3 rounded-lg border border-success/30 bg-success/10 p-4 text-sm font-medium text-success">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <p>{resultMsg.message}</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="communityId"
@@ -115,11 +140,11 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
               <FormItem>
                 <FormLabel>Comunidad</FormLabel>
                 <Select
-                  onValueChange={(val) => {
-                    field.onChange(val)
-                    form.setValue('feeRuleId', '') // reset rule
+                  value={field.value ?? ''}
+                  onValueChange={(value) => {
+                    field.onChange(value)
+                    form.setValue('feeRuleId', '', { shouldDirty: true, shouldValidate: true })
                   }}
-                  defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -127,9 +152,9 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {communities.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
+                    {communities.map((community) => (
+                      <SelectItem key={community.id} value={community.id}>
+                        {community.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -144,34 +169,46 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
             name="feeRuleId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Regla de Cuota Activa</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value || undefined}
+                <FormLabel>Regla de cuota activa</FormLabel>
+                <Select
+                  value={field.value ?? ''}
+                  onValueChange={field.onChange}
                   disabled={!selectedCommunity || filteredRules.length === 0}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={
-                        !selectedCommunity ? 'Selecciona comunidad primero' :
-                        filteredRules.length === 0 ? 'No hay reglas activas' :
-                        'Selecciona una regla'
-                      } />
+                      <SelectValue
+                        placeholder={
+                          !selectedCommunity
+                            ? 'Selecciona comunidad primero'
+                            : filteredRules.length === 0
+                              ? 'No hay reglas activas'
+                              : 'Selecciona una regla'
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {filteredRules.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.name} ({r.calculationBase})
+                    {filteredRules.map((rule) => (
+                      <SelectItem key={rule.id} value={rule.id}>
+                        {rule.name} ({rule.calculationBase ?? 'SIN BASE'})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+
                 {selectedRule && (
                   <FormDescription>
-                    Base: {selectedRule.calculationBase} — Fijo/Total: {Number(selectedRule.fixedAmount).toLocaleString('es-ES', { style: 'currency', currency:'EUR'})}
+                    Base: {selectedRule.calculationBase ?? 'SIN BASE'} — Fijo/Total:{' '}
+                    {selectedRule.fixedAmount != null
+                      ? selectedRule.fixedAmount.toLocaleString('es-ES', {
+                        style: 'currency',
+                        currency: 'EUR',
+                      })
+                      : '—'}
                   </FormDescription>
                 )}
+
                 <FormMessage />
               </FormItem>
             )}
@@ -182,8 +219,10 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
             name="periodStart"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Inicio Periodo Facturado</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormLabel>Inicio periodo facturado</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -194,8 +233,10 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
             name="periodEnd"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fin Periodo Facturado</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormLabel>Fin periodo facturado</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
                 <FormDescription>Usado para prevenir duplicados.</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -207,8 +248,10 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
             name="issueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fecha de Emisión</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormLabel>Fecha de emisión</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -219,26 +262,22 @@ export function GenerateReceiptsForm({ communities, feeRules }: FormProps) {
             name="dueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fecha de Vencimiento / Pago Límite</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormLabel>Fecha de vencimiento / pago límite</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
         </div>
 
-        <div className="flex justify-end gap-4 pt-4 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={isSubmitting}
-          >
+        <div className="flex justify-end gap-4 border-t pt-4">
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Generando...' : 'Generar Recibos'}
+            {isSubmitting ? 'Generando...' : 'Generar recibos'}
           </Button>
         </div>
       </form>
