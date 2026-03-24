@@ -13,6 +13,20 @@ export interface PermissionContext {
   incidentId?: string
 }
 
+const BACKOFFICE_READ_ROLES: UserRole[] = [
+  'SUPERADMIN',
+  'OFFICE_ADMIN',
+  'MANAGER',
+  'ACCOUNTANT',
+  'VIEWER',
+]
+
+const BACKOFFICE_MANAGE_ROLES: UserRole[] = [
+  'SUPERADMIN',
+  'OFFICE_ADMIN',
+  'MANAGER',
+]
+
 const FINANCE_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
@@ -28,30 +42,30 @@ const FINANCE_MANAGE_ROLES: UserRole[] = [
   'ACCOUNTANT',
 ]
 
-// ─── Community Permissions ──────────────────────────────
-export async function canReadCommunity(
-  session: Session,
-  communityId: string,
-): Promise<boolean> {
-  const adminRoles: UserRole[] = [
-    'SUPERADMIN',
-    'OFFICE_ADMIN',
-    'MANAGER',
-    'ACCOUNTANT',
-    'VIEWER',
-  ]
+function isBackofficeReadRole(role: UserRole) {
+  return BACKOFFICE_READ_ROLES.includes(role)
+}
 
-  if (adminRoles.includes(session.role)) {
+function isBackofficeManageRole(role: UserRole) {
+  return BACKOFFICE_MANAGE_ROLES.includes(role)
+}
+
+// ─── Community Permissions ──────────────────────────────
+
+export async function canReadCommunity(session: Session, communityId: string): Promise<boolean> {
+  if (isBackofficeReadRole(session.role)) {
     const community = await prisma.community.findFirst({
-      where: { id: communityId, officeId: session.officeId, archivedAt: null },
+      where: {
+        id: communityId,
+        officeId: session.officeId,
+        archivedAt: null,
+      },
     })
 
     return !!community
   }
 
-  if (session.role === 'OWNER' || session.role === 'PRESIDENT') {
-    if (!session.linkedOwnerId) return false
-
+  if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
     const ownership = await prisma.ownership.findFirst({
       where: {
         ownerId: session.linkedOwnerId,
@@ -63,11 +77,12 @@ export async function canReadCommunity(
     return !!ownership
   }
 
-  if (session.role === 'PROVIDER') {
-    if (!session.linkedProviderId) return false
-
+  if (session.role === 'PROVIDER' && session.linkedProviderId) {
     const incident = await prisma.incident.findFirst({
-      where: { communityId, assignedProviderId: session.linkedProviderId },
+      where: {
+        communityId,
+        assignedProviderId: session.linkedProviderId,
+      },
     })
 
     return !!incident
@@ -76,25 +91,23 @@ export async function canReadCommunity(
   return false
 }
 
-export async function canManageCommunity(
-  session: Session,
-  communityId: string,
-): Promise<boolean> {
-  const manageRoles: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER']
-  if (!manageRoles.includes(session.role)) return false
+export async function canManageCommunity(session: Session, communityId: string): Promise<boolean> {
+  if (!isBackofficeManageRole(session.role)) return false
 
   const community = await prisma.community.findFirst({
-    where: { id: communityId, officeId: session.officeId, archivedAt: null },
+    where: {
+      id: communityId,
+      officeId: session.officeId,
+      archivedAt: null,
+    },
   })
 
   return !!community
 }
 
 // ─── Unit Permissions ───────────────────────────────────
-export async function canReadUnit(
-  session: Session,
-  unitId: string,
-): Promise<boolean> {
+
+export async function canReadUnit(session: Session, unitId: string): Promise<boolean> {
   const unit = await prisma.unit.findFirst({
     where: { id: unitId },
     include: { community: true },
@@ -102,24 +115,17 @@ export async function canReadUnit(
 
   if (!unit) return false
 
-  const adminRoles: UserRole[] = [
-    'SUPERADMIN',
-    'OFFICE_ADMIN',
-    'MANAGER',
-    'ACCOUNTANT',
-    'VIEWER',
-  ]
-
-  if (adminRoles.includes(session.role)) {
+  if (isBackofficeReadRole(session.role)) {
     return unit.community.officeId === session.officeId
   }
 
-  if (
-    (session.role === 'OWNER' || session.role === 'PRESIDENT') &&
-    session.linkedOwnerId
-  ) {
+  if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
     const ownership = await prisma.ownership.findFirst({
-      where: { unitId, ownerId: session.linkedOwnerId, endDate: null },
+      where: {
+        unitId,
+        ownerId: session.linkedOwnerId,
+        endDate: null,
+      },
     })
 
     return !!ownership
@@ -129,30 +135,21 @@ export async function canReadUnit(
 }
 
 // ─── Owner Permissions ──────────────────────────────────
-export async function canReadOwner(
-  session: Session,
-  ownerId: string,
-): Promise<boolean> {
-  const adminRoles: UserRole[] = [
-    'SUPERADMIN',
-    'OFFICE_ADMIN',
-    'MANAGER',
-    'ACCOUNTANT',
-    'VIEWER',
-  ]
 
-  if (adminRoles.includes(session.role)) {
+export async function canReadOwner(session: Session, ownerId: string): Promise<boolean> {
+  if (isBackofficeReadRole(session.role)) {
     const owner = await prisma.owner.findFirst({
-      where: { id: ownerId, officeId: session.officeId, archivedAt: null },
+      where: {
+        id: ownerId,
+        officeId: session.officeId,
+        archivedAt: null,
+      },
     })
 
     return !!owner
   }
 
-  if (
-    (session.role === 'OWNER' || session.role === 'PRESIDENT') &&
-    session.linkedOwnerId
-  ) {
+  if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
     return session.linkedOwnerId === ownerId
   }
 
@@ -160,39 +157,32 @@ export async function canReadOwner(
 }
 
 // ─── Finance Permissions ────────────────────────────────
+
 export function canManageFinance(session: Session): boolean {
   return FINANCE_MANAGE_ROLES.includes(session.role)
 }
 
 // ─── Incident Permissions ───────────────────────────────
-export async function canViewIncident(
-  session: Session,
-  incidentId: string,
-): Promise<boolean> {
-  const incident = await prisma.incident.findFirst({
+
+async function getIncidentForScope(incidentId: string) {
+  return prisma.incident.findFirst({
     where: { id: incidentId },
-    include: { community: true },
+    include: {
+      community: true,
+    },
   })
+}
+
+export async function canReadIncident(session: Session, incidentId: string): Promise<boolean> {
+  const incident = await getIncidentForScope(incidentId)
 
   if (!incident) return false
 
-  const adminRoles: UserRole[] = [
-    'SUPERADMIN',
-    'OFFICE_ADMIN',
-    'MANAGER',
-    'ACCOUNTANT',
-    'VIEWER',
-  ]
-
-  if (adminRoles.includes(session.role)) {
+  if (isBackofficeReadRole(session.role)) {
     return incident.community.officeId === session.officeId
   }
 
-  if (
-    (session.role === 'OWNER' || session.role === 'PRESIDENT') &&
-    session.linkedOwnerId
-  ) {
-    // Owner can see incidents in their communities
+  if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
     const ownership = await prisma.ownership.findFirst({
       where: {
         ownerId: session.linkedOwnerId,
@@ -203,9 +193,7 @@ export async function canViewIncident(
 
     if (session.role === 'PRESIDENT') return !!ownership
 
-    // Regular owner: only their own incidents or public community incidents
-    return !!ownership &&
-      (incident.createdByUserId === session.userId || !incident.unitId)
+    return !!ownership && (incident.createdByUserId === session.userId || !incident.unitId)
   }
 
   if (session.role === 'PROVIDER' && session.linkedProviderId) {
@@ -215,20 +203,76 @@ export async function canViewIncident(
   return false
 }
 
-export async function canCommentIncident(
+export async function canViewIncident(session: Session, incidentId: string): Promise<boolean> {
+  return canReadIncident(session, incidentId)
+}
+
+export async function canManageIncident(
   session: Session,
-  incidentId: string,
+  incidentId?: string,
 ): Promise<boolean> {
-  return canViewIncident(session, incidentId)
+  if (!isBackofficeManageRole(session.role)) return false
+  if (!incidentId) return true
+
+  const incident = await getIncidentForScope(incidentId)
+  if (!incident) return false
+
+  return incident.community.officeId === session.officeId
+}
+
+export async function canAssignProvider(session: Session, incidentId: string): Promise<boolean> {
+  return canManageIncident(session, incidentId)
+}
+
+export async function canCommentIncident(session: Session, incidentId: string): Promise<boolean> {
+  if (isBackofficeReadRole(session.role)) {
+    return canReadIncident(session, incidentId)
+  }
+
+  if (session.role === 'OWNER' || session.role === 'PRESIDENT' || session.role === 'PROVIDER') {
+    return canReadIncident(session, incidentId)
+  }
+
+  return false
+}
+
+// ─── Provider Permissions ───────────────────────────────
+
+async function getProviderForScope(providerId: string) {
+  return prisma.provider.findFirst({
+    where: { id: providerId },
+  })
+}
+
+export async function canReadProvider(session: Session, providerId: string): Promise<boolean> {
+  const provider = await getProviderForScope(providerId)
+  if (!provider || provider.archivedAt) return false
+
+  if (isBackofficeReadRole(session.role)) {
+    return provider.officeId === session.officeId
+  }
+
+  if (session.role === 'PROVIDER' && session.linkedProviderId) {
+    return session.linkedProviderId === providerId
+  }
+
+  return false
+}
+
+export async function canManageProvider(session: Session, providerId?: string): Promise<boolean> {
+  if (!isBackofficeManageRole(session.role)) return false
+  if (!providerId) return true
+
+  const provider = await getProviderForScope(providerId)
+  if (!provider || provider.archivedAt) return false
+
+  return provider.officeId === session.officeId
 }
 
 // ─── Meeting Permissions ────────────────────────────────
-export async function canManageMeeting(
-  session: Session,
-  meetingId: string,
-): Promise<boolean> {
-  const manageRoles: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER']
-  if (!manageRoles.includes(session.role)) return false
+
+export async function canManageMeeting(session: Session, meetingId: string): Promise<boolean> {
+  if (!isBackofficeManageRole(session.role)) return false
 
   const meeting = await prisma.meeting.findFirst({
     where: { id: meetingId },
@@ -236,43 +280,31 @@ export async function canManageMeeting(
   })
 
   if (!meeting) return false
+
   return meeting.community.officeId === session.officeId
 }
 
 // ─── Document Permissions ───────────────────────────────
-export async function canReadDocument(
-  session: Session,
-  documentId: string,
-): Promise<boolean> {
-  const doc = await prisma.document.findFirst({
+
+export async function canReadDocument(session: Session, documentId: string): Promise<boolean> {
+  const document = await prisma.document.findFirst({
     where: { id: documentId, archivedAt: null },
     include: { community: true },
   })
 
-  if (!doc) return false
+  if (!document) return false
 
-  const adminRoles: UserRole[] = [
-    'SUPERADMIN',
-    'OFFICE_ADMIN',
-    'MANAGER',
-    'ACCOUNTANT',
-    'VIEWER',
-  ]
-
-  if (adminRoles.includes(session.role)) {
-    return doc.community.officeId === session.officeId
+  if (isBackofficeReadRole(session.role)) {
+    return document.community.officeId === session.officeId
   }
 
-  if (
-    (session.role === 'OWNER' || session.role === 'PRESIDENT') &&
-    session.linkedOwnerId
-  ) {
-    if (doc.visibility === 'INTERNAL') return false
+  if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
+    if (document.visibility === 'INTERNAL') return false
 
     const ownership = await prisma.ownership.findFirst({
       where: {
         ownerId: session.linkedOwnerId,
-        unit: { communityId: doc.communityId },
+        unit: { communityId: document.communityId },
         endDate: null,
       },
     })
@@ -284,67 +316,39 @@ export async function canReadDocument(
 }
 
 // ─── Generic Role Check ─────────────────────────────────
+
 export function requirePermission(
   session: Session,
   permission: string,
   _context?: PermissionContext,
 ): boolean {
-  // Generic permission check - extendable
   const permissionMap: Record<string, UserRole[]> = {
-    'communities.read': [
-      'SUPERADMIN',
-      'OFFICE_ADMIN',
-      'MANAGER',
-      'ACCOUNTANT',
-      'VIEWER',
-    ],
-    'communities.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
-    'owners.read': [
-      'SUPERADMIN',
-      'OFFICE_ADMIN',
-      'MANAGER',
-      'ACCOUNTANT',
-      'VIEWER',
-    ],
-    'owners.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+    'communities.read': BACKOFFICE_READ_ROLES,
+    'communities.manage': BACKOFFICE_MANAGE_ROLES,
+
+    'owners.read': BACKOFFICE_READ_ROLES,
+    'owners.manage': BACKOFFICE_MANAGE_ROLES,
+
     'finance.read': FINANCE_READ_ROLES,
     'finances.read': FINANCE_READ_ROLES,
     'finance.manage': FINANCE_MANAGE_ROLES,
     'finances.manage': FINANCE_MANAGE_ROLES,
-    'incidents.read': [
-      'SUPERADMIN',
-      'OFFICE_ADMIN',
-      'MANAGER',
-      'ACCOUNTANT',
-      'VIEWER',
-    ],
-    'incidents.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
-    'meetings.read': [
-      'SUPERADMIN',
-      'OFFICE_ADMIN',
-      'MANAGER',
-      'ACCOUNTANT',
-      'VIEWER',
-    ],
-    'meetings.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
-    'documents.read': [
-      'SUPERADMIN',
-      'OFFICE_ADMIN',
-      'MANAGER',
-      'ACCOUNTANT',
-      'VIEWER',
-    ],
-    'documents.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
-    'providers.read': [
-      'SUPERADMIN',
-      'OFFICE_ADMIN',
-      'MANAGER',
-      'ACCOUNTANT',
-      'VIEWER',
-    ],
-    'providers.manage': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+
+    'incidents.read': BACKOFFICE_READ_ROLES,
+    'incidents.manage': BACKOFFICE_MANAGE_ROLES,
+
+    'providers.read': BACKOFFICE_READ_ROLES,
+    'providers.manage': BACKOFFICE_MANAGE_ROLES,
+
+    'meetings.read': BACKOFFICE_READ_ROLES,
+    'meetings.manage': BACKOFFICE_MANAGE_ROLES,
+
+    'documents.read': BACKOFFICE_READ_ROLES,
+    'documents.manage': BACKOFFICE_MANAGE_ROLES,
+
     'settings.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
     'settings.manage': ['SUPERADMIN', 'OFFICE_ADMIN'],
+
     'audit.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
   }
 
