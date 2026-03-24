@@ -14,53 +14,79 @@ export async function getFeeRuleService(id: string) {
 
 export async function createFeeRuleService(officeId: string, userId: string, data: FeeRuleInput) {
   const valid = feeRuleSchema.parse(data)
-  
-  // Verify community belongs to office
-  const community = await prisma.community.findFirst({ where: { id: valid.communityId, officeId } })
-  if (!community) throw new Error("Comunidad no encontrada o sin acceso")
+
+  const community = await prisma.community.findFirst({
+    where: { id: valid.communityId, officeId },
+  })
+
+  if (!community) throw new Error('Comunidad no encontrada o sin acceso')
 
   const rule = await repo.createFeeRule(valid)
-  
+
   await logAudit({
     officeId,
     userId,
     entityType: 'FeeRule',
     entityId: rule.id,
     action: 'CREATE',
-    meta: { name: rule.name, communityId: valid.communityId }
+    meta: { name: rule.name, communityId: valid.communityId },
   })
-  
+
   return rule
 }
 
 export async function updateFeeRuleService(id: string, officeId: string, userId: string, data: FeeRuleInput) {
   const valid = feeRuleSchema.parse(data)
-  
+
+  const existingRule = await prisma.feeRule.findFirst({
+    where: {
+      id,
+      community: { officeId },
+    },
+  })
+
+  if (!existingRule) throw new Error('Regla de cuota no encontrada o sin acceso')
+
+  const community = await prisma.community.findFirst({
+    where: { id: valid.communityId, officeId },
+  })
+
+  if (!community) throw new Error('Comunidad no encontrada o sin acceso')
+
   const rule = await repo.updateFeeRule(id, valid)
-  
+
   await logAudit({
     officeId,
     userId,
     entityType: 'FeeRule',
     entityId: rule.id,
     action: 'UPDATE',
-    meta: { name: rule.name, active: rule.active }
+    meta: { name: rule.name, active: rule.active },
   })
-  
+
   return rule
 }
 
 export async function toggleFeeRuleService(id: string, officeId: string, userId: string, active: boolean) {
+  const existingRule = await prisma.feeRule.findFirst({
+    where: {
+      id,
+      community: { officeId },
+    },
+  })
+
+  if (!existingRule) throw new Error('Regla de cuota no encontrada o sin acceso')
+
   const rule = await repo.toggleFeeRuleStatus(id, active)
-  
+
   await logAudit({
     officeId,
     userId,
     entityType: 'FeeRule',
     entityId: rule.id,
     action: 'STATUS_CHANGE',
-    meta: { active }
+    meta: { active },
   })
-  
+
   return rule
 }

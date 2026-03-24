@@ -1,7 +1,9 @@
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
-import { prisma } from '@/lib/db'
+import { Prisma, ReceiptStatus } from '@prisma/client'
 import { NextResponse } from 'next/server'
+
+import { requireAuth } from '@/lib/auth'
+import { prisma } from '@/lib/db'
+import { requirePermission } from '@/lib/permissions'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,9 +17,22 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const communityId = searchParams.get('communityId')
+    const status = searchParams.get('status')
 
-    const where: any = { community: { officeId: session.officeId } }
-    if (communityId) where.communityId = communityId
+    const where: Prisma.ReceiptWhereInput = {
+      community: { officeId: session.officeId },
+    }
+
+    if (communityId) {
+      where.communityId = communityId
+    }
+
+    if (
+      status &&
+      Object.values(ReceiptStatus).includes(status as ReceiptStatus)
+    ) {
+      where.status = status as ReceiptStatus
+    }
 
     const receipts = await prisma.receipt.findMany({
       where,
@@ -42,7 +57,7 @@ export async function GET(request: Request) {
     ].join(';')
 
     const rows = receipts
-      .map((r: any) => {
+      .map((r) => {
         const ownerName = r.owner.fullName.replace(/;/g, ',')
         const communityName = r.community.name.replace(/;/g, ',')
         const unitName = r.unit.reference.replace(/;/g, ',')
@@ -67,7 +82,9 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="recibos_${new Date().toISOString().substring(0, 10)}.csv"`,
+        'Content-Disposition': `attachment; filename="recibos_${new Date()
+          .toISOString()
+          .substring(0, 10)}.csv"`,
       },
     })
   } catch (error) {
