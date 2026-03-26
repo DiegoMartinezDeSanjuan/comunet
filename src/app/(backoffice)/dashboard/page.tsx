@@ -1,204 +1,251 @@
+import Link from 'next/link'
+
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { formatCurrency } from '@/lib/formatters'
-import {
-  Building2,
-  Users,
-  AlertTriangle,
-  Receipt,
-  TrendingDown,
-  Wallet,
-  Calendar,
-  FileText,
-  Banknote,
-  Euro
-} from 'lucide-react'
 import { computeOfficeFinanceKPIs } from '@/modules/finances/server/kpi-service'
+import { getIncidentDashboardSnapshotQuery } from '@/modules/incidents/server/queries'
 
 export const dynamic = 'force-dynamic'
 
-async function getStats(officeId: string) {
-  const [
-    communitiesCount,
-    ownersCount,
-    openIncidents,
-    pendingReceipts,
-    totalDebt,
-    monthPayments,
-    upcomingMeetings,
-    recentDocuments,
-  ] = await Promise.all([
-    prisma.community.count({ where: { officeId, archivedAt: null } }),
-    prisma.owner.count({ where: { officeId, archivedAt: null } }),
-    prisma.incident.count({
-      where: {
-        community: { officeId },
-        status: { in: ['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'WAITING_VENDOR'] },
-      },
-    }),
-    prisma.receipt.count({
-      where: {
-        community: { officeId },
-        status: { in: ['ISSUED', 'OVERDUE'] },
-      },
-    }),
-    prisma.debt.aggregate({
-      where: {
-        community: { officeId },
-        status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-      },
-      _sum: { principal: true, surcharge: true },
-    }),
-    prisma.payment.aggregate({
-      where: {
-        receipt: { community: { officeId } },
-        paymentDate: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+async function getGeneralStats(officeId: string) {
+  const [communitiesCount, ownersCount, pendingReceipts, upcomingMeetings] =
+    await Promise.all([
+      prisma.community.count({
+        where: { officeId, archivedAt: null },
+      }),
+      prisma.owner.count({
+        where: { officeId, archivedAt: null },
+      }),
+      prisma.receipt.count({
+        where: {
+          community: { officeId },
+          status: { in: ['ISSUED', 'OVERDUE'] },
         },
-      },
-      _sum: { amount: true },
-    }),
-    prisma.meeting.count({
-      where: {
-        community: { officeId },
-        scheduledAt: { gte: new Date() },
-        status: { in: ['DRAFT', 'SCHEDULED'] },
-      },
-    }),
-    prisma.document.count({
-      where: {
-        community: { officeId },
-        archivedAt: null,
-        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-      },
-    }),
-  ])
-
-  const debtSum = Number(totalDebt._sum.principal || 0) + Number(totalDebt._sum.surcharge || 0)
-  const paymentsSum = Number(monthPayments._sum.amount || 0)
+      }),
+      prisma.meeting.count({
+        where: {
+          community: { officeId },
+          scheduledAt: { gte: new Date() },
+          status: { in: ['DRAFT', 'SCHEDULED'] },
+        },
+      }),
+    ])
 
   return {
     communitiesCount,
     ownersCount,
-    openIncidents,
     pendingReceipts,
-    totalDebt: debtSum,
-    monthPayments: paymentsSum,
     upcomingMeetings,
-    recentDocuments,
   }
+}
+
+function formatDate(value: Date | null): string {
+  if (!value) return '-'
+  return new Date(value).toLocaleDateString('es-ES')
 }
 
 export default async function DashboardPage() {
   const session = await requireAuth()
-  const stats = await getStats(session.officeId)
 
-  const kpis = [
-    { label: 'Comunidades', value: stats.communitiesCount, icon: Building2, color: 'text-blue-500' },
-    { label: 'Propietarios', value: stats.ownersCount, icon: Users, color: 'text-emerald-500' },
-    { label: 'Incidencias abiertas', value: stats.openIncidents, icon: AlertTriangle, color: 'text-amber-500' },
-    { label: 'Recibos pendientes', value: stats.pendingReceipts, icon: Receipt, color: 'text-orange-500' },
-    { label: 'Deuda acumulada', value: formatCurrency(stats.totalDebt), icon: TrendingDown, color: 'text-red-500' },
-    { label: 'Recibos (Mes)', value: formatCurrency(stats.monthPayments), icon: Wallet, color: 'text-green-500' },
-    { label: 'Reuniones próximas', value: stats.upcomingMeetings, icon: Calendar, color: 'text-purple-500' },
-    { label: 'Documentos recientes', value: stats.recentDocuments, icon: FileText, color: 'text-indigo-500' },
+  const [stats, financeKPIs, incidentSnapshot] = await Promise.all([
+    getGeneralStats(session.officeId),
+    computeOfficeFinanceKPIs(session.officeId),
+    getIncidentDashboardSnapshotQuery(),
+  ])
+
+  const financialCards = [
+    { label: 'Total emitido', value: formatCurrency(financeKPIs.totalEmitido) },
+    { label: 'Total cobrado', value: formatCurrency(financeKPIs.totalCobrado) },
+    { label: 'Deuda pendiente', value: formatCurrency(financeKPIs.totalPendiente) },
+    { label: 'Recibos vencidos', value: String(financeKPIs.overdueCount) },
   ]
 
-  const financeKPIs = await computeOfficeFinanceKPIs(session.officeId)
+  const activityCards = [
+    { label: 'Comunidades', value: String(stats.communitiesCount) },
+    { label: 'Propietarios', value: String(stats.ownersCount) },
+    { label: 'Recibos pendientes', value: String(stats.pendingReceipts) },
+    { label: 'Reuniones proximas', value: String(stats.upcomingMeetings) },
+  ]
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Resumen general del despacho
+      <header className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          Resumen operativo del despacho con foco en finanzas e incidencias.
         </p>
-      </div>
+      </header>
 
-      {/* Primary Financial KPIs */}
-      <h2 className="text-lg font-semibold text-foreground mt-8 border-b pb-2">Estado Financiero Global</h2>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Total Emitido</p>
-            <Banknote className="h-5 w-5 text-blue-500" />
+      <section className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Estado financiero global</h2>
+            <p className="text-sm text-muted-foreground">
+              Indicadores basicos de emision, cobro y deuda.
+            </p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-foreground">{formatCurrency(financeKPIs.totalEmitido)}</p>
+          <Link
+            href="/finance/receipts"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Ir a recibos
+          </Link>
         </div>
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Total Cobrado</p>
-            <Wallet className="h-5 w-5 text-success" />
-          </div>
-          <p className="mt-2 text-2xl font-bold text-foreground">{formatCurrency(financeKPIs.totalCobrado)}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Deuda Pendiente</p>
-            <TrendingDown className="h-5 w-5 text-destructive" />
-          </div>
-          <p className="mt-2 text-2xl font-bold text-foreground">{formatCurrency(financeKPIs.totalPendiente)}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Recibos Vencidos</p>
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
-          </div>
-          <p className="mt-2 text-2xl font-bold text-foreground">{financeKPIs.overdueCount}</p>
-        </div>
-      </div>
 
-      <h2 className="text-lg font-semibold text-foreground mt-8 border-b pb-2">Actividad General</h2>
-      {/* Activity KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map((kpi) => {
-          const Icon = kpi.icon
-          return (
-            <div
-              key={kpi.label}
-              className="rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-muted-foreground">{kpi.label}</p>
-                <Icon className={`h-5 w-5 ${kpi.color}`} />
-              </div>
-              <p className="mt-2 text-2xl font-bold text-foreground">{kpi.value}</p>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {financialCards.map((card) => (
+            <div key={card.label} className="rounded-lg border p-4">
+              <div className="text-sm text-muted-foreground">{card.label}</div>
+              <div className="mt-2 text-2xl font-semibold">{card.value}</div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      </section>
 
-      {/* Quick Access */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Accesos rápidos</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Nueva comunidad', href: '/communities' },
-              { label: 'Nuevo propietario', href: '/owners' },
-              { label: 'Emitir recibos', href: '/finance/receipts' },
-              { label: 'Nueva incidencia', href: '/incidents' },
-              { label: 'Nueva reunión', href: '/meetings' },
-              { label: 'Subir documento', href: '/documents' },
-            ].map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="rounded-lg border border-border px-4 py-3 text-sm font-medium text-foreground hover:bg-accent transition-colors text-center"
+      <section className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">KPIs de incidencias</h2>
+            <p className="text-sm text-muted-foreground">
+              Volumen abierto, urgencias, vencidas y carga por proveedor.
+            </p>
+          </div>
+          <div className="flex gap-4 text-sm">
+            <Link
+              href="/incidents"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Ver incidencias
+            </Link>
+            <Link
+              href="/providers"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Ver proveedores
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+              <div className="rounded-lg border p-4">
+                <div className="text-sm text-muted-foreground">Abiertas</div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {incidentSnapshot.openCount}
+                </div>
+              </div>
+              <div className="rounded-lg border p-4">
+                <div className="text-sm text-muted-foreground">Urgentes</div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {incidentSnapshot.urgentCount}
+                </div>
+              </div>
+              <div className="rounded-lg border p-4">
+                <div className="text-sm text-muted-foreground">Vencidas</div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {incidentSnapshot.overdueCount}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <h3 className="font-medium">Incidencias por proveedor</h3>
+              <div className="mt-3 space-y-3">
+                {incidentSnapshot.incidentsByProvider.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Todavia no hay incidencias activas.
+                  </p>
+                ) : (
+                  incidentSnapshot.incidentsByProvider.map((item) => (
+                    <div key={item.providerId ?? 'unassigned'}>
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span>{item.providerName}</span>
+                        <span className="font-medium">{item.count}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h3 className="font-medium">Ultimas incidencias activas</h3>
+              <Link
+                href="/notifications"
+                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
               >
-                {item.label}
-              </a>
-            ))}
+                Ver notificaciones
+              </Link>
+            </div>
+
+            {incidentSnapshot.latestActive.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+                No hay incidencias activas en este momento.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b text-left text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Incidencia</th>
+                      <th className="px-3 py-2 font-medium">Comunidad</th>
+                      <th className="px-3 py-2 font-medium">Proveedor</th>
+                      <th className="px-3 py-2 font-medium">Estado</th>
+                      <th className="px-3 py-2 font-medium">Vence</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incidentSnapshot.latestActive.map((incident) => (
+                      <tr key={incident.id} className="border-b align-top">
+                        <td className="px-3 py-3">
+                          <Link
+                            href={`/incidents/${incident.id}`}
+                            className="font-medium text-primary underline-offset-4 hover:underline"
+                          >
+                            {incident.title}
+                          </Link>
+                          <div className="text-xs text-muted-foreground">
+                            {incident.priority}
+                            {incident.unit ? ` · Unidad ${incident.unit.reference}` : ''}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3">{incident.community.name}</td>
+                        <td className="px-3 py-3">
+                          {incident.assignedProvider?.name || 'Sin asignar'}
+                        </td>
+                        <td className="px-3 py-3">{incident.status}</td>
+                        <td className="px-3 py-3">{formatDate(incident.dueAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Actividad general</h2>
+          <p className="text-sm text-muted-foreground">
+            Indicadores estructurales del backoffice para el despacho.
+          </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Actividad reciente</h3>
-          <div className="text-sm text-muted-foreground">
-            <p className="py-8 text-center">Las últimas acciones aparecerán aquí</p>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {activityCards.map((card) => (
+            <div key={card.label} className="rounded-lg border p-4">
+              <div className="text-sm text-muted-foreground">{card.label}</div>
+              <div className="mt-2 text-2xl font-semibold">{card.value}</div>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
     </div>
   )
 }
