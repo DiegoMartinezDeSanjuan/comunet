@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mockPrisma = {
-  provider: { findFirst: vi.fn() },
-}
-
-const mockRepository = {
-  createProviderRecord: vi.fn(),
-  findProviderByIdForOffice: vi.fn(),
-  updateProviderRecord: vi.fn(),
-}
-
-const mockAudit = {
-  logAudit: vi.fn(),
-}
+const { mockAudit, mockPrisma, mockRepository } = vi.hoisted(() => ({
+  mockPrisma: {
+    provider: { findFirst: vi.fn() },
+  },
+  mockRepository: {
+    createProviderRecord: vi.fn(),
+    findProviderByIdForOffice: vi.fn(),
+    updateProviderRecord: vi.fn(),
+  },
+  mockAudit: {
+    logAudit: vi.fn(),
+  },
+}))
 
 vi.mock('@/lib/db', () => ({ prisma: mockPrisma }))
 vi.mock('@/modules/providers/server/repository', () => mockRepository)

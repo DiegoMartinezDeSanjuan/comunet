@@ -1,29 +1,33 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mockPrisma = {
-  community: { findFirst: vi.fn() },
-  unit: { findFirst: vi.fn() },
-  provider: { findFirst: vi.fn() },
-}
-
-const mockRepository = {
-  createIncidentCommentRecord: vi.fn(),
-  createIncidentRecord: vi.fn(),
-  findIncidentByIdForOffice: vi.fn(),
-  listIncidentTimelineRecords: vi.fn(),
-  updateIncidentRecord: vi.fn(),
-}
-
-const mockAudit = {
-  logAudit: vi.fn(),
-}
-
-const mockNotifications = {
-  notifyIncidentAssigned: vi.fn(),
-  notifyIncidentCreated: vi.fn(),
-  notifyIncidentResolved: vi.fn(),
-  notifySharedIncidentComment: vi.fn(),
-}
+const {
+  mockAudit,
+  mockNotifications,
+  mockPrisma,
+  mockRepository,
+} = vi.hoisted(() => ({
+  mockPrisma: {
+    community: { findFirst: vi.fn() },
+    unit: { findFirst: vi.fn() },
+    provider: { findFirst: vi.fn() },
+  },
+  mockRepository: {
+    createIncidentCommentRecord: vi.fn(),
+    createIncidentRecord: vi.fn(),
+    findIncidentByIdForOffice: vi.fn(),
+    listIncidentTimelineRecords: vi.fn(),
+    updateIncidentRecord: vi.fn(),
+  },
+  mockAudit: {
+    logAudit: vi.fn(),
+  },
+  mockNotifications: {
+    notifyIncidentAssigned: vi.fn(),
+    notifyIncidentCreated: vi.fn(),
+    notifyIncidentResolved: vi.fn(),
+    notifySharedIncidentComment: vi.fn(),
+  },
+}))
 
 vi.mock('@/lib/db', () => ({
   prisma: mockPrisma,

@@ -1,12 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mockRepository = {
-  createNotificationRecord: vi.fn(),
-  listActiveUsersByRoles: vi.fn(),
-  listLinkedUsersForProvider: vi.fn(),
-}
+const { mockRepository } = vi.hoisted(() => ({
+  mockRepository: {
+    createNotificationRecord: vi.fn(),
+    listActiveUsersByRoles: vi.fn(),
+    listLinkedUsersForProvider: vi.fn(),
+  },
+}))
 
 vi.mock('@/modules/notifications/server/repository', () => mockRepository)
+
+vi.mock('@/lib/auth', () => ({
+  isBackofficeRole: (role: string) => [
+    'SUPERADMIN',
+    'OFFICE_ADMIN',
+    'MANAGER',
+    'ACCOUNTANT',
+    'VIEWER',
+  ].includes(role),
+}))
 
 import {
   createNotification,
