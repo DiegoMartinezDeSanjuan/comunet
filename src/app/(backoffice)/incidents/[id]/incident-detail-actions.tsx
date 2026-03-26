@@ -64,8 +64,7 @@ export function IncidentDetailActions({
   const isClosed = incident.status === 'CLOSED'
 
   const handleError = (error: unknown) => {
-    const message =
-      error instanceof Error ? error.message : 'No se pudo completar la accion.'
+    const message = error instanceof Error ? error.message : 'No se pudo completar la acción.'
 
     toast({
       title: 'Error',
@@ -158,7 +157,7 @@ export function IncidentDetailActions({
 
         toast({
           title: 'Comentario registrado',
-          description: 'El comentario se ha anadido a la incidencia.',
+          description: 'El comentario se ha añadido a la incidencia.',
         })
 
         router.refresh()
@@ -170,7 +169,7 @@ export function IncidentDetailActions({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-edit-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Editar incidencia</h2>
           <p className="text-sm text-muted-foreground">
@@ -181,8 +180,12 @@ export function IncidentDetailActions({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium">Titulo</label>
+            <label htmlFor="incident-edit-title" className="text-sm font-medium">
+              Título
+            </label>
             <Input
+              id="incident-edit-title"
+              data-testid="incident-edit-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               disabled={isPending || isClosed}
@@ -190,8 +193,12 @@ export function IncidentDetailActions({
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium">Descripcion</label>
+            <label htmlFor="incident-edit-description" className="text-sm font-medium">
+              Descripción
+            </label>
             <Textarea
+              id="incident-edit-description"
+              data-testid="incident-edit-description"
               rows={4}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -200,15 +207,15 @@ export function IncidentDetailActions({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Prioridad</label>
+            <label htmlFor="incident-edit-priority" className="text-sm font-medium">
+              Prioridad
+            </label>
             <select
+              id="incident-edit-priority"
+              data-testid="incident-edit-priority"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={priority}
-              onChange={(event) =>
-                setPriority(
-                  event.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT',
-                )
-              }
+              onChange={(event) => setPriority(event.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')}
               disabled={isPending || isClosed}
             >
               <option value="LOW">Baja</option>
@@ -219,8 +226,12 @@ export function IncidentDetailActions({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Vencimiento</label>
+            <label htmlFor="incident-edit-due-at" className="text-sm font-medium">
+              Vencimiento
+            </label>
             <Input
+              id="incident-edit-due-at"
+              data-testid="incident-edit-due-at"
               type="date"
               value={dueAt}
               onChange={(event) => setDueAt(event.target.value)}
@@ -232,6 +243,7 @@ export function IncidentDetailActions({
         <div className="mt-4 flex justify-end">
           <Button
             type="button"
+            data-testid="incident-edit-submit"
             onClick={handleUpdate}
             disabled={isPending || isClosed || title.trim().length < 3}
           >
@@ -240,9 +252,9 @@ export function IncidentDetailActions({
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-follow-up-card">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">Asignacion y seguimiento</h2>
+          <h2 className="text-lg font-semibold">Asignación y seguimiento</h2>
           <p className="text-sm text-muted-foreground">
             Cambia proveedor o estado sin saltarte las reglas del dominio.
           </p>
@@ -250,8 +262,12 @@ export function IncidentDetailActions({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Proveedor</label>
+            <label htmlFor="incident-provider-select" className="text-sm font-medium">
+              Proveedor
+            </label>
             <select
+              id="incident-provider-select"
+              data-testid="incident-provider-select"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={providerId}
               onChange={(event) => setProviderId(event.target.value)}
@@ -268,6 +284,7 @@ export function IncidentDetailActions({
             <div className="flex justify-end">
               <Button
                 type="button"
+                data-testid="incident-assign-provider-submit"
                 onClick={handleAssignProvider}
                 disabled={isPending || isClosed || !providerId}
               >
@@ -277,8 +294,12 @@ export function IncidentDetailActions({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Estado</label>
+            <label htmlFor="incident-status-select" className="text-sm font-medium">
+              Estado
+            </label>
             <select
+              id="incident-status-select"
+              data-testid="incident-status-select"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={status}
               onChange={(event) =>
@@ -304,6 +325,7 @@ export function IncidentDetailActions({
             <div className="flex justify-end">
               <Button
                 type="button"
+                data-testid="incident-status-submit"
                 onClick={handleChangeStatus}
                 disabled={isPending || isClosed}
               >
@@ -315,42 +337,46 @@ export function IncidentDetailActions({
 
         {isClosed ? (
           <p className="mt-4 text-sm text-muted-foreground">
-            La incidencia esta cerrada y no admite mas cambios operativos.
+            La incidencia está cerrada y no admite más cambios operativos.
           </p>
         ) : null}
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-comment-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Nuevo comentario</h2>
           <p className="text-sm text-muted-foreground">
-            Usa INTERNAL para backoffice y SHARED para preparar futura
-            reutilizacion en portales y notificaciones.
+            Usa INTERNAL para backoffice y SHARED para reutilización futura en
+            portales y notificaciones.
           </p>
         </div>
 
-        <div className="grid gap-4">
+        <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Comentario</label>
+            <label htmlFor="incident-comment-body" className="text-sm font-medium">
+              Comentario
+            </label>
             <Textarea
+              id="incident-comment-body"
+              data-testid="incident-comment-body"
               rows={4}
               value={commentBody}
               onChange={(event) => setCommentBody(event.target.value)}
-              placeholder="Anade contexto, seguimiento o instrucciones."
               disabled={isPending}
+              placeholder="Añade seguimiento, instrucciones o contexto para la trazabilidad."
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Visibilidad</label>
+            <label htmlFor="incident-comment-visibility" className="text-sm font-medium">
+              Visibilidad
+            </label>
             <select
+              id="incident-comment-visibility"
+              data-testid="incident-comment-visibility"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={commentVisibility}
-              onChange={(event) =>
-                setCommentVisibility(
-                  event.target.value as 'INTERNAL' | 'SHARED',
-                )
-              }
+              onChange={(event) => setCommentVisibility(event.target.value as 'INTERNAL' | 'SHARED')}
               disabled={isPending}
             >
               <option value="INTERNAL">INTERNAL</option>
@@ -362,10 +388,11 @@ export function IncidentDetailActions({
         <div className="mt-4 flex justify-end">
           <Button
             type="button"
+            data-testid="incident-comment-submit"
             onClick={handleAddComment}
             disabled={isPending || commentBody.trim().length === 0}
           >
-            {isPending ? 'Guardando...' : 'Anadir comentario'}
+            {isPending ? 'Guardando...' : 'Añadir comentario'}
           </Button>
         </div>
       </section>

@@ -81,9 +81,7 @@ export function IncidentCreateForm({
         router.push(`/incidents/${created.id}`)
       } catch (error) {
         const message =
-          error instanceof Error
-            ? error.message
-            : 'No se pudo crear la incidencia.'
+          error instanceof Error ? error.message : 'No se pudo crear la incidencia.'
 
         toast({
           title: 'Error',
@@ -95,19 +93,24 @@ export function IncidentCreateForm({
   }
 
   return (
-    <section className="rounded-lg border bg-white p-6 shadow-sm">
+    <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-create-card">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Nueva incidencia</h2>
         <p className="text-sm text-muted-foreground">
           Alta manual desde backoffice con comunidad, unidad opcional,
-          prioridad y asignacion inicial de proveedor.
+          prioridad y asignación inicial de proveedor.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium">Titulo</label>
+          <label htmlFor="incident-create-title" className="text-sm font-medium">
+            Título
+          </label>
           <Input
+            id="incident-create-title"
+            name="title"
+            data-testid="incident-create-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Ej. Fuga en bajante del portal B"
@@ -115,18 +118,28 @@ export function IncidentCreateForm({
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium">Descripcion</label>
+          <label htmlFor="incident-create-description" className="text-sm font-medium">
+            Descripción
+          </label>
           <Textarea
+            id="incident-create-description"
+            name="description"
+            data-testid="incident-create-description"
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Describe el problema, ubicacion y contexto relevante."
+            placeholder="Describe el problema, ubicación y contexto relevante."
             rows={4}
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Comunidad</label>
+          <label htmlFor="incident-create-community" className="text-sm font-medium">
+            Comunidad
+          </label>
           <select
+            id="incident-create-community"
+            name="communityId"
+            data-testid="incident-create-community"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={communityId}
             onChange={(event) => {
@@ -144,8 +157,13 @@ export function IncidentCreateForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Unidad (opcional)</label>
+          <label htmlFor="incident-create-unit" className="text-sm font-medium">
+            Unidad (opcional)
+          </label>
           <select
+            id="incident-create-unit"
+            name="unitId"
+            data-testid="incident-create-unit"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={unitId}
             onChange={(event) => setUnitId(event.target.value)}
@@ -161,8 +179,13 @@ export function IncidentCreateForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Proveedor asignado</label>
+          <label htmlFor="incident-create-provider" className="text-sm font-medium">
+            Proveedor asignado
+          </label>
           <select
+            id="incident-create-provider"
+            name="assignedProviderId"
+            data-testid="incident-create-provider"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={assignedProviderId}
             onChange={(event) => setAssignedProviderId(event.target.value)}
@@ -178,14 +201,17 @@ export function IncidentCreateForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Prioridad</label>
+          <label htmlFor="incident-create-priority" className="text-sm font-medium">
+            Prioridad
+          </label>
           <select
+            id="incident-create-priority"
+            name="priority"
+            data-testid="incident-create-priority"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={priority}
             onChange={(event) =>
-              setPriority(
-                event.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT',
-              )
+              setPriority(event.target.value as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT')
             }
           >
             <option value="LOW">Baja</option>
@@ -196,8 +222,13 @@ export function IncidentCreateForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Reportada el</label>
+          <label htmlFor="incident-create-reported-at" className="text-sm font-medium">
+            Reportada el
+          </label>
           <Input
+            id="incident-create-reported-at"
+            name="reportedAt"
+            data-testid="incident-create-reported-at"
             type="date"
             value={reportedAt}
             onChange={(event) => setReportedAt(event.target.value)}
@@ -205,8 +236,13 @@ export function IncidentCreateForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Vencimiento</label>
+          <label htmlFor="incident-create-due-at" className="text-sm font-medium">
+            Vencimiento
+          </label>
           <Input
+            id="incident-create-due-at"
+            name="dueAt"
+            data-testid="incident-create-due-at"
             type="date"
             value={dueAt}
             onChange={(event) => setDueAt(event.target.value)}
@@ -217,10 +253,9 @@ export function IncidentCreateForm({
       <div className="mt-6 flex justify-end">
         <Button
           type="button"
+          data-testid="incident-create-submit"
           onClick={handleSubmit}
-          disabled={
-            isPending || !communityId || title.trim().length < 3
-          }
+          disabled={isPending || !communityId || title.trim().length < 3}
         >
           {isPending ? 'Guardando...' : 'Crear incidencia'}
         </Button>

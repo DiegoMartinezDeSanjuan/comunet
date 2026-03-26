@@ -89,8 +89,8 @@ enum IncidentStatus {
 }
 
 enum CommentVisibility {
-  PUBLIC
   INTERNAL
+  SHARED
 }
 
 enum MeetingType {
@@ -534,7 +534,7 @@ model IncidentComment {
   incidentId   String
   authorUserId String
   body         String
-  visibility   CommentVisibility @default(PUBLIC)
+  visibility   CommentVisibility @default(INTERNAL)
   createdAt    DateTime          @default(now())
 
   incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)

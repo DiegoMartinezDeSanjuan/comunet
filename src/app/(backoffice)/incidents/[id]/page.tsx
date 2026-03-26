@@ -180,9 +180,9 @@ export default async function IncidentDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold">Resumen</h2>
             <div className="mt-4 grid gap-3 text-sm">
               <div>
-                <div className="font-medium">Descripcion</div>
+                <div className="font-medium">Descripción</div>
                 <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
-                  {incident.description || 'Sin descripcion adicional.'}
+                  {incident.description || 'Sin descripción adicional.'}
                 </p>
               </div>
               <div>
@@ -194,19 +194,19 @@ export default async function IncidentDetailPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="rounded-lg border bg-white p-6 shadow-sm">
+          <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-timeline">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">Timeline</h2>
                 <p className="text-sm text-muted-foreground">
-                  Historial cronologico de cambios, asignaciones y comentarios.
+                  Historial cronológico de cambios, asignaciones y comentarios.
                 </p>
               </div>
             </div>
 
             {visibleTimeline.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                Aun no hay eventos registrados en la traza.
+                Aún no hay eventos registrados en la traza.
               </div>
             ) : (
               <div className="space-y-4">
@@ -214,6 +214,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
                   <div
                     key={`${entry.kind}-${entry.id}`}
                     className="rounded-lg border p-4"
+                    data-testid={entry.kind === 'COMMENT' ? 'incident-timeline-comment' : 'incident-timeline-audit'}
                   >
                     <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                       <div className="text-sm font-medium">
