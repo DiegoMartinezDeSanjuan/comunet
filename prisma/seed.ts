@@ -968,21 +968,126 @@ async function main() {
     ],
   })
 
+  await prisma.document.createMany({
+    data: [
+      {
+        communityId: communityMadrid.id,
+        uploadedByUserId: officeAdmin.id,
+        title: 'Acta Junta 2025',
+        category: 'Actas',
+        visibility: 'OWNERS',
+        storagePath: 'seeds/doc1.pdf',
+        size: 254000,
+        mimeType: 'application/pdf',
+      },
+      {
+        communityId: communityMadrid.id,
+        uploadedByUserId: manager.id,
+        title: 'Presupuesto 2026',
+        category: 'Finanzas',
+        visibility: 'OWNERS',
+        storagePath: 'seeds/doc2.pdf',
+        size: 154000,
+        mimeType: 'application/pdf',
+      },
+      {
+        communityId: communityMadrid.id,
+        uploadedByUserId: officeAdmin.id,
+        title: 'Certificado de Deuda',
+        category: 'Legal',
+        visibility: 'INTERNAL',
+        storagePath: 'seeds/doc3.pdf',
+        size: 50000,
+        mimeType: 'application/pdf',
+      },
+    ]
+  })
+
+  console.log('✅ Documents seeded')
+
   await prisma.meeting.create({
     data: {
       communityId: communityMadrid.id,
       title: 'Junta Ordinaria 2026',
       scheduledAt: new Date('2026-04-15T18:00:00Z'),
       status: 'SCHEDULED',
-      location: 'Portal del edificio',
+      location: 'Portal del Edificio Los Pinos',
       agendaItems: {
         create: [
-          { title: 'Lectura acta anterior', sortOrder: 1 },
-          { title: 'Incidencias abiertas y proveedores', sortOrder: 2 },
-          { title: 'Aprobación cuentas Q1', sortOrder: 3 },
+          { title: 'Lectura acta anterior y aprobación', sortOrder: 1 },
+          { title: 'Revisión de cuentas 2025', sortOrder: 2 },
+          { title: 'Estado de obras del tejado', sortOrder: 3 },
           { title: 'Ruegos y preguntas', sortOrder: 4 },
         ],
       },
+    },
+    include: { agendaItems: true }
+  })
+
+  const heldMeeting = await prisma.meeting.create({
+    data: {
+      communityId: communityMadrid.id,
+      title: 'Junta Extraordinaria Fachada',
+      scheduledAt: new Date('2026-02-10T19:00:00Z'),
+      status: 'HELD',
+      location: 'Sala de reuniones Fincas Martínez',
+      agendaItems: {
+        create: [
+          { title: 'Presupuesto reparación fachada principal', sortOrder: 1, description: 'Se presentan 3 presupuestos para elegir.' },
+          { title: 'Aprobación de derrama excepcional', sortOrder: 2 },
+        ],
+      },
+      attendances: {
+        create: [
+          { ownerId: ownerCarlos.id, unitId: unit1A.id, attendeeName: ownerCarlos.fullName, attendanceType: 'IN_PERSON', coefficientPresent: 30 },
+          { ownerId: ownerMaria.id, unitId: unit1B.id, attendeeName: ownerMaria.fullName, attendanceType: 'IN_PERSON', coefficientPresent: 45 },
+          { ownerId: ownerLaura.id, unitId: unit3A.id, attendeeName: 'David Gómez (Hijo)', attendanceType: 'DELEGATED', coefficientPresent: 25 },
+        ]
+      }
+    },
+    include: { agendaItems: true, attendances: true }
+  })
+
+  // Add Votes to the held meeting
+  await prisma.vote.createMany({
+    data: [
+      { agendaItemId: heldMeeting.agendaItems[0].id, ownerId: ownerCarlos.id, unitId: unit1A.id, vote: 'FOR', coefficientWeight: 30 },
+      { agendaItemId: heldMeeting.agendaItems[0].id, ownerId: ownerMaria.id, unitId: unit1B.id, vote: 'FOR', coefficientWeight: 45 },
+      { agendaItemId: heldMeeting.agendaItems[0].id, ownerId: ownerLaura.id, unitId: unit3A.id, vote: 'AGAINST', coefficientWeight: 25 },
+      
+      { agendaItemId: heldMeeting.agendaItems[1].id, ownerId: ownerCarlos.id, unitId: unit1A.id, vote: 'FOR', coefficientWeight: 30 },
+      { agendaItemId: heldMeeting.agendaItems[1].id, ownerId: ownerMaria.id, unitId: unit1B.id, vote: 'FOR', coefficientWeight: 45 },
+      { agendaItemId: heldMeeting.agendaItems[1].id, ownerId: ownerLaura.id, unitId: unit3A.id, vote: 'ABSTAIN', coefficientWeight: 25 },
+    ]
+  })
+
+  // Add a Minute Draft to the held meeting
+  await prisma.minute.create({
+    data: {
+      meetingId: heldMeeting.id,
+      content: `ACTA DE REUNIÓN EXTRAORDINARIA\nComunidad: Edificio Los Pinos\nFecha: 10/2/2026, 19:00:00\nLugar: Sala de reuniones Fincas Martínez\n\nASISTENTES:\n- Carlos García López (Presencial) - Coef: 30\n- María Martínez Torres (Presencial) - Coef: 45\n- David Gómez (Hijo) (Delegada) - Coef: 25\n\nORDEN DEL DÍA Y ACUERDOS:\n\n1. Presupuesto reparación fachada principal\n   Se presentan 3 presupuestos para elegir.\n   Votos: A favor: 2, En contra: 1, Abstenciones: 0\n\n2. Aprobación de derrama excepcional\n   Votos: A favor: 2, En contra: 0, Abstenciones: 1\n\nCon la firma de los asistentes se da por concluida la reunión.\n`,
+      status: 'DRAFT',
+    }
+  })
+
+  await prisma.meeting.create({
+    data: {
+      communityId: communityRetiro.id,
+      title: 'Junta Constitución Inicial',
+      scheduledAt: new Date('2025-12-01T17:30:00Z'),
+      status: 'CLOSED',
+      location: 'Garaje',
+      agendaItems: {
+        create: [
+          { title: 'Aprobación de estatutos', sortOrder: 1 },
+          { title: 'Nombramiento de cargos', sortOrder: 2 },
+        ],
+      },
+      minutes: {
+        create: [
+          { status: 'APPROVED', content: 'Acta de constitución aprobada por unanimidad...', approvedAt: new Date('2025-12-15T09:00:00Z') }
+        ]
+      }
     },
   })
 

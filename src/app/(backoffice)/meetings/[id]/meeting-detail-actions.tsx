@@ -11,6 +11,7 @@ import {
   changeMeetingStatusAction,
   saveMeetingMinuteAction,
   updateMeetingAction,
+  generateMinuteDraftAction,
 } from '@/modules/meetings/server/actions'
 
 type MeetingStatus = 'DRAFT' | 'SCHEDULED' | 'HELD' | 'CLOSED'
@@ -143,6 +144,22 @@ export function MeetingDetailActions({ meeting, latestMinute }: MeetingDetailAct
           description: 'El borrador del acta se ha actualizado.',
         })
         router.refresh()
+      } catch (error) {
+        handleError(error)
+      }
+    })
+  }
+
+  const handleGenerateMinute = () => {
+    if (!confirm('¿Atención! Esto sobreescribirá el contenido actual del acta. ¿Deseas continuar?')) return
+    startTransition(async () => {
+      try {
+        const generated = await generateMinuteDraftAction({ meetingId: meeting.id })
+        setMinuteContent(generated.content)
+        toast({
+          title: 'Borrador generado',
+          description: 'Puedes modificar el texto antes de guardarlo.',
+        })
       } catch (error) {
         handleError(error)
       }
@@ -363,7 +380,16 @@ export function MeetingDetailActions({ meeting, latestMinute }: MeetingDetailAct
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            data-testid="meeting-minute-generate"
+            onClick={handleGenerateMinute}
+            disabled={isPending}
+          >
+            {isPending ? 'Cargando...' : 'Generar borrador automático'}
+          </Button>
           <Button
             type="button"
             data-testid="meeting-minute-submit"

@@ -9,6 +9,14 @@ import type {
   CreateMeetingInput,
   SaveMeetingMinuteInput,
   UpdateMeetingInput,
+  UpdateAgendaItemInput,
+  ReorderAgendaItemsInput,
+  DeleteAgendaItemInput,
+  RecordAttendanceInput,
+  DeleteAttendanceInput,
+  RecordVoteInput,
+  DeleteVoteInput,
+  GenerateMinuteDraftInput,
 } from '@/modules/meetings/schema'
 import {
   addAgendaItem,
@@ -16,6 +24,14 @@ import {
   createMeeting,
   saveMeetingMinute,
   updateMeeting,
+  updateAgendaItem,
+  reorderAgendaItems,
+  deleteAgendaItem,
+  recordAttendance,
+  deleteAttendance,
+  recordVote,
+  deleteVote,
+  generateMinuteDraft,
 } from './services'
 
 async function getOfficeAndUser(permission: string) {
@@ -71,4 +87,59 @@ export async function saveMeetingMinuteAction(input: SaveMeetingMinuteInput) {
   revalidatePath(`/meetings/${minute.meetingId}`)
   revalidatePath('/portal/meetings')
   return minute
+}
+
+export async function updateAgendaItemAction(input: UpdateAgendaItemInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  const agendaItem = await updateAgendaItem(officeId, userId, input)
+  revalidatePath(`/meetings/${agendaItem.meetingId}`)
+  return agendaItem
+}
+
+export async function reorderAgendaItemsAction(input: ReorderAgendaItemsInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  await reorderAgendaItems(officeId, userId, input)
+  revalidatePath(`/meetings/${input.meetingId}`)
+  return true
+}
+
+export async function deleteAgendaItemAction(input: DeleteAgendaItemInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  await deleteAgendaItem(officeId, userId, input)
+  revalidatePath(`/meetings/${input.meetingId}`)
+  return true
+}
+
+export async function recordAttendanceAction(input: RecordAttendanceInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  const attendance = await recordAttendance(officeId, userId, input)
+  revalidatePath(`/meetings/${attendance.meetingId}`)
+  return attendance
+}
+
+export async function deleteAttendanceAction(input: DeleteAttendanceInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  await deleteAttendance(officeId, userId, input)
+  revalidatePath(`/meetings/${input.meetingId}`)
+  return true
+}
+
+export async function recordVoteAction(input: RecordVoteInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  const vote = await recordVote(officeId, userId, input)
+  revalidatePath(`/meetings/${input.meetingId}`)
+  return vote
+}
+
+export async function deleteVoteAction(input: DeleteVoteInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  await deleteVote(officeId, userId, input)
+  revalidatePath(`/meetings/${input.meetingId}`)
+  return true
+}
+
+export async function generateMinuteDraftAction(input: GenerateMinuteDraftInput) {
+  const { officeId, userId } = await getOfficeAndUser('meetings.manage')
+  const draft = await generateMinuteDraft(officeId, userId, input)
+  return draft
 }

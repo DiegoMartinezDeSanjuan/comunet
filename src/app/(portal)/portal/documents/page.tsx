@@ -30,7 +30,7 @@ export default async function PortalDocumentsPage() {
       <PortalPageHeader
         eyebrow="Portal"
         title="Documentos"
-        description="Vista de lectura para documentos ya publicados a propietarios. Si todavía no hay documentos visibles, el portal lo muestra de forma honesta sin inventar estados ni promesas vagas."
+        description="Explora y descarga los documentos que la administración ha publicado para tu comunidad."
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -47,9 +47,9 @@ export default async function PortalDocumentsPage() {
           icon={FolderOpen}
         />
         <PortalStatCard
-          label="Modo de este slice"
-          value="Lectura"
-          hint="La gestión documental avanzada y la descarga final se completan en el siguiente slice."
+          label="Descarga Directa"
+          value="Segura"
+          hint="Todos los documentos listados aquí tienen acceso validado por tu cuenta de propietario."
           icon={ShieldCheck}
         />
       </div>
@@ -87,16 +87,23 @@ export default async function PortalDocumentsPage() {
                 </div>
               </dl>
 
-              <p className="mt-4 text-xs leading-5 text-muted-foreground">
-                En este slice el portal expone el catálogo y los metadatos visibles. La descarga directa, el versionado y la gestión documental completa se documentan para el siguiente slice.
-              </p>
+              <div className="mt-6 flex justify-end">
+                <a
+                  href={`/api/documents/${document.id}/download`}
+                  target="_blank"
+                  className="inline-flex cursor-pointer items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                  rel="noreferrer"
+                >
+                  Descargar Documento
+                </a>
+              </div>
             </article>
           ))}
         </div>
       ) : (
         <PortalEmptyState
-          title="Todavía no hay documentos publicados para tus comunidades"
-          description="El portal ya está preparado para una vista de lectura, pero si backoffice aún no ha publicado documentos con visibilidad para propietarios, aquí no se mostrará nada. La publicación y descarga documental completa quedan documentadas para el siguiente slice."
+          title="Todavía no hay documentos publicados"
+          description="Al publicarse documentos relevantes (actas, normativas, recibos unificados) por parte de la administración, aparecerán aquí de forma automática."
         />
       )}
     </div>

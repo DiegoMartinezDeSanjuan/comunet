@@ -197,3 +197,16 @@ export async function notifySharedIncidentComment(
         body: `La incidencia ${input.incidentTitle} tiene un comentario compartido nuevo.`,
     })
 }
+
+export async function notifyMeetingScheduled(input: { officeId: string, communityId: string, meetingId: string, title: string }) {
+    console.log('[MOCK NOTIFICATION] Meeting Scheduled:', input.title)
+}
+
+export async function notifyMinuteApproved(input: { officeId: string, communityId: string, meetingId: string, title: string }) {
+    console.log('[MOCK NOTIFICATION] Minute Approved:', input.title)
+}
+
+export async function notifyDocumentPublished(input: { officeId: string, communityId: string, documentId: string, title: string }) {
+    console.log('[MOCK NOTIFICATION] Document Published:', input.title)
+}
+

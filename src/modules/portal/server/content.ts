@@ -85,3 +85,64 @@ export async function listPortalDocuments(session: Session, limit = 12) {
     take: limit,
   })
 }
+
+export async function getPortalCommunitySummary(session: Session) {
+  if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
+    return null
+  }
+
+  const scope = await getPortalAccessScope(session)
+  const communityIds = getUniqueValues([
+    ...scope.ownedCommunityIds,
+    ...scope.presidentCommunityIds,
+  ])
+
+  if (!communityIds.length) {
+    return null
+  }
+
+  const communities = await prisma.community.findMany({
+    where: { id: { in: communityIds } },
+    include: {
+      units: {
+        where: {
+          ownerships: { some: { ownerId: session.linkedOwnerId, endDate: null } },
+        },
+      },
+      boardPositions: {
+        where: { ownerId: session.linkedOwnerId },
+      },
+      office: {
+        select: {
+          name: true,
+          phone: true,
+          email: true,
+        }
+      }
+    },
+    orderBy: { name: 'asc' },
+  })
+
+  // Quick stats
+  const receiptsCount = await prisma.receipt.count({
+    where: {
+      ownerId: session.linkedOwnerId,
+      status: { in: ['ISSUED', 'OVERDUE', 'PARTIALLY_PAID'] },
+    },
+  })
+
+  const incidentsCount = await prisma.incident.count({
+    where: {
+      createdByUserId: session.userId,
+      status: { not: 'CLOSED' },
+    },
+  })
+
+  return {
+    communities,
+    stats: {
+      pendingReceipts: receiptsCount,
+      activeIncidents: incidentsCount,
+    },
+  }
+}

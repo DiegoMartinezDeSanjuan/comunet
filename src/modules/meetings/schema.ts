@@ -4,6 +4,9 @@ import { z } from 'zod'
 const meetingTypeSchema = z.enum(['ORDINARY', 'EXTRAORDINARY'])
 const meetingStatusSchema = z.enum(['DRAFT', 'SCHEDULED', 'HELD', 'CLOSED'])
 const minuteStatusSchema = z.enum(['DRAFT', 'GENERATED', 'APPROVED'])
+const attendanceTypeSchema = z.enum(['IN_PERSON', 'DELEGATED', 'REMOTE'])
+const voteValueSchema = z.enum(['FOR', 'AGAINST', 'ABSTAIN'])
+
 
 const nullableTrimmedString = z
   .string()
@@ -58,6 +61,60 @@ export const saveMeetingMinuteSchema = z.object({
   status: minuteStatusSchema.default('DRAFT'),
 })
 
+export const updateAgendaItemSchema = z.object({
+  meetingId: z.string().cuid(),
+  agendaItemId: z.string().cuid(),
+  title: z.string().trim().min(3).max(160).optional(),
+  description: nullableTrimmedString.optional(),
+  sortOrder: z.number().int().min(0).optional()
+})
+
+export const reorderAgendaItemsSchema = z.object({
+  meetingId: z.string().cuid(),
+  items: z.array(z.object({
+    id: z.string().cuid(),
+    sortOrder: z.number().int().min(0)
+  })).min(1)
+})
+
+export const deleteAgendaItemSchema = z.object({
+  meetingId: z.string().cuid(),
+  agendaItemId: z.string().cuid()
+})
+
+export const recordAttendanceSchema = z.object({
+  meetingId: z.string().cuid(),
+  ownerId: z.string().cuid().optional().nullable(),
+  unitId: z.string().cuid().optional().nullable(),
+  attendeeName: z.string().trim().min(2).max(160),
+  coefficientPresent: z.number().min(0).max(100),
+  attendanceType: attendanceTypeSchema.default('IN_PERSON')
+})
+
+export const deleteAttendanceSchema = z.object({
+  meetingId: z.string().cuid(),
+  attendanceId: z.string().cuid()
+})
+
+export const recordVoteSchema = z.object({
+  meetingId: z.string().cuid(),
+  agendaItemId: z.string().cuid(),
+  ownerId: z.string().cuid().optional().nullable(),
+  unitId: z.string().cuid().optional().nullable(),
+  vote: voteValueSchema,
+  coefficientWeight: z.number().min(0).max(100).optional().default(0)
+})
+
+export const deleteVoteSchema = z.object({
+  meetingId: z.string().cuid(),
+  voteId: z.string().cuid()
+})
+
+export const generateMinuteDraftSchema = z.object({
+  meetingId: z.string().cuid()
+})
+
+
 export type MeetingStatusValue = z.infer<typeof meetingStatusSchema>
 export type MeetingTypeValue = z.infer<typeof meetingTypeSchema>
 export type MinuteStatusValue = z.infer<typeof minuteStatusSchema>
@@ -65,8 +122,16 @@ export type MinuteStatusValue = z.infer<typeof minuteStatusSchema>
 export type CreateMeetingInput = z.input<typeof createMeetingSchema>
 export type UpdateMeetingInput = z.input<typeof updateMeetingSchema>
 export type AddAgendaItemInput = z.input<typeof addAgendaItemSchema>
+export type UpdateAgendaItemInput = z.input<typeof updateAgendaItemSchema>
+export type ReorderAgendaItemsInput = z.input<typeof reorderAgendaItemsSchema>
+export type DeleteAgendaItemInput = z.input<typeof deleteAgendaItemSchema>
 export type ChangeMeetingStatusInput = z.input<typeof changeMeetingStatusSchema>
 export type SaveMeetingMinuteInput = z.input<typeof saveMeetingMinuteSchema>
+export type RecordAttendanceInput = z.input<typeof recordAttendanceSchema>
+export type DeleteAttendanceInput = z.input<typeof deleteAttendanceSchema>
+export type RecordVoteInput = z.input<typeof recordVoteSchema>
+export type DeleteVoteInput = z.input<typeof deleteVoteSchema>
+export type GenerateMinuteDraftInput = z.input<typeof generateMinuteDraftSchema>
 
 export function parseMeetingStatus(value: string | undefined): MeetingStatus | undefined {
   if (!value) return undefined
