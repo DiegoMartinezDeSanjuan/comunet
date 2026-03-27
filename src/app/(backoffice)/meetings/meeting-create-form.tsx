@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -22,6 +23,12 @@ function toDateTimeLocal(value: Date): string {
   return adjusted.toISOString().slice(0, 16)
 }
 
+function getDefaultScheduledAt(): string {
+  const value = new Date()
+  value.setDate(value.getDate() + 7)
+  return toDateTimeLocal(value)
+}
+
 function toIsoDateTime(value: string): string {
   return new Date(value).toISOString()
 }
@@ -30,13 +37,18 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
+
   const [communityId, setCommunityId] = useState(communities[0]?.id ?? '')
   const [title, setTitle] = useState('')
   const [meetingType, setMeetingType] = useState<'ORDINARY' | 'EXTRAORDINARY'>('ORDINARY')
-  const [scheduledAt, setScheduledAt] = useState(toDateTimeLocal(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)))
+  const [scheduledAt, setScheduledAt] = useState('')
   const [location, setLocation] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<'DRAFT' | 'SCHEDULED'>('SCHEDULED')
+
+  useEffect(() => {
+    setScheduledAt((current) => current || getDefaultScheduledAt())
+  }, [])
 
   const handleSubmit = () => {
     startTransition(async () => {
@@ -55,6 +67,7 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
           title: 'Reunión creada',
           description: 'La reunión se ha registrado correctamente.',
         })
+
         router.push(`/meetings/${created.id}`)
       } catch (error) {
         const message = error instanceof Error ? error.message : 'No se pudo crear la reunión.'
@@ -68,36 +81,30 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
   }
 
   return (
-    <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-create-card">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Nueva reunión</h2>
-        <p className="text-sm text-muted-foreground">
-          Crea convocatorias desde backoffice con comunidad, fecha, tipo y estado inicial.
-        </p>
+    <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Nueva reunión</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Crea convocatorias desde backoffice con comunidad, fecha, tipo y estado inicial.
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
-          <label htmlFor="meeting-create-title" className="text-sm font-medium">
-            Título
-          </label>
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-slate-700">Título</label>
           <Input
-            id="meeting-create-title"
-            data-testid="meeting-create-title"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Ej. Junta ordinaria de primavera"
           />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="meeting-create-community" className="text-sm font-medium">
-            Comunidad
-          </label>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Comunidad</label>
           <select
-            id="meeting-create-community"
-            data-testid="meeting-create-community"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             value={communityId}
             onChange={(event) => setCommunityId(event.target.value)}
           >
@@ -110,14 +117,10 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
           </select>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="meeting-create-type" className="text-sm font-medium">
-            Tipo de reunión
-          </label>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Tipo de reunión</label>
           <select
-            id="meeting-create-type"
-            data-testid="meeting-create-type"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             value={meetingType}
             onChange={(event) => setMeetingType(event.target.value as 'ORDINARY' | 'EXTRAORDINARY')}
           >
@@ -126,27 +129,19 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
           </select>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="meeting-create-scheduled-at" className="text-sm font-medium">
-            Fecha y hora
-          </label>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Fecha y hora</label>
           <Input
-            id="meeting-create-scheduled-at"
-            data-testid="meeting-create-scheduled-at"
             type="datetime-local"
             value={scheduledAt}
             onChange={(event) => setScheduledAt(event.target.value)}
           />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="meeting-create-status" className="text-sm font-medium">
-            Estado inicial
-          </label>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Estado inicial</label>
           <select
-            id="meeting-create-status"
-            data-testid="meeting-create-status"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
             value={status}
             onChange={(event) => setStatus(event.target.value as 'DRAFT' | 'SCHEDULED')}
           >
@@ -155,26 +150,18 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
           </select>
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <label htmlFor="meeting-create-location" className="text-sm font-medium">
-            Ubicación
-          </label>
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-slate-700">Ubicación</label>
           <Input
-            id="meeting-create-location"
-            data-testid="meeting-create-location"
             value={location}
             onChange={(event) => setLocation(event.target.value)}
             placeholder="Ej. Sala social, despacho o videollamada"
           />
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <label htmlFor="meeting-create-description" className="text-sm font-medium">
-            Descripción
-          </label>
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-slate-700">Descripción</label>
           <Textarea
-            id="meeting-create-description"
-            data-testid="meeting-create-description"
             rows={4}
             value={description}
             onChange={(event) => setDescription(event.target.value)}

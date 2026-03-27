@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/lib/auth'
 import { canReadDocument } from '@/lib/permissions'
 import { getDocumentDownloadPayload } from '@/modules/documents/server/services'
@@ -19,11 +20,12 @@ export async function GET(
     }
 
     const { buffer, downloadName, document } = await getDocumentDownloadPayload(id)
+    const body = new Uint8Array(buffer)
 
-    return new NextResponse(buffer, {
+    return new NextResponse(body, {
       headers: {
         'Content-Type': document.mimeType || 'application/octet-stream',
-        'Content-Length': String(buffer.length),
+        'Content-Length': String(body.byteLength),
         'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
         'Cache-Control': 'private, no-store',
       },
