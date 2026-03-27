@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
+    user: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+  },
+}))
+
 // We will mock the database and auth session
 vi.mock('@/lib/auth', () => ({
   requireAuth: vi.fn().mockResolvedValue({
@@ -21,14 +31,6 @@ vi.mock('@/modules/audit/server/services', () => ({
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }))
-
-const mockPrisma = {
-  user: {
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
-}
 
 vi.mock('@/lib/db', () => ({
   prisma: mockPrisma,

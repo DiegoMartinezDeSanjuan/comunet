@@ -1,13 +1,15 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const mockPrisma = {
-  community: {
-    findMany: vi.fn(),
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
+    community: {
+      findMany: vi.fn(),
+    },
+    debt: {
+      groupBy: vi.fn(),
+    },
   },
-  debt: {
-    groupBy: vi.fn(),
-  },
-}
+}))
 
 vi.mock('@/lib/db', () => ({
   prisma: mockPrisma,
