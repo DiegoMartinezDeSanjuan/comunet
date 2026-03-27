@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import { requireAuth } from '@/lib/auth'
-
 import {
   addPortalIncidentSharedComment,
   createPortalIncident,
@@ -15,7 +14,11 @@ import { isPortalOwnerPresidentRole } from './policy'
 const createPortalIncidentFormSchema = z.object({
   communityId: z.string().trim().min(1, 'Selecciona una comunidad'),
   unitId: z.string().trim().optional(),
-  title: z.string().trim().min(3, 'El título debe tener al menos 3 caracteres').max(160),
+  title: z
+    .string()
+    .trim()
+    .min(3, 'El título debe tener al menos 3 caracteres')
+    .max(160),
   description: z.string().trim().max(5000).optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
   dueAt: z.string().trim().optional(),
@@ -23,7 +26,11 @@ const createPortalIncidentFormSchema = z.object({
 
 const createPortalIncidentCommentSchema = z.object({
   incidentId: z.string().trim().min(1),
-  body: z.string().trim().min(1, 'Escribe un comentario').max(4000),
+  body: z
+    .string()
+    .trim()
+    .min(1, 'Escribe un comentario')
+    .max(4000),
 })
 
 function normalizeDateInput(dateText: string | undefined): string | null {
@@ -32,13 +39,11 @@ function normalizeDateInput(dateText: string | undefined): string | null {
   }
 
   const trimmed = dateText.trim()
-
   if (!trimmed) {
     return null
   }
 
   const parsed = new Date(`${trimmed}T23:59:59.000Z`)
-
   if (Number.isNaN(parsed.getTime())) {
     return null
   }
@@ -60,7 +65,6 @@ function getErrorMessage(error: unknown): string {
 
 export async function createPortalIncidentAction(formData: FormData) {
   const session = await requireAuth()
-
   if (!isPortalOwnerPresidentRole(session.role)) {
     redirect('/portal')
   }
@@ -79,6 +83,8 @@ export async function createPortalIncidentAction(formData: FormData) {
     redirect(`/portal/incidents?error=${encodeURIComponent(message)}`)
   }
 
+  let createdIncidentId: string
+
   try {
     const incident = await createPortalIncident(session, {
       communityId: parsed.data.communityId,
@@ -89,17 +95,20 @@ export async function createPortalIncidentAction(formData: FormData) {
       dueAt: normalizeDateInput(parsed.data.dueAt),
     })
 
-    revalidatePath('/portal')
-    revalidatePath('/portal/incidents')
-    redirect(`/portal/incidents/${incident.id}?created=1`)
+    createdIncidentId = incident.id
   } catch (error) {
     redirect(`/portal/incidents?error=${encodeURIComponent(getErrorMessage(error))}`)
   }
+
+  revalidatePath('/portal')
+  revalidatePath('/portal/incidents')
+  revalidatePath(`/portal/incidents/${createdIncidentId}`)
+
+  redirect(`/portal/incidents/${createdIncidentId}?created=1`)
 }
 
 export async function addPortalIncidentCommentAction(formData: FormData) {
   const session = await requireAuth()
-
   if (!isPortalOwnerPresidentRole(session.role)) {
     redirect('/portal')
   }
@@ -110,20 +119,26 @@ export async function addPortalIncidentCommentAction(formData: FormData) {
   })
 
   if (!parsed.success) {
+    const fallbackIncidentId = String(formData.get('incidentId') ?? '').trim()
     const message = parsed.error.issues[0]?.message ?? 'Revisa el comentario antes de enviarlo.'
-    redirect(`/portal/incidents/${formData.get('incidentId')}?error=${encodeURIComponent(message)}`)
+    const target = fallbackIncidentId
+      ? `/portal/incidents/${fallbackIncidentId}`
+      : '/portal/incidents'
+
+    redirect(`${target}?error=${encodeURIComponent(message)}`)
   }
 
   try {
     await addPortalIncidentSharedComment(session, parsed.data)
-
-    revalidatePath('/portal')
-    revalidatePath('/portal/incidents')
-    revalidatePath(`/portal/incidents/${parsed.data.incidentId}`)
-    redirect(`/portal/incidents/${parsed.data.incidentId}?commented=1`)
   } catch (error) {
     redirect(
       `/portal/incidents/${parsed.data.incidentId}?error=${encodeURIComponent(getErrorMessage(error))}`,
     )
   }
+
+  revalidatePath('/portal')
+  revalidatePath('/portal/incidents')
+  revalidatePath(`/portal/incidents/${parsed.data.incidentId}`)
+
+  redirect(`/portal/incidents/${parsed.data.incidentId}?commented=1`)
 }
