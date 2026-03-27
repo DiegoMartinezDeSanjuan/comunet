@@ -42,6 +42,41 @@ export interface PortalIncidentAccessRecord {
   } | null
 }
 
+interface ActiveDateRangeFilter {
+  startDate: {
+    lte: Date
+  }
+  OR: Array<
+    | { endDate: null }
+    | {
+        endDate: {
+          gte: Date
+        }
+      }
+  >
+}
+
+interface OwnershipScopeRecord {
+  unitId: string
+  unit: {
+    id: string
+    reference: string
+    communityId: string
+    community: {
+      id: string
+      name: string
+    }
+  }
+}
+
+interface PresidentPositionRecord {
+  communityId: string
+  community: {
+    id: string
+    name: string
+  }
+}
+
 export function isPortalOwnerPresidentRole(role: UserRole): role is 'OWNER' | 'PRESIDENT' {
   return role === 'OWNER' || role === 'PRESIDENT'
 }
@@ -50,11 +85,11 @@ export function isPortalProviderRole(role: UserRole): role is 'PROVIDER' {
   return role === 'PROVIDER'
 }
 
-export function buildActiveDateRangeFilter(at = new Date()) {
+export function buildActiveDateRangeFilter(at = new Date()): ActiveDateRangeFilter {
   return {
     startDate: { lte: at },
     OR: [{ endDate: null }, { endDate: { gte: at } }],
-  } as const
+  }
 }
 
 export function isPortalVisibleCommentVisibility(visibility: string | null | undefined): boolean {
@@ -88,36 +123,37 @@ export async function getPortalAccessScope(
     }
   }
 
-  const [ownerships, presidentPositions] = await Promise.all([
-    prisma.ownership.findMany({
-      where: {
-        ownerId: session.linkedOwnerId,
-        ...buildActiveDateRangeFilter(at),
-        unit: {
-          active: true,
-          community: {
-            officeId: session.officeId,
-            archivedAt: null,
-          },
+  const ownershipsPromise: Promise<OwnershipScopeRecord[]> = prisma.ownership.findMany({
+    where: {
+      ownerId: session.linkedOwnerId,
+      ...buildActiveDateRangeFilter(at),
+      unit: {
+        active: true,
+        community: {
+          officeId: session.officeId,
+          archivedAt: null,
         },
       },
-      select: {
-        unitId: true,
-        unit: {
-          select: {
-            id: true,
-            reference: true,
-            communityId: true,
-            community: {
-              select: {
-                id: true,
-                name: true,
-              },
+    },
+    select: {
+      unitId: true,
+      unit: {
+        select: {
+          id: true,
+          reference: true,
+          communityId: true,
+          community: {
+            select: {
+              id: true,
+              name: true,
             },
           },
         },
       },
-    }),
+    },
+  })
+
+  const presidentPositionsPromise: Promise<PresidentPositionRecord[]> =
     session.role === 'PRESIDENT'
       ? prisma.boardPosition.findMany({
           where: {
@@ -139,7 +175,11 @@ export async function getPortalAccessScope(
             },
           },
         })
-      : Promise.resolve<Array<{ communityId: string; community: { id: string; name: string } }>>([]),
+      : Promise.resolve<PresidentPositionRecord[]>([])
+
+  const [ownerships, presidentPositions] = await Promise.all([
+    ownershipsPromise,
+    presidentPositionsPromise,
   ])
 
   const unitMap = new Map<string, PortalUnitScopeItem>()
@@ -287,11 +327,11 @@ export async function canReadPortalCommunitySummary(
     return true
   }
 
-  if (session.role === 'PRESIDENT') {
-    return isActivePresidentForCommunity(session, communityId, at)
+  if (session.role !== 'PRESIDENT') {
+    return false
   }
 
-  return false
+  return isActivePresidentForCommunity(session, communityId, at)
 }
 
 export async function canAccessPortalReceiptRecord(
@@ -400,5 +440,9 @@ export async function canCreatePortalIncident(
     return hasActiveOwnershipForUnit(session, input.unitId, at)
   }
 
-  return session.role === 'PRESIDENT' && isActivePresidentForCommunity(session, input.communityId, at)
+  if (session.role !== 'PRESIDENT') {
+    return false
+  }
+
+  return isActivePresidentForCommunity(session, input.communityId, at)
 }

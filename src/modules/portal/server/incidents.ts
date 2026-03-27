@@ -25,6 +25,13 @@ export interface PortalIncidentFilters {
   search?: string
 }
 
+interface NormalizedPortalIncidentFilters {
+  communityId?: string
+  status?: IncidentStatus
+  priority?: IncidentPriority
+  search?: string
+}
+
 export interface CreatePortalIncidentInput {
   communityId: string
   unitId?: string | null
@@ -50,7 +57,9 @@ const ALLOWED_INCIDENT_PRIORITIES = new Set<IncidentPriority>([
   'URGENT',
 ])
 
-function normalizePortalIncidentFilters(filters: PortalIncidentFilters = {}): PortalIncidentFilters {
+function normalizePortalIncidentFilters(
+  filters: PortalIncidentFilters = {},
+): NormalizedPortalIncidentFilters {
   const status =
     typeof filters.status === 'string' && ALLOWED_INCIDENT_STATUSES.has(filters.status as IncidentStatus)
       ? (filters.status as IncidentStatus)
@@ -61,11 +70,13 @@ function normalizePortalIncidentFilters(filters: PortalIncidentFilters = {}): Po
       ? (filters.priority as IncidentPriority)
       : undefined
 
+  const search = typeof filters.search === 'string' ? filters.search.trim() : undefined
+
   return {
     communityId: typeof filters.communityId === 'string' ? filters.communityId : undefined,
     status,
     priority,
-    search: typeof filters.search === 'string' ? filters.search.trim() : undefined,
+    search: search ? search : undefined,
   }
 }
 

@@ -19,6 +19,13 @@ export interface PortalReceiptFilters {
   period?: string
 }
 
+interface NormalizedPortalReceiptFilters {
+  communityId?: string
+  unitId?: string
+  status?: ReceiptStatus
+  period?: string
+}
+
 const ALLOWED_RECEIPT_STATUSES = new Set<ReceiptStatus>([
   'DRAFT',
   'ISSUED',
@@ -29,15 +36,18 @@ const ALLOWED_RECEIPT_STATUSES = new Set<ReceiptStatus>([
   'CANCELLED',
 ])
 
-function normalizePortalReceiptFilters(filters: PortalReceiptFilters = {}): PortalReceiptFilters {
+function normalizePortalReceiptFilters(
+  filters: PortalReceiptFilters = {},
+): NormalizedPortalReceiptFilters {
   const normalizedStatus =
     typeof filters.status === 'string' && ALLOWED_RECEIPT_STATUSES.has(filters.status as ReceiptStatus)
       ? (filters.status as ReceiptStatus)
       : undefined
 
-  const normalizedPeriod = typeof filters.period === 'string' && /^\d{4}-\d{2}$/.test(filters.period)
-    ? filters.period
-    : undefined
+  const normalizedPeriod =
+    typeof filters.period === 'string' && /^\d{4}-\d{2}$/.test(filters.period)
+      ? filters.period
+      : undefined
 
   return {
     communityId: typeof filters.communityId === 'string' ? filters.communityId : undefined,

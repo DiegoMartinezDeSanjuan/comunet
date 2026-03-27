@@ -9,16 +9,20 @@ async function loginAsPortalUser(page: Page, email: string) {
   await expect(page).toHaveURL(/\/portal$/)
 }
 
+function portalNavLink(page: Page, label: string) {
+  return page.getByRole('link', { name: label, exact: true })
+}
+
 test('owner sees a real dashboard, only own receipts and can create an incident without seeing foreign data', async ({
   page,
 }) => {
   await loginAsPortalUser(page, 'propietario@comunet.test')
 
   await expect(page.getByRole('heading', { name: /Hola,/ })).toBeVisible()
-  await expect(page.getByText('Tus comunidades')).toBeVisible()
-  await expect(page.getByText('Incidencias activas de tus unidades')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Tus comunidades' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Incidencias activas de tus unidades' })).toBeVisible()
 
-  await page.getByRole('link', { name: 'Recibos' }).click()
+  await portalNavLink(page, 'Recibos').click()
   await expect(page).toHaveURL(/\/portal\/receipts/)
   await expect(page.getByText('REC-2026-000003')).toBeVisible()
   await expect(page.getByText('REC-2026-000004')).toBeVisible()
@@ -35,7 +39,7 @@ test('owner sees a real dashboard, only own receipts and can create an incident 
   await expect(page.getByRole('heading', { name: 'REC-2026-000003' })).toBeVisible()
   await expect(page.getByText('Residencial Retiro')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Incidencias' }).click()
+  await portalNavLink(page, 'Incidencias').click()
   await expect(page).toHaveURL(/\/portal\/incidents/)
   await expect(page.getByText('Puerta del trastero no cierra')).toBeVisible()
   await expect(page.getByText('Humedad en garaje plaza 14')).toHaveCount(0)
@@ -62,11 +66,11 @@ test('owner sees a real dashboard, only own receipts and can create an incident 
 test('president sees the aggregate community layer and never sees INTERNAL comments', async ({ page }) => {
   await loginAsPortalUser(page, 'presidenta@comunet.test')
 
-  await expect(page.getByText('Capa de presidencia')).toBeVisible()
-  await expect(page.getByText('Resumen agregado de presidencia')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Capa de presidencia' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Resumen agregado de presidencia' })).toBeVisible()
   await expect(page.getByText('Comunidades con cargo activo')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Incidencias' }).click()
+  await portalNavLink(page, 'Incidencias').click()
   await expect(page).toHaveURL(/\/portal\/incidents/)
   await expect(page.getByText('Humedad en garaje plaza 14')).toBeVisible()
   await expect(page.getByText('Fuga en bajante del portal A')).toBeVisible()
