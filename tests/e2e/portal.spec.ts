@@ -50,8 +50,8 @@ test('owner sees a real dashboard, only own receipts and can create an incident 
   })
   const uniqueTitle = `Incidencia portal owner e2e ${Date.now()}`
 
-  await createSection.getByLabel('Comunidad').selectOption({ label: 'Edificio Los Pinos' })
-  await createSection.getByLabel('Unidad').selectOption({ label: 'Edificio Los Pinos · 3A' })
+  await createSection.getByLabel('Comunidad', { exact: true }).selectOption({ label: 'Edificio Los Pinos' })
+  await createSection.getByLabel('Unidad', { exact: true }).selectOption({ label: 'Edificio Los Pinos · 3A' })
   await createSection.getByLabel('Título').fill(uniqueTitle)
   await createSection.getByLabel('Descripción').fill('Alta desde Playwright para validar el slice 2.4.')
   await createSection.getByRole('button', { name: 'Crear incidencia' }).click()

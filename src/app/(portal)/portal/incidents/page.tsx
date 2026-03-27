@@ -87,11 +87,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
 
           <form action={createPortalIncidentAction} className="mt-5 space-y-4">
             <div className="space-y-2">
-              <label htmlFor="communityId" className="text-sm font-medium text-foreground">
+              <label htmlFor="createCommunityId" className="text-sm font-medium text-foreground">
                 Comunidad
               </label>
               <select
-                id="communityId"
+                id="createCommunityId"
                 name="communityId"
                 required
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -107,11 +107,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="unitId" className="text-sm font-medium text-foreground">
+              <label htmlFor="createUnitId" className="text-sm font-medium text-foreground">
                 Unidad
               </label>
               <select
-                id="unitId"
+                id="createUnitId"
                 name="unitId"
                 className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
               >
@@ -128,11 +128,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium text-foreground">
+              <label htmlFor="createIncidentTitle" className="text-sm font-medium text-foreground">
                 Título
               </label>
               <input
-                id="title"
+                id="createIncidentTitle"
                 name="title"
                 type="text"
                 required
@@ -144,11 +144,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium text-foreground">
+              <label htmlFor="createIncidentDescription" className="text-sm font-medium text-foreground">
                 Descripción
               </label>
               <textarea
-                id="description"
+                id="createIncidentDescription"
                 name="description"
                 rows={5}
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
@@ -158,11 +158,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <label htmlFor="priority" className="text-sm font-medium text-foreground">
+                <label htmlFor="createPriority" className="text-sm font-medium text-foreground">
                   Prioridad
                 </label>
                 <select
-                  id="priority"
+                  id="createPriority"
                   name="priority"
                   defaultValue="MEDIUM"
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -176,11 +176,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="dueAt" className="text-sm font-medium text-foreground">
+                <label htmlFor="createDueAt" className="text-sm font-medium text-foreground">
                   Fecha objetivo
                 </label>
                 <input
-                  id="dueAt"
+                  id="createDueAt"
                   name="dueAt"
                   type="date"
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -201,11 +201,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <form className="grid gap-4 lg:grid-cols-[1.3fr_1fr_1fr_auto]">
               <div className="space-y-2">
-                <label htmlFor="search" className="text-sm font-medium text-foreground">
+                <label htmlFor="filterSearch" className="text-sm font-medium text-foreground">
                   Buscar
                 </label>
                 <input
-                  id="search"
+                  id="filterSearch"
                   name="search"
                   type="text"
                   defaultValue={data.appliedFilters.search ?? ''}
@@ -215,11 +215,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="communityId" className="text-sm font-medium text-foreground">
+                <label htmlFor="filterCommunityId" className="text-sm font-medium text-foreground">
                   Comunidad
                 </label>
                 <select
-                  id="communityId"
+                  id="filterCommunityId"
                   name="communityId"
                   defaultValue={data.appliedFilters.communityId ?? ''}
                   className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -235,11 +235,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
                 <div className="space-y-2">
-                  <label htmlFor="status" className="text-sm font-medium text-foreground">
+                  <label htmlFor="filterStatus" className="text-sm font-medium text-foreground">
                     Estado
                   </label>
                   <select
-                    id="status"
+                    id="filterStatus"
                     name="status"
                     defaultValue={data.appliedFilters.status ?? ''}
                     className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
@@ -254,11 +254,11 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="priority" className="text-sm font-medium text-foreground">
+                  <label htmlFor="filterPriority" className="text-sm font-medium text-foreground">
                     Prioridad
                   </label>
                   <select
-                    id="priority"
+                    id="filterPriority"
                     name="priority"
                     defaultValue={data.appliedFilters.priority ?? ''}
                     className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
