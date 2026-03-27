@@ -174,7 +174,17 @@ export function CreateUserDialog() {
   )
 }
 
-export function EditUserDialog({ user, currentUserId }: { user: any, currentUserId: string }) {
+interface EditUserProps {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  status: UserStatus
+  linkedOwnerId: string | null
+  linkedProviderId: string | null
+}
+
+export function EditUserDialog({ user, currentUserId }: { user: EditUserProps, currentUserId: string }) {
   const router = useRouter()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
@@ -317,7 +327,6 @@ export function EditUserDialog({ user, currentUserId }: { user: any, currentUser
 }
 
 export function ResetPasswordDialog({ userId, userName }: { userId: string, userName: string }) {
-  const router = useRouter()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()

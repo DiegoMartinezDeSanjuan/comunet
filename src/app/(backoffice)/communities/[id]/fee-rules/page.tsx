@@ -3,7 +3,7 @@ import { getCommunityDetails } from '@/modules/communities/server/community-serv
 import { getCommunityFeeRulesService } from '@/modules/finances/server/fee-rule-service'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, Plus } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { FeeRulesTable } from './fee-rules-table'
 
 export const dynamic = 'force-dynamic'

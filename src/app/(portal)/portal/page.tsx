@@ -3,7 +3,9 @@ import {
   AlertTriangle,
   Building2,
   CalendarDays,
+  CheckCircle2,
   Home,
+  Loader2,
   ShieldCheck,
   Wallet,
 } from 'lucide-react'
@@ -21,23 +23,93 @@ import {
 import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { getPortalDashboardData } from '@/modules/portal/server/dashboard'
+import { getProviderDashboardData } from '@/modules/portal/server/provider'
 
 export default async function PortalDashboardPage() {
   const session = await requireAuth()
 
   if (session.role === 'PROVIDER') {
+    const dashboard = await getProviderDashboardData(session)
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <PortalPageHeader
-          eyebrow="Portal"
-          title="Portal de proveedor pendiente"
-          description="Este slice se centra en la experiencia de OWNER y PRESIDENT. El carril de proveedor se retomará en un slice posterior sin mezclar permisos ni vistas del backoffice."
+          eyebrow="Portal Proveedor"
+          title={`Hola, ${session.name}`}
+          description="Panel de incidencias asignadas a tu cuenta de proveedor. Solo se muestran las incidencias donde estás asignado y los comentarios compartidos."
+          action={
+            <Link
+              href="/portal/incidents"
+              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Ver todas las incidencias
+            </Link>
+          }
         />
 
-        <PortalEmptyState
-          title="Sin módulo operativo para proveedor en este slice"
-          description="Por ahora no se exponen incidencias ni otros datos del proveedor en el portal. La sesión sigue funcionando y el acceso queda preparado para el siguiente vertical slice."
-        />
+        <div className="grid gap-4 md:grid-cols-3">
+          <PortalStatCard
+            label="Asignadas activas"
+            value={String(dashboard.kpis.totalAssigned)}
+            hint="Incidencias no cerradas asignadas a tu cuenta."
+            icon={AlertTriangle}
+          />
+          <PortalStatCard
+            label="En curso"
+            value={String(dashboard.kpis.inProgressCount)}
+            hint="Incidencias marcadas como EN PROGRESO."
+            icon={Loader2}
+          />
+          <PortalStatCard
+            label="Resueltas / Cerradas"
+            value={String(dashboard.kpis.resolvedCount)}
+            hint="Incidencias finalizadas con éxito."
+            icon={CheckCircle2}
+          />
+        </div>
+
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Incidencias recientes</h2>
+            <p className="text-sm text-muted-foreground">
+              Últimas incidencias asignadas, ordenadas por actividad reciente.
+            </p>
+          </div>
+
+          {dashboard.recentIncidents.length > 0 ? (
+            <div className="space-y-3">
+              {dashboard.recentIncidents.map((incident) => (
+                <article key={incident.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1.5">
+                      <Link
+                        href={`/portal/incidents/${incident.id}`}
+                        className="text-base font-semibold text-foreground hover:text-primary"
+                      >
+                        {incident.title}
+                      </Link>
+                      <p className="text-sm text-muted-foreground">
+                        {incident.community.name} · {incident.unit?.reference ?? 'Incidencia comunitaria'}
+                      </p>
+                    </div>
+                    <PortalBadge tone={getIncidentStatusTone(incident.status)}>
+                      {INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}
+                    </PortalBadge>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <span>Reportada: {formatDate(incident.reportedAt)}</span>
+                    {incident.dueAt && <span>Vencimiento: {formatDate(incident.dueAt)}</span>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <PortalEmptyState
+              title="Sin incidencias asignadas"
+              description="Cuando el despacho te asigne incidencias, aparecerán aquí con su estado y contexto."
+            />
+          )}
+        </section>
       </div>
     )
   }

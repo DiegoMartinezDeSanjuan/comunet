@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { requireAuth, requireRole } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth'
 import { canManageUsers, canReadUsers } from '@/lib/permissions'
 import { listUsers } from '@/modules/users/server/queries'
 import { UserRole, UserStatus } from '@prisma/client'

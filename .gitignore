@@ -47,3 +47,10 @@ next-env.d.ts
 *typecheck*.txt
 *error*.txt
 lint-results.json
+
+# test artifacts
+/playwright-report/
+/test-results/
+
+# local file storage
+/storage/

@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { AlertTriangle, ShieldCheck, Wrench } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ShieldCheck, Wrench } from 'lucide-react'
 
 import {
   INCIDENT_PRIORITY_LABELS,
@@ -17,6 +16,7 @@ import { requireAuth } from '@/lib/auth'
 import { formatDate } from '@/lib/formatters'
 import { createPortalIncidentAction } from '@/modules/portal/server/actions'
 import { listPortalIncidents } from '@/modules/portal/server/incidents'
+import { listProviderIncidents } from '@/modules/portal/server/provider'
 
 interface PortalIncidentsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -28,12 +28,147 @@ function getSingleParam(value: string | string[] | undefined) {
 
 export default async function PortalIncidentsPage({ searchParams }: PortalIncidentsPageProps) {
   const session = await requireAuth()
+  const params = await searchParams
+  const error = getSingleParam(params.error)
 
+  // ─── Provider branch ───────────────────────────────────
   if (session.role === 'PROVIDER') {
-    redirect('/portal')
+    const data = await listProviderIncidents(session, {
+      communityId: getSingleParam(params.communityId),
+      status: getSingleParam(params.status),
+      priority: getSingleParam(params.priority),
+      search: getSingleParam(params.search),
+    })
+
+    const openCount = data.items.filter((i) => !['RESOLVED', 'CLOSED'].includes(i.status)).length
+    const resolvedCount = data.items.filter((i) => ['RESOLVED', 'CLOSED'].includes(i.status)).length
+
+    return (
+      <div className="space-y-8">
+        <PortalPageHeader
+          eyebrow="Portal Proveedor"
+          title="Incidencias asignadas"
+          description="Solo se muestran incidencias asignadas a tu cuenta de proveedor. Los comentarios internos del despacho no son visibles."
+        />
+
+        {error ? <PortalAlert variant="error">{error}</PortalAlert> : null}
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <PortalStatCard
+            label="Total asignadas"
+            value={String(data.items.length)}
+            hint="Resultado del filtro actual."
+            icon={AlertTriangle}
+          />
+          <PortalStatCard
+            label="Activas"
+            value={String(openCount)}
+            hint="Abiertas, asignadas, en curso o esperando."
+            icon={Wrench}
+          />
+          <PortalStatCard
+            label="Resueltas"
+            value={String(resolvedCount)}
+            hint="Resueltas o cerradas."
+            icon={CheckCircle2}
+          />
+        </div>
+
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <form className="grid gap-4 lg:grid-cols-[1.3fr_1fr_1fr_auto]">
+              <div className="space-y-2">
+                <label htmlFor="filterSearch" className="text-sm font-medium text-foreground">Buscar</label>
+                <input
+                  id="filterSearch"
+                  name="search"
+                  type="text"
+                  defaultValue={data.appliedFilters.search ?? ''}
+                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                  placeholder="Título o descripción"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+                <div className="space-y-2">
+                  <label htmlFor="filterStatus" className="text-sm font-medium text-foreground">Estado</label>
+                  <select
+                    id="filterStatus"
+                    name="status"
+                    defaultValue={data.appliedFilters.status ?? ''}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Todos</option>
+                    {Object.entries(INCIDENT_STATUS_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="filterPriority" className="text-sm font-medium text-foreground">Prioridad</label>
+                  <select
+                    id="filterPriority"
+                    name="priority"
+                    defaultValue={data.appliedFilters.priority ?? ''}
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Todas</option>
+                    {Object.entries(INCIDENT_PRIORITY_LABELS).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-end gap-3">
+                <button type="submit" className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">Filtrar</button>
+                <Link href="/portal/incidents" className="inline-flex h-10 items-center justify-center rounded-lg border border-border px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted">Limpiar</Link>
+              </div>
+            </form>
+          </div>
+
+          {data.items.length > 0 ? (
+            <div className="space-y-3">
+              {data.items.map((incident) => (
+                <article key={incident.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1.5">
+                      <Link
+                        href={`/portal/incidents/${incident.id}`}
+                        className="text-base font-semibold text-foreground hover:text-primary"
+                      >
+                        {incident.title}
+                      </Link>
+                      <p className="text-sm text-muted-foreground">
+                        {incident.community.name} · {incident.unit?.reference ?? 'Incidencia comunitaria'}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <PortalBadge tone={getIncidentPriorityTone(incident.priority)}>
+                        {INCIDENT_PRIORITY_LABELS[incident.priority] ?? incident.priority}
+                      </PortalBadge>
+                      <PortalBadge tone={getIncidentStatusTone(incident.status)}>
+                        {INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}
+                      </PortalBadge>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+                    <span>Reportada: {formatDate(incident.reportedAt)}</span>
+                    <span>Comentarios visibles: {incident.sharedCommentCount}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <PortalEmptyState
+              title="No hay incidencias para este filtro"
+              description="Ajusta la búsqueda o espera a que el despacho te asigne incidencias."
+            />
+          )}
+        </section>
+      </div>
+    )
   }
 
-  const params = await searchParams
+  // ─── Owner / President branch ──────────────────────────
   const data = await listPortalIncidents(session, {
     communityId: getSingleParam(params.communityId),
     status: getSingleParam(params.status),
@@ -41,7 +176,6 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
     search: getSingleParam(params.search),
   })
 
-  const error = getSingleParam(params.error)
   const openCount = data.items.filter((incident) => !['RESOLVED', 'CLOSED'].includes(incident.status)).length
   const urgentCount = data.items.filter((incident) => incident.priority === 'URGENT').length
 

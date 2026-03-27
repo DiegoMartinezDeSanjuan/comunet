@@ -9,7 +9,11 @@ import {
   addPortalIncidentSharedComment,
   createPortalIncident,
 } from './incidents'
-import { isPortalOwnerPresidentRole } from './policy'
+import { isPortalOwnerPresidentRole, isPortalProviderRole } from './policy'
+import {
+  addProviderIncidentComment,
+  changeProviderIncidentStatus,
+} from './provider'
 
 const createPortalIncidentFormSchema = z.object({
   communityId: z.string().trim().min(1, 'Selecciona una comunidad'),
@@ -141,4 +145,77 @@ export async function addPortalIncidentCommentAction(formData: FormData) {
   revalidatePath(`/portal/incidents/${parsed.data.incidentId}`)
 
   redirect(`/portal/incidents/${parsed.data.incidentId}?commented=1`)
+}
+
+// ─── Provider Actions ────────────────────────────────────
+
+const providerCommentSchema = z.object({
+  incidentId: z.string().trim().min(1),
+  body: z.string().trim().min(1, 'Escribe un comentario').max(4000),
+})
+
+const providerStatusSchema = z.object({
+  incidentId: z.string().trim().min(1),
+  status: z.enum(['ASSIGNED', 'IN_PROGRESS', 'WAITING_VENDOR', 'RESOLVED']),
+})
+
+export async function addProviderCommentAction(formData: FormData) {
+  const session = await requireAuth()
+  if (!isPortalProviderRole(session.role)) {
+    redirect('/portal')
+  }
+
+  const parsed = providerCommentSchema.safeParse({
+    incidentId: formData.get('incidentId'),
+    body: formData.get('body'),
+  })
+
+  if (!parsed.success) {
+    const fallback = String(formData.get('incidentId') ?? '').trim()
+    const message = parsed.error.issues[0]?.message ?? 'Revisa el comentario.'
+    redirect(`/portal/incidents/${fallback}?error=${encodeURIComponent(message)}`)
+  }
+
+  try {
+    await addProviderIncidentComment(session, parsed.data.incidentId, parsed.data.body)
+  } catch (error) {
+    redirect(
+      `/portal/incidents/${parsed.data.incidentId}?error=${encodeURIComponent(getErrorMessage(error))}`,
+    )
+  }
+
+  revalidatePath('/portal')
+  revalidatePath('/portal/incidents')
+  revalidatePath(`/portal/incidents/${parsed.data.incidentId}`)
+  redirect(`/portal/incidents/${parsed.data.incidentId}?commented=1`)
+}
+
+export async function changeProviderStatusAction(formData: FormData) {
+  const session = await requireAuth()
+  if (!isPortalProviderRole(session.role)) {
+    redirect('/portal')
+  }
+
+  const parsed = providerStatusSchema.safeParse({
+    incidentId: formData.get('incidentId'),
+    status: formData.get('status'),
+  })
+
+  if (!parsed.success) {
+    const fallback = String(formData.get('incidentId') ?? '').trim()
+    redirect(`/portal/incidents/${fallback}?error=${encodeURIComponent('Estado no válido')}`)
+  }
+
+  try {
+    await changeProviderIncidentStatus(session, parsed.data.incidentId, parsed.data.status)
+  } catch (error) {
+    redirect(
+      `/portal/incidents/${parsed.data.incidentId}?error=${encodeURIComponent(getErrorMessage(error))}`,
+    )
+  }
+
+  revalidatePath('/portal')
+  revalidatePath('/portal/incidents')
+  revalidatePath(`/portal/incidents/${parsed.data.incidentId}`)
+  redirect(`/portal/incidents/${parsed.data.incidentId}?status_changed=1`)
 }

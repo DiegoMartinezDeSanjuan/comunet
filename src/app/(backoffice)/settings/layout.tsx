@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 
 import { requireAuth } from '@/lib/auth'
 import { canReadSettings } from '@/lib/permissions'

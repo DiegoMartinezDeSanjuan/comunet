@@ -11,6 +11,7 @@ import {
   FileText,
   LayoutDashboard,
   Receipt,
+  Wrench,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -24,8 +25,9 @@ export interface PortalNavItemDefinition {
 
 const NAV_ITEMS: PortalNavItemDefinition[] = [
   { label: 'Resumen', href: '/portal', icon: LayoutDashboard, roles: ['OWNER', 'PRESIDENT', 'PROVIDER'] },
+  { label: 'Incidencias', href: '/portal/incidents', icon: AlertTriangle, roles: ['OWNER', 'PRESIDENT', 'PROVIDER'] },
   { label: 'Recibos', href: '/portal/receipts', icon: Receipt, roles: ['OWNER', 'PRESIDENT'] },
-  { label: 'Incidencias', href: '/portal/incidents', icon: AlertTriangle, roles: ['OWNER', 'PRESIDENT'] },
+  { label: 'Mi Comunidad', href: '/portal/community', icon: Building2, roles: ['OWNER', 'PRESIDENT'] },
   { label: 'Documentos', href: '/portal/documents', icon: FileText, roles: ['OWNER', 'PRESIDENT'] },
   { label: 'Reuniones', href: '/portal/meetings', icon: Calendar, roles: ['OWNER', 'PRESIDENT'] },
 ]
@@ -38,7 +40,7 @@ const ROLE_SUBTITLE: Record<UserRole, string> = {
   VIEWER: 'Administración',
   OWNER: 'Portal propietario',
   PRESIDENT: 'Portal presidencia',
-  PROVIDER: 'Proveedor pendiente',
+  PROVIDER: 'Portal proveedor',
 }
 
 export function getPortalNavigationItems(role: UserRole) {
@@ -58,7 +60,11 @@ export function PortalSidebar({ role }: PortalSidebarProps) {
       <div className="border-b border-border px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Building2 className="h-5 w-5" />
+            {role === 'PROVIDER' ? (
+              <Wrench className="h-5 w-5" />
+            ) : (
+              <Building2 className="h-5 w-5" />
+            )}
           </div>
           <div>
             <p className="text-lg font-semibold tracking-tight text-foreground">COMUNET</p>
@@ -93,7 +99,7 @@ export function PortalSidebar({ role }: PortalSidebarProps) {
       <div className="border-t border-border px-6 py-4">
         <p className="text-xs leading-5 text-muted-foreground">
           {role === 'PROVIDER'
-            ? 'El carril de proveedor se completará en un slice posterior.'
+            ? 'Solo se muestran incidencias asignadas a tu cuenta de proveedor.'
             : 'Datos visibles solo dentro del alcance del propietario o de la presidencia activa.'}
         </p>
       </div>

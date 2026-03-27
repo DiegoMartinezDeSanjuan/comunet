@@ -1,6 +1,0 @@
-﻿src/modules/reports/server/queries.ts(16,9): error TS2353: Object literal may only specify known properties, and 'pendingAmount' does not exist in type 'DebtSumAggregateInputType'.
-src/modules/reports/server/queries.ts(24,30): error TS18048: 'pendingDebtResult._sum' is possibly 'undefined'.
-src/modules/reports/server/queries.ts(24,53): error TS2339: Property 'pendingAmount' does not exist on type '{ principal?: Decimal | null | undefined; surcharge?: Decimal | null | undefined; }'.
-src/modules/reports/server/queries.ts(52,7): error TS2353: Object literal may only specify known properties, and 'pendingAmount' does not exist in type 'DebtSumAggregateInputType'.
-src/modules/reports/server/queries.ts(62,25): error TS18048: 'debtGroup._sum' is possibly 'undefined'.
-src/modules/reports/server/queries.ts(62,41): error TS2339: Property 'pendingAmount' does not exist on type '{ principal?: Decimal | null | undefined; surcharge?: Decimal | null | undefined; }'.

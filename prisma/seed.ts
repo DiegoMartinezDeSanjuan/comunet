@@ -1091,59 +1091,16 @@ async function main() {
     },
   })
 
-  console.log('✅ Notifications and meetings seeded')
-
-  // -- Backoffice Users (New for SLICE 2.6) --
-  const adminUser = await prisma.user.create({
-    data: {
-      officeId: office.id,
-      name: 'Super Admin',
-      email: 'admin@fincasmartinez.es',
-      passwordHash,
-      role: 'SUPERADMIN',
-    }
-  })
-
-  const userManager = await prisma.user.create({
-    data: {
-      officeId: office.id,
-      name: 'Gestor Principal',
-      email: 'manager@fincasmartinez.es',
-      passwordHash,
-      role: 'MANAGER',
-    }
-  })
-
-  const userAccountant = await prisma.user.create({
-    data: {
-      officeId: office.id,
-      name: 'Contable Jefe',
-      email: 'accountant@fincasmartinez.es',
-      passwordHash,
-      role: 'ACCOUNTANT',
-    }
-  })
-
-  const userViewer = await prisma.user.create({
-    data: {
-      officeId: office.id,
-      name: 'Invitado',
-      email: 'viewer@fincasmartinez.es',
-      passwordHash,
-      role: 'VIEWER',
-    }
-  })
-
-  // Grab first incident and receipt to link
+  // -- Additional Audit Logs (SLICE 2.6) --
+  // Reuse the users created above (officeAdmin, manager, accountant, viewer)
   const firstIncident = await prisma.incident.findFirst({ where: { communityId: communityMadrid.id } })
   const firstReceipt = await prisma.receipt.findFirst({ where: { communityId: communityMadrid.id } })
 
-  // -- Audit Logs (New for SLICE 2.6) --
   await prisma.auditLog.createMany({
     data: [
       {
         officeId: office.id,
-        userId: userManager.id,
+        userId: manager.id,
         entityType: 'COMMUNITY',
         entityId: communityMadrid.id,
         action: 'UPDATE',
@@ -1152,25 +1109,25 @@ async function main() {
       },
       {
         officeId: office.id,
-        userId: adminUser.id,
+        userId: officeAdmin.id,
         entityType: 'USER',
-        entityId: userManager.id,
+        entityId: manager.id,
         action: 'UPDATE',
         metaJson: JSON.stringify({ prevRole: 'VIEWER', newRole: 'MANAGER' }),
         createdAt: new Date('2026-03-21T11:30:00Z'),
       },
       ...(firstReceipt ? [{
         officeId: office.id,
-        userId: userAccountant.id,
+        userId: accountant.id,
         entityType: 'RECEIPT',
         entityId: firstReceipt.id,
-        action: 'STATUS_CHANGE' as any,
+        action: 'STATUS_CHANGE' as const,
         metaJson: JSON.stringify({ from: 'ISSUED', to: 'PAID' }),
         createdAt: new Date('2026-03-22T09:15:00Z'),
       }] : []),
       {
         officeId: office.id,
-        userId: adminUser.id,
+        userId: officeAdmin.id,
         entityType: 'OFFICE',
         entityId: office.id,
         action: 'UPDATE',
@@ -1179,10 +1136,10 @@ async function main() {
       },
       ...(firstIncident ? [{
         officeId: office.id,
-        userId: userManager.id,
+        userId: manager.id,
         entityType: 'INCIDENT',
         entityId: firstIncident.id,
-        action: 'CREATE' as any,
+        action: 'CREATE' as const,
         metaJson: JSON.stringify({ priority: 'URGENT' }),
         createdAt: new Date('2026-03-26T08:20:00Z'),
       }] : []),

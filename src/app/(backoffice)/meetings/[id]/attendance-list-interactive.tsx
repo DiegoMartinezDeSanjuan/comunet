@@ -106,7 +106,6 @@ export function AttendanceListInteractive({
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold">Tipo</label>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               <select
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={attType}
