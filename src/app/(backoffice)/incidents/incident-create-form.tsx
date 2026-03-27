@@ -93,7 +93,7 @@ export function IncidentCreateForm({
   }
 
   return (
-    <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-create-card">
+    <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="incident-create-card">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Nueva incidencia</h2>
         <p className="text-sm text-muted-foreground">

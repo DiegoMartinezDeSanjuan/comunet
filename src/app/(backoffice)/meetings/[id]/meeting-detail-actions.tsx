@@ -168,7 +168,7 @@ export function MeetingDetailActions({ meeting, latestMinute }: MeetingDetailAct
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-edit-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meeting-edit-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Editar reunión</h2>
           <p className="text-sm text-muted-foreground">
@@ -289,7 +289,7 @@ export function MeetingDetailActions({ meeting, latestMinute }: MeetingDetailAct
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-agenda-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meeting-agenda-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Orden del día</h2>
           <p className="text-sm text-muted-foreground">
@@ -338,7 +338,7 @@ export function MeetingDetailActions({ meeting, latestMinute }: MeetingDetailAct
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-minute-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meeting-minute-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Acta / Minuta</h2>
           <p className="text-sm text-muted-foreground">

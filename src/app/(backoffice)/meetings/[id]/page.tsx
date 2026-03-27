@@ -67,19 +67,19 @@ export default async function MeetingDetailPage({
       </div>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Fecha y hora</div>
           <div className="mt-1 text-lg font-semibold">{formatDateTime(meeting.scheduledAt)}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Ubicación</div>
           <div className="mt-1 text-lg font-semibold">{meeting.location || 'Pendiente'}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Puntos del orden del día</div>
           <div className="mt-1 text-lg font-semibold">{meeting.agendaItems.length}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Acta</div>
           <div className="mt-1 text-lg font-semibold">{latestMinute ? latestMinute.status : 'Sin acta'}</div>
         </div>
@@ -108,7 +108,7 @@ export default async function MeetingDetailPage({
         />
       ) : null}
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-agenda-list-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meeting-agenda-list-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Orden del día</h2>
           <p className="text-sm text-muted-foreground">
@@ -125,7 +125,7 @@ export default async function MeetingDetailPage({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-attendance-card">
+        <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meeting-attendance-card">
           <div className="mb-4">
             <h2 className="text-lg font-semibold">Asistencia</h2>
             <p className="text-sm text-muted-foreground">
@@ -141,7 +141,7 @@ export default async function MeetingDetailPage({
           />
         </section>
 
-        <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meeting-minute-preview-card">
+        <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meeting-minute-preview-card">
           <div className="mb-4">
             <h2 className="text-lg font-semibold">Última acta</h2>
             <p className="text-sm text-muted-foreground">

@@ -69,25 +69,25 @@ export default async function DocumentDetailPage({
       </div>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Categoría</div>
           <div className="mt-1 text-lg font-semibold">{document.category || 'Sin categoría'}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Tamaño</div>
           <div className="mt-1 text-lg font-semibold">{formatFileSize(document.size)}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Subido por</div>
           <div className="mt-1 text-lg font-semibold">{document.uploadedBy.name}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Fecha</div>
           <div className="mt-1 text-lg font-semibold">{formatDateTime(document.createdAt)}</div>
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="document-detail-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="document-detail-card">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <div className="text-sm text-muted-foreground">Visibilidad</div>

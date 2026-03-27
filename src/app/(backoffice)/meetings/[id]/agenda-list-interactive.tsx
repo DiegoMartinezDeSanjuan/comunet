@@ -116,7 +116,7 @@ export function AgendaListInteractive({ meetingId, canManage, isClosed, items }:
   return (
     <div className="space-y-4">
       {items.map((item, index) => (
-        <article key={item.id} className="rounded-md border p-4 bg-white relative">
+        <article key={item.id} className="rounded-md border p-4 bg-card text-card-foreground relative">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="font-medium text-lg">
@@ -181,7 +181,7 @@ export function AgendaListInteractive({ meetingId, canManage, isClosed, items }:
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Sentido del voto</label>
                   <select
-                    className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm"
+                    className="flex h-9 w-full rounded-md border border-input bg-card text-card-foreground px-3 py-1 text-sm"
                     value={voteValue}
                     onChange={(e) => setVoteValue(e.target.value as 'FOR' | 'AGAINST' | 'ABSTAIN')}
                   >
@@ -197,7 +197,7 @@ export function AgendaListInteractive({ meetingId, canManage, isClosed, items }:
                     step="0.01"
                     min="0"
                     max="100"
-                    className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-1 text-sm"
+                    className="flex h-9 w-full rounded-md border border-input bg-card text-card-foreground px-3 py-1 text-sm"
                     value={voteCoef}
                     onChange={(e) => setVoteCoef(parseFloat(e.target.value) || 0)}
                   />

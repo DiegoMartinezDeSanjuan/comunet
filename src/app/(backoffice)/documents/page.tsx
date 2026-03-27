@@ -95,7 +95,7 @@ export default async function DocumentsPage({
     <div className="space-y-6">
       <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Documentos</h1>
+          <h1 className="text-2xl font-bold text-foreground">Documentos</h1>
           <p className="text-muted-foreground">
             Repositorio documental del backoffice con almacenamiento local, permisos y descarga controlada.
           </p>
@@ -104,7 +104,7 @@ export default async function DocumentsPage({
 
       {canManage ? <DocumentUploadForm communities={communities} /> : null}
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="documents-list-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="documents-list-card">
         <div className="mb-4 flex flex-col gap-1">
           <h2 className="text-lg font-semibold">Listado</h2>
           <p className="text-sm text-muted-foreground">
@@ -221,33 +221,33 @@ export default async function DocumentsPage({
             <table className="min-w-full divide-y divide-border text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">Documento</th>
-                  <th className="px-3 py-2 font-medium">Comunidad</th>
-                  <th className="px-3 py-2 font-medium">Categoría</th>
-                  <th className="px-3 py-2 font-medium">Visibilidad</th>
-                  <th className="px-3 py-2 font-medium">Peso</th>
-                  <th className="px-3 py-2 font-medium">Subido por</th>
-                  <th className="px-3 py-2 font-medium">Fecha</th>
-                  <th className="px-3 py-2 font-medium">Acciones</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Documento</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Comunidad</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Categoría</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Visibilidad</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Peso</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Subido por</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Fecha</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {result.items.map((document) => (
                   <tr key={document.id} data-testid={`document-row-${document.id}`}>
-                    <td className="px-3 py-3">
+                    <td className="p-4 align-middle">
                       <div className="font-medium">{document.title}</div>
                       <div className="text-xs text-muted-foreground">
                         {document.mimeType || 'Sin tipo MIME'}
                         {document.archivedAt ? ' · Archivado' : ''}
                       </div>
                     </td>
-                    <td className="px-3 py-3">{document.community.name}</td>
-                    <td className="px-3 py-3">{document.category || 'Sin categoría'}</td>
-                    <td className="px-3 py-3">{VISIBILITY_LABELS[document.visibility] ?? document.visibility}</td>
-                    <td className="px-3 py-3">{formatFileSize(document.size)}</td>
-                    <td className="px-3 py-3">{document.uploadedBy.name}</td>
-                    <td className="px-3 py-3">{formatDate(document.createdAt)}</td>
-                    <td className="px-3 py-3">
+                    <td className="p-4 align-middle">{document.community.name}</td>
+                    <td className="p-4 align-middle">{document.category || 'Sin categoría'}</td>
+                    <td className="p-4 align-middle">{VISIBILITY_LABELS[document.visibility] ?? document.visibility}</td>
+                    <td className="p-4 align-middle">{formatFileSize(document.size)}</td>
+                    <td className="p-4 align-middle">{document.uploadedBy.name}</td>
+                    <td className="p-4 align-middle">{formatDate(document.createdAt)}</td>
+                    <td className="p-4 align-middle">
                       <div className="flex flex-wrap gap-3">
                         <Link href={`/documents/${document.id}`} className="text-primary underline-offset-4 hover:underline">
                           Ver

@@ -51,7 +51,7 @@ function badgeClasses(value: string): string {
     case 'SCHEDULED':
       return 'border-amber-200 bg-amber-50 text-amber-700'
     default:
-      return 'border-slate-200 bg-slate-50 text-slate-700'
+      return 'border-border bg-slate-50 text-muted-foreground'
   }
 }
 
@@ -108,7 +108,7 @@ export default async function MeetingsPage({
     <div className="space-y-6">
       <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reuniones</h1>
+          <h1 className="text-2xl font-bold text-foreground">Reuniones</h1>
           <p className="text-muted-foreground">
             Gestión del calendario de juntas, orden del día y actas mínimas desde backoffice.
           </p>
@@ -117,7 +117,7 @@ export default async function MeetingsPage({
 
       {canManage ? <MeetingCreateForm communities={communities} /> : null}
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="meetings-list-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="meetings-list-card">
         <div className="mb-4 flex flex-col gap-1">
           <h2 className="text-lg font-semibold">Listado</h2>
           <p className="text-sm text-muted-foreground">
@@ -234,14 +234,14 @@ export default async function MeetingsPage({
             <table className="min-w-full divide-y divide-border text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">Reunión</th>
-                  <th className="px-3 py-2 font-medium">Comunidad</th>
-                  <th className="px-3 py-2 font-medium">Fecha</th>
-                  <th className="px-3 py-2 font-medium">Tipo</th>
-                  <th className="px-3 py-2 font-medium">Estado</th>
-                  <th className="px-3 py-2 font-medium">Orden del día</th>
-                  <th className="px-3 py-2 font-medium">Acta</th>
-                  <th className="px-3 py-2 font-medium">Acciones</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Reunión</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Comunidad</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Fecha</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Tipo</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Estado</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Orden del día</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acta</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -249,23 +249,23 @@ export default async function MeetingsPage({
                   const minute = meeting.minutes[0] ?? null
                   return (
                     <tr key={meeting.id} data-testid={`meeting-row-${meeting.id}`}>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">
                         <div className="font-medium">{meeting.title}</div>
                         <div className="text-xs text-muted-foreground">
                           {meeting.location || 'Sin ubicación definida'}
                         </div>
                       </td>
-                      <td className="px-3 py-3">{meeting.community.name}</td>
-                      <td className="px-3 py-3">{formatDateTime(meeting.scheduledAt)}</td>
-                      <td className="px-3 py-3">{TYPE_LABELS[meeting.meetingType] ?? meeting.meetingType}</td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">{meeting.community.name}</td>
+                      <td className="p-4 align-middle">{formatDateTime(meeting.scheduledAt)}</td>
+                      <td className="p-4 align-middle">{TYPE_LABELS[meeting.meetingType] ?? meeting.meetingType}</td>
+                      <td className="p-4 align-middle">
                         <span className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${badgeClasses(meeting.status)}`}>
                           {STATUS_LABELS[meeting.status] ?? meeting.status}
                         </span>
                       </td>
-                      <td className="px-3 py-3">{meeting._count.agendaItems}</td>
-                      <td className="px-3 py-3">{minute ? minute.status : 'Sin acta'}</td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">{meeting._count.agendaItems}</td>
+                      <td className="p-4 align-middle">{minute ? minute.status : 'Sin acta'}</td>
+                      <td className="p-4 align-middle">
                         <Link href={`/meetings/${meeting.id}`} className="text-primary underline-offset-4 hover:underline">
                           Ver detalle
                         </Link>

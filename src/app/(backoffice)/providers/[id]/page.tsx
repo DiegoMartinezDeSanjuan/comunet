@@ -31,7 +31,7 @@ function formatIncidentBadge(status: string): string {
     case 'IN_PROGRESS':
       return 'border-cyan-200 bg-cyan-50 text-cyan-700'
     default:
-      return 'border-slate-200 bg-slate-50 text-slate-700'
+      return 'border-border bg-slate-50 text-muted-foreground'
   }
 }
 
@@ -66,24 +66,24 @@ export default async function ProviderDetailPage({ params }: PageProps) {
       </header>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Categoria</div>
           <div className="mt-2 text-sm font-medium">
             {detail.provider.category || '-'}
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Activas</div>
           <div className="mt-2 text-2xl font-semibold">{detail.activeCount}</div>
         </div>
 
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Cerradas</div>
           <div className="mt-2 text-2xl font-semibold">{detail.closedCount}</div>
         </div>
 
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Ultima actividad</div>
           <div className="mt-2 text-sm font-medium">
             {formatDateTime(detail.lastActivityAt)}
@@ -93,7 +93,7 @@ export default async function ProviderDetailPage({ params }: PageProps) {
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-6">
-          <section className="rounded-lg border bg-white p-6 shadow-sm">
+          <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Datos generales</h2>
             <dl className="mt-4 grid gap-3 text-sm">
               <div>
@@ -136,7 +136,7 @@ export default async function ProviderDetailPage({ params }: PageProps) {
               }}
             />
           ) : (
-            <section className="rounded-lg border bg-white p-6 text-sm text-muted-foreground shadow-sm">
+            <section className="rounded-lg border bg-card text-card-foreground p-6 text-sm text-muted-foreground shadow-sm">
               Tu rol tiene acceso de lectura sobre este proveedor, pero no puede
               editar su ficha.
             </section>
@@ -144,7 +144,7 @@ export default async function ProviderDetailPage({ params }: PageProps) {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-lg border bg-white p-6 shadow-sm">
+          <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">Incidencias activas</h2>
               <p className="text-sm text-muted-foreground">
@@ -188,7 +188,7 @@ export default async function ProviderDetailPage({ params }: PageProps) {
             )}
           </section>
 
-          <section className="rounded-lg border bg-white p-6 shadow-sm">
+          <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">Incidencias cerradas</h2>
               <p className="text-sm text-muted-foreground">

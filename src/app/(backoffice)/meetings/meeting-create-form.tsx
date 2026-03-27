@@ -77,10 +77,10 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
   }
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-lg border border-border bg-card text-card-foreground p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Nueva reunión</h2>
+          <h2 className="text-lg font-semibold text-foreground">Nueva reunión</h2>
           <p className="mt-1 text-sm text-slate-600">
             Crea convocatorias desde backoffice con comunidad, fecha, tipo y estado inicial.
           </p>
@@ -89,7 +89,7 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-slate-700">Título</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Título</label>
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -98,9 +98,9 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Comunidad</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Comunidad</label>
           <select
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-md border border-input bg-card text-card-foreground px-3 py-2 text-sm text-foreground"
             value={communityId}
             onChange={(event) => setCommunityId(event.target.value)}
           >
@@ -114,9 +114,9 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Tipo de reunión</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Tipo de reunión</label>
           <select
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-md border border-input bg-card text-card-foreground px-3 py-2 text-sm text-foreground"
             value={meetingType}
             onChange={(event) => setMeetingType(event.target.value as 'ORDINARY' | 'EXTRAORDINARY')}
           >
@@ -126,7 +126,7 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Fecha y hora</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Fecha y hora</label>
           <Input
             type="datetime-local"
             value={scheduledAt}
@@ -135,9 +135,9 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Estado inicial</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Estado inicial</label>
           <select
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+            className="w-full rounded-md border border-input bg-card text-card-foreground px-3 py-2 text-sm text-foreground"
             value={status}
             onChange={(event) => setStatus(event.target.value as 'DRAFT' | 'SCHEDULED')}
           >
@@ -147,7 +147,7 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-slate-700">Ubicación</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Ubicación</label>
           <Input
             value={location}
             onChange={(event) => setLocation(event.target.value)}
@@ -156,7 +156,7 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-slate-700">Descripción</label>
+          <label className="mb-1 block text-sm font-medium text-muted-foreground">Descripción</label>
           <Textarea
             rows={4}
             value={description}

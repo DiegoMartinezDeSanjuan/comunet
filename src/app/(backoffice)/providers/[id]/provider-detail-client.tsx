@@ -73,7 +73,7 @@ export function ProviderDetailClient({ provider }: ProviderDetailClientProps) {
   }
 
   return (
-    <section className="rounded-lg border bg-white p-6 shadow-sm">
+    <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
       <div className="mb-4">
         <h2 className="text-lg font-semibold">Editar proveedor</h2>
         <p className="text-sm text-muted-foreground">

@@ -37,7 +37,7 @@ function formatBadgeClasses(value: string): string {
     case 'IN_PROGRESS':
       return 'border-cyan-200 bg-cyan-50 text-cyan-700'
     default:
-      return 'border-slate-200 bg-slate-50 text-slate-700'
+      return 'border-border bg-slate-50 text-muted-foreground'
   }
 }
 
@@ -132,7 +132,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
       </header>
 
       <section className="grid gap-4 lg:grid-cols-4">
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Estado</div>
           <div className="mt-2">
             <span
@@ -143,7 +143,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Prioridad</div>
           <div className="mt-2">
             <span
@@ -154,7 +154,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Proveedor</div>
           <div className="mt-2 text-sm font-medium">
             {incident.assignedProvider?.name || 'Sin asignar'}
@@ -164,7 +164,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card text-card-foreground p-4 shadow-sm">
           <div className="text-sm text-muted-foreground">Fechas</div>
           <div className="mt-2 space-y-1 text-sm">
             <div>Reportada: {formatDateTime(incident.reportedAt)}</div>
@@ -176,7 +176,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
-          <section className="rounded-lg border bg-white p-6 shadow-sm">
+          <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Resumen</h2>
             <div className="mt-4 grid gap-3 text-sm">
               <div>
@@ -194,7 +194,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-timeline">
+          <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="incident-timeline">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">Timeline</h2>
@@ -264,7 +264,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
               providerOptions={providerOptions}
             />
           ) : (
-            <section className="rounded-lg border bg-white p-6 text-sm text-muted-foreground shadow-sm">
+            <section className="rounded-lg border bg-card text-card-foreground p-6 text-sm text-muted-foreground shadow-sm">
               Tu rol tiene acceso de lectura sobre esta incidencia, pero no puede
               modificarla.
             </section>

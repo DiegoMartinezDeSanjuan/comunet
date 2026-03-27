@@ -77,7 +77,7 @@ export default async function DashboardPage() {
         </p>
       </header>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">Estado financiero global</h2>
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">KPIs de incidencias</h2>
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Actividad general</h2>
           <p className="text-sm text-muted-foreground">

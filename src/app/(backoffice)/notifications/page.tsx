@@ -65,7 +65,7 @@ export default async function NotificationsPage({
         </p>
       </header>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">Bandeja</h2>

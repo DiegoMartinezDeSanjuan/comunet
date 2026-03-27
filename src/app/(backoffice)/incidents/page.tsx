@@ -59,7 +59,7 @@ function badgeClasses(value: string): string {
     case 'IN_PROGRESS':
       return 'border-cyan-200 bg-cyan-50 text-cyan-700'
     default:
-      return 'border-slate-200 bg-slate-50 text-slate-700'
+      return 'border-border bg-slate-50 text-muted-foreground'
   }
 }
 
@@ -151,7 +151,7 @@ export default async function IncidentsPage({
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Incidencias</h1>
+        <h1 className="text-2xl font-bold text-foreground">Incidencias</h1>
         <p className="text-sm text-muted-foreground">
           Gestion operativa de incidencias con filtros, asignacion,
           seguimiento y trazabilidad.
@@ -162,7 +162,7 @@ export default async function IncidentsPage({
         <IncidentCreateForm communities={communities} providers={providers} />
       ) : null}
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">Listado</h2>
@@ -289,15 +289,15 @@ export default async function IncidentsPage({
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">Incidencia</th>
-                  <th className="px-3 py-2 font-medium">Comunidad</th>
-                  <th className="px-3 py-2 font-medium">Proveedor</th>
-                  <th className="px-3 py-2 font-medium">Prioridad</th>
-                  <th className="px-3 py-2 font-medium">Estado</th>
-                  <th className="px-3 py-2 font-medium">Vencimiento</th>
-                  <th className="px-3 py-2 font-medium">Ult. actividad</th>
-                  <th className="px-3 py-2 font-medium">Acciones</th>
+                <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Incidencia</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Comunidad</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Proveedor</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Prioridad</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Estado</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Vencimiento</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Ult. actividad</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -305,16 +305,16 @@ export default async function IncidentsPage({
                   const overdueItem = isOverdue(incident.dueAt, incident.status)
 
                   return (
-                    <tr key={incident.id} className="border-b align-top">
-                      <td className="px-3 py-3">
+                    <tr key={incident.id} className="border-b transition-colors hover:bg-muted/50">
+                      <td className="p-4 align-middle">
                         <div className="font-medium">{incident.title}</div>
                         <div className="text-xs text-muted-foreground">
                           Creada por {incident.createdBy.name}
                           {incident.unit ? ` · Unidad ${incident.unit.reference}` : ''}
                         </div>
                       </td>
-                      <td className="px-3 py-3">{incident.community.name}</td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">{incident.community.name}</td>
+                      <td className="p-4 align-middle">
                         {incident.assignedProvider ? (
                           <div>
                             <div>{incident.assignedProvider.name}</div>
@@ -326,21 +326,21 @@ export default async function IncidentsPage({
                           <span className="text-muted-foreground">Sin asignar</span>
                         )}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">
                         <span
                           className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${badgeClasses(incident.priority)}`}
                         >
                           {incident.priority}
                         </span>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">
                         <span
                           className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${badgeClasses(incident.status)}`}
                         >
                           {incident.status}
                         </span>
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">
                         <div>{formatDate(incident.dueAt)}</div>
                         {overdueItem ? (
                           <div className="text-xs font-medium text-red-600">
@@ -348,10 +348,10 @@ export default async function IncidentsPage({
                           </div>
                         ) : null}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">
                         {formatDate(incident.updatedAt)}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="p-4 align-middle">
                         <Link
                           href={`/incidents/${incident.id}`}
                           className="font-medium text-primary underline-offset-4 hover:underline"

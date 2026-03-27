@@ -92,7 +92,7 @@ export default async function ProvidersPage({
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Proveedores</h1>
+        <h1 className="text-2xl font-bold text-foreground">Proveedores</h1>
         <p className="text-sm text-muted-foreground">
           Directorio operativo con datos de contacto, categoria y vinculo con
           incidencias asignadas.
@@ -101,7 +101,7 @@ export default async function ProvidersPage({
 
       {canManage ? <ProviderCreateForm /> : null}
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Listado</h2>
           <p className="text-sm text-muted-foreground">
@@ -165,38 +165,38 @@ export default async function ProvidersPage({
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="px-3 py-2 font-medium">Proveedor</th>
-                  <th className="px-3 py-2 font-medium">Categoria</th>
-                  <th className="px-3 py-2 font-medium">Contacto</th>
-                  <th className="px-3 py-2 font-medium">Archivado</th>
-                  <th className="px-3 py-2 font-medium">Actualizado</th>
-                  <th className="px-3 py-2 font-medium">Acciones</th>
+                <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Proveedor</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Categoria</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Contacto</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Archivado</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Actualizado</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {result.items.map((provider) => (
-                  <tr key={provider.id} className="border-b align-top">
-                    <td className="px-3 py-3">
+                  <tr key={provider.id} className="border-b transition-colors hover:bg-muted/50">
+                    <td className="p-4 align-middle">
                       <div className="font-medium">{provider.name}</div>
                       <div className="text-xs text-muted-foreground">
                         {provider.cif || 'Sin CIF'}
                       </div>
                     </td>
-                    <td className="px-3 py-3">{provider.category || '-'}</td>
-                    <td className="px-3 py-3">
+                    <td className="p-4 align-middle">{provider.category || '-'}</td>
+                    <td className="p-4 align-middle">
                       <div>{provider.email || '-'}</div>
                       <div className="text-xs text-muted-foreground">
                         {provider.phone || '-'}
                       </div>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="p-4 align-middle">
                       {provider.archivedAt ? 'Si' : 'No'}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="p-4 align-middle">
                       {formatDate(provider.updatedAt)}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="p-4 align-middle">
                       <Link
                         href={`/providers/${provider.id}`}
                         className="font-medium text-primary underline-offset-4 hover:underline"

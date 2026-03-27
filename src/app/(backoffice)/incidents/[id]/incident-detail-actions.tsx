@@ -169,7 +169,7 @@ export function IncidentDetailActions({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-edit-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="incident-edit-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Editar incidencia</h2>
           <p className="text-sm text-muted-foreground">
@@ -252,7 +252,7 @@ export function IncidentDetailActions({
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-follow-up-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="incident-follow-up-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Asignación y seguimiento</h2>
           <p className="text-sm text-muted-foreground">
@@ -342,7 +342,7 @@ export function IncidentDetailActions({
         ) : null}
       </section>
 
-      <section className="rounded-lg border bg-white p-6 shadow-sm" data-testid="incident-comment-card">
+      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm" data-testid="incident-comment-card">
         <div className="mb-4">
           <h2 className="text-lg font-semibold">Nuevo comentario</h2>
           <p className="text-sm text-muted-foreground">
