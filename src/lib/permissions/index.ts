@@ -317,6 +317,30 @@ export async function canReadDocument(session: Session, documentId: string): Pro
 
 // ─── Generic Role Check ─────────────────────────────────
 
+export function canReadReports(session: Session): boolean {
+  return requirePermission(session, 'reports.read')
+}
+
+export function canManageOfficeSettings(session: Session): boolean {
+  return requirePermission(session, 'settings.manage')
+}
+
+export function canReadSettings(session: Session): boolean {
+  return requirePermission(session, 'settings.read')
+}
+
+export function canReadUsers(session: Session): boolean {
+  return requirePermission(session, 'users.read')
+}
+
+export function canManageUsers(session: Session): boolean {
+  return requirePermission(session, 'users.manage')
+}
+
+export function canReadAudit(session: Session): boolean {
+  return requirePermission(session, 'audit.read')
+}
+
 export function requirePermission(
   session: Session,
   permission: string,
@@ -345,10 +369,15 @@ export function requirePermission(
     'documents.read': BACKOFFICE_READ_ROLES,
     'documents.manage': BACKOFFICE_MANAGE_ROLES,
 
-    'settings.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
+    'settings.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
     'settings.manage': ['SUPERADMIN', 'OFFICE_ADMIN'],
 
-    'audit.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
+    'users.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+    'users.manage': ['SUPERADMIN', 'OFFICE_ADMIN'],
+
+    'audit.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'],
+    
+    'reports.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'],
   }
 
   const allowedRoles = permissionMap[permission]

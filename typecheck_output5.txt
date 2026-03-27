@@ -1,7 +1,0 @@
-
-> comunet@0.1.0 typecheck C:\Users\didim\source\repos\comunet
-> tsc --noEmit
-
-src/modules/units/server/unit-service.ts(48,5): error TS2353: Object literal may only specify known properties, and 'cadastralRef' does not exist in type 'UnitUncheckedCreateInput'.
-src/modules/units/server/unit-service.ts(74,5): error TS2353: Object literal may only specify known properties, and 'cadastralRef' does not exist in type 'UnitUncheckedUpdateInput'.
- ELIFECYCLE  Command failed with exit code 2.

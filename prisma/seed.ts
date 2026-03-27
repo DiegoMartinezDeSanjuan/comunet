@@ -1092,6 +1092,105 @@ async function main() {
   })
 
   console.log('✅ Notifications and meetings seeded')
+
+  // -- Backoffice Users (New for SLICE 2.6) --
+  const adminUser = await prisma.user.create({
+    data: {
+      officeId: office.id,
+      name: 'Super Admin',
+      email: 'admin@fincasmartinez.es',
+      passwordHash,
+      role: 'SUPERADMIN',
+    }
+  })
+
+  const userManager = await prisma.user.create({
+    data: {
+      officeId: office.id,
+      name: 'Gestor Principal',
+      email: 'manager@fincasmartinez.es',
+      passwordHash,
+      role: 'MANAGER',
+    }
+  })
+
+  const userAccountant = await prisma.user.create({
+    data: {
+      officeId: office.id,
+      name: 'Contable Jefe',
+      email: 'accountant@fincasmartinez.es',
+      passwordHash,
+      role: 'ACCOUNTANT',
+    }
+  })
+
+  const userViewer = await prisma.user.create({
+    data: {
+      officeId: office.id,
+      name: 'Invitado',
+      email: 'viewer@fincasmartinez.es',
+      passwordHash,
+      role: 'VIEWER',
+    }
+  })
+
+  // Grab first incident and receipt to link
+  const firstIncident = await prisma.incident.findFirst({ where: { communityId: communityMadrid.id } })
+  const firstReceipt = await prisma.receipt.findFirst({ where: { communityId: communityMadrid.id } })
+
+  // -- Audit Logs (New for SLICE 2.6) --
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        officeId: office.id,
+        userId: userManager.id,
+        entityType: 'COMMUNITY',
+        entityId: communityMadrid.id,
+        action: 'UPDATE',
+        metaJson: JSON.stringify({ note: 'Actualizado IBAN' }),
+        createdAt: new Date('2026-03-20T10:00:00Z'),
+      },
+      {
+        officeId: office.id,
+        userId: adminUser.id,
+        entityType: 'USER',
+        entityId: userManager.id,
+        action: 'UPDATE',
+        metaJson: JSON.stringify({ prevRole: 'VIEWER', newRole: 'MANAGER' }),
+        createdAt: new Date('2026-03-21T11:30:00Z'),
+      },
+      ...(firstReceipt ? [{
+        officeId: office.id,
+        userId: userAccountant.id,
+        entityType: 'RECEIPT',
+        entityId: firstReceipt.id,
+        action: 'STATUS_CHANGE' as any,
+        metaJson: JSON.stringify({ from: 'ISSUED', to: 'PAID' }),
+        createdAt: new Date('2026-03-22T09:15:00Z'),
+      }] : []),
+      {
+        officeId: office.id,
+        userId: adminUser.id,
+        entityType: 'OFFICE',
+        entityId: office.id,
+        action: 'UPDATE',
+        metaJson: JSON.stringify({ diff: { phone: '912345678' } }),
+        createdAt: new Date('2026-03-25T16:45:00Z'),
+      },
+      ...(firstIncident ? [{
+        officeId: office.id,
+        userId: userManager.id,
+        entityType: 'INCIDENT',
+        entityId: firstIncident.id,
+        action: 'CREATE' as any,
+        metaJson: JSON.stringify({ priority: 'URGENT' }),
+        createdAt: new Date('2026-03-26T08:20:00Z'),
+      }] : []),
+    ]
+  })
+  
+  console.log('✅ Audit logs seeded')
+
   console.log('👤 Demo backoffice users:')
   console.log('   - admin@fincasmartinez.es')
   console.log('   - manager@fincasmartinez.es')
