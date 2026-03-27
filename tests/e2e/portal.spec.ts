@@ -37,7 +37,7 @@ test('owner sees a real dashboard, only own receipts and can create an incident 
 
   await expect(page).toHaveURL(/\/portal\/receipts\/.+/)
   await expect(page.getByRole('heading', { name: 'REC-2026-000003' })).toBeVisible()
-  await expect(page.getByText('Residencial Retiro')).toBeVisible()
+  await expect(page.getByText('Residencial Retiro', { exact: true })).toBeVisible()
 
   await portalNavLink(page, 'Incidencias').click()
   await expect(page).toHaveURL(/\/portal\/incidents/)
