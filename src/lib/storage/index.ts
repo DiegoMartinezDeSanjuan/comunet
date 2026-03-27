@@ -17,7 +17,7 @@ class LocalStorageAdapter implements StorageAdapter {
     this.basePath = basePath || process.env.STORAGE_PATH || './uploads'
   }
 
-  async save(filename: string, data: Buffer, _mimeType?: string): Promise<string> {
+  async save(filename: string, data: Buffer): Promise<string> {
     const dir = path.join(this.basePath, new Date().getFullYear().toString())
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })

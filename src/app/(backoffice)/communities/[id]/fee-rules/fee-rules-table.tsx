@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { toggleFeeRuleAction } from '@/modules/finances/server/actions'
 import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/components/ui/use-toast'

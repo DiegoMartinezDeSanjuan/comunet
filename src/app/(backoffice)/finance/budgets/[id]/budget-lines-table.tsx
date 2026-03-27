@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { deleteBudgetLineAction } from '@/modules/finances/server/actions'
 import { Button } from '@/components/ui/button'
 import { Trash2 } from 'lucide-react'
