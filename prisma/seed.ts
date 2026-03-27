@@ -87,7 +87,7 @@ async function main() {
     },
   })
 
-  const [unit1A, unit1B, unit2A, unitBajo] = await Promise.all([
+  const [unit1A, unit1B, unit2A, unitBajo, unit3A] = await Promise.all([
     prisma.unit.create({
       data: {
         communityId: communityMadrid.id,
@@ -138,6 +138,19 @@ async function main() {
         areaM2: 150,
         coefficient: 0.09,
         quotaPercent: 9.0,
+      },
+    }),
+    prisma.unit.create({
+      data: {
+        communityId: communityMadrid.id,
+        buildingId: buildingPinos.id,
+        reference: '3A',
+        type: 'APARTMENT',
+        floor: '3',
+        door: 'A',
+        areaM2: 92,
+        coefficient: 0.055,
+        quotaPercent: 5.5,
       },
     }),
   ])
@@ -218,6 +231,12 @@ async function main() {
         ownershipPercent: 100,
         isPrimaryBillingContact: true,
       },
+      {
+        unitId: unit3A.id,
+        ownerId: ownerLaura.id,
+        ownershipPercent: 100,
+        isPrimaryBillingContact: true,
+      },
     ],
   })
 
@@ -286,6 +305,8 @@ async function main() {
       },
     }),
   ])
+
+  void providerPainter
 
   const [officeAdmin, manager, accountant, viewer, presidentUser, ownerUser, providerPlumberUser, providerElevatorUser] = await Promise.all([
     prisma.user.create({
@@ -456,6 +477,22 @@ async function main() {
     },
   })
 
+  const receiptIssuedPortal = await prisma.receipt.create({
+    data: {
+      communityId: communityMadrid.id,
+      unitId: unit3A.id,
+      ownerId: ownerLaura.id,
+      periodStart: new Date('2026-03-01T00:00:00Z'),
+      periodEnd: new Date('2026-03-31T23:59:59Z'),
+      issueDate: new Date('2026-03-25T09:00:00Z'),
+      dueDate: new Date('2026-04-05T23:59:59Z'),
+      amount: 145,
+      paidAmount: 0,
+      status: 'ISSUED',
+      reference: 'REC-2026-000004',
+    },
+  })
+
   await prisma.payment.createMany({
     data: [
       {
@@ -493,6 +530,15 @@ async function main() {
         principal: 210,
         surcharge: 0,
         status: 'PARTIALLY_PAID',
+      },
+      {
+        communityId: communityMadrid.id,
+        unitId: unit3A.id,
+        ownerId: ownerLaura.id,
+        receiptId: receiptIssuedPortal.id,
+        principal: 145,
+        surcharge: 0,
+        status: 'PENDING',
       },
     ],
   })
@@ -558,6 +604,20 @@ async function main() {
     },
   })
 
+  const incidentOwnerPortal = await prisma.incident.create({
+    data: {
+      communityId: communityMadrid.id,
+      unitId: unit3A.id,
+      createdByUserId: ownerUser.id,
+      title: 'Puerta del trastero no cierra',
+      description: 'La puerta metálica del trastero de la planta 3 no ajusta bien y queda abierta.',
+      priority: 'MEDIUM',
+      status: 'OPEN',
+      reportedAt: new Date('2026-03-22T19:10:00Z'),
+      dueAt: new Date('2026-03-29T14:00:00Z'),
+    },
+  })
+
   const incidentClosed = await prisma.incident.create({
     data: {
       communityId: communityMadrid.id,
@@ -573,7 +633,7 @@ async function main() {
     },
   })
 
-  const [commentAssignedInternal, commentAssignedShared, commentResolvedShared] = await Promise.all([
+  const [commentAssignedInternal, commentAssignedShared, commentResolvedShared, commentOwnerInternal, commentOwnerShared] = await Promise.all([
     prisma.incidentComment.create({
       data: {
         incidentId: incidentAssigned.id,
@@ -599,6 +659,24 @@ async function main() {
         body: 'La maniobra se ha reajustado y el equipo vuelve a operar con normalidad.',
         visibility: 'SHARED',
         createdAt: new Date('2026-03-12T12:50:00Z'),
+      },
+    }),
+    prisma.incidentComment.create({
+      data: {
+        incidentId: incidentOwnerPortal.id,
+        authorUserId: officeAdmin.id,
+        body: 'Se revisará cobertura de seguro antes de solicitar presupuesto.',
+        visibility: 'INTERNAL',
+        createdAt: new Date('2026-03-23T09:00:00Z'),
+      },
+    }),
+    prisma.incidentComment.create({
+      data: {
+        incidentId: incidentOwnerPortal.id,
+        authorUserId: manager.id,
+        body: 'Hemos registrado la incidencia y estamos coordinando una visita de revisión.',
+        visibility: 'SHARED',
+        createdAt: new Date('2026-03-23T10:15:00Z'),
       },
     }),
   ])
@@ -760,6 +838,20 @@ async function main() {
       },
       {
         officeId: office.id,
+        userId: ownerUser.id,
+        entityType: 'INCIDENT',
+        entityId: incidentOwnerPortal.id,
+        action: 'CREATE',
+        metaJson: JSON.stringify({
+          title: incidentOwnerPortal.title,
+          priority: incidentOwnerPortal.priority,
+          status: incidentOwnerPortal.status,
+          assignedProviderId: null,
+        }),
+        createdAt: new Date('2026-03-22T19:10:00Z'),
+      },
+      {
+        officeId: office.id,
         userId: officeAdmin.id,
         entityType: 'INCIDENT',
         entityId: incidentAssigned.id,
@@ -796,6 +888,32 @@ async function main() {
           visibility: 'SHARED',
         }),
         createdAt: new Date('2026-03-12T12:50:00Z'),
+      },
+      {
+        officeId: office.id,
+        userId: officeAdmin.id,
+        entityType: 'INCIDENT',
+        entityId: incidentOwnerPortal.id,
+        action: 'CREATE',
+        metaJson: JSON.stringify({
+          type: 'INCIDENT_COMMENT',
+          commentId: commentOwnerInternal.id,
+          visibility: 'INTERNAL',
+        }),
+        createdAt: new Date('2026-03-23T09:00:00Z'),
+      },
+      {
+        officeId: office.id,
+        userId: manager.id,
+        entityType: 'INCIDENT',
+        entityId: incidentOwnerPortal.id,
+        action: 'CREATE',
+        metaJson: JSON.stringify({
+          type: 'INCIDENT_COMMENT',
+          commentId: commentOwnerShared.id,
+          visibility: 'SHARED',
+        }),
+        createdAt: new Date('2026-03-23T10:15:00Z'),
       },
     ],
   })
