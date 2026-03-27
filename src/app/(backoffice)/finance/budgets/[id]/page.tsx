@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/auth'
 import { getBudgetDetailsService } from '@/modules/finances/server/budget-service'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { BudgetLinesTable } from './budget-lines-table'
 import { AddBudgetLineDialog } from './add-budget-line-dialog'
 

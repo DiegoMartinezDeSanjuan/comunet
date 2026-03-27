@@ -7,7 +7,6 @@ import { useToast } from '@/components/ui/use-toast'
 import { Calendar } from 'lucide-react'
 
 export function FeeRulesTable({ rules, communityId }: { rules: any[], communityId: string }) {
-  const router = useRouter()
   const { toast } = useToast()
 
   const handleToggle = async (id: string, active: boolean) => {

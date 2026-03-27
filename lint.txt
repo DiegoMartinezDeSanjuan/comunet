@@ -1,0 +1,18 @@
+﻿
+C:\Users\didim\source\repos\comunet\src\app\(backoffice)\communities\[id]\fee-rules\fee-rules-table.tsx
+  3:10  warning  'useRouter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\didim\source\repos\comunet\src\app\(backoffice)\finance\budgets\[id]\add-budget-line-dialog.tsx
+  4:10  warning  'useRouter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\didim\source\repos\comunet\src\app\(backoffice)\finance\budgets\[id]\budget-lines-table.tsx
+  4:10  warning  'useRouter' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\didim\source\repos\comunet\src\app\(backoffice)\meetings\meeting-create-form.tsx
+  3:10  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\didim\source\repos\comunet\src\lib\storage\index.ts
+  20:46  warning  '_mimeType' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 5 problems (0 errors, 5 warnings)
+

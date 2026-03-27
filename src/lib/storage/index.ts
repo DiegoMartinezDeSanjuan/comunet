@@ -54,23 +54,23 @@ class LocalStorageAdapter implements StorageAdapter {
 
 // S3 adapter stub — prepared for future implementation
 class S3StorageAdapter implements StorageAdapter {
-  async save(_filename: string, _data: Buffer, _mimeType?: string): Promise<string> {
+  async save(): Promise<string> {
     throw new Error('S3StorageAdapter not implemented. Configure AWS credentials and implement.')
   }
 
-  async read(_storagePath: string): Promise<Buffer> {
+  async read(): Promise<Buffer> {
     throw new Error('S3StorageAdapter not implemented.')
   }
 
-  async delete(_storagePath: string): Promise<void> {
+  async delete(): Promise<void> {
     throw new Error('S3StorageAdapter not implemented.')
   }
 
-  async exists(_storagePath: string): Promise<boolean> {
+  async exists(): Promise<boolean> {
     throw new Error('S3StorageAdapter not implemented.')
   }
 
-  getUrl(_storagePath: string): string {
+  getUrl(): string {
     throw new Error('S3StorageAdapter not implemented.')
   }
 }

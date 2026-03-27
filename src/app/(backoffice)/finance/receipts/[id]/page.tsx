@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/auth'
 import { findReceiptById } from '@/modules/finances/server/receipt-repository'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, User, Building2, Calendar, Euro, CreditCard } from 'lucide-react'
+import { ArrowLeft, User, Building2, Calendar, Euro } from 'lucide-react'
 import { RegisterPaymentDialog } from './register-payment-dialog'
 
 export const dynamic = 'force-dynamic'

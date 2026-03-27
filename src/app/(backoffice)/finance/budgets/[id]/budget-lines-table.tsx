@@ -8,7 +8,6 @@ import { Trash2 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 
 export function BudgetLinesTable({ lines, isEditable, budgetId }: { lines: any[], isEditable: boolean, budgetId: string }) {
-  const router = useRouter()
   const { toast } = useToast()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 

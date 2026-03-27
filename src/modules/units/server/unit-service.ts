@@ -2,7 +2,6 @@ import 'server-only'
 import * as repo from './unit-repository'
 import { buildingSchema, unitSchema, type BuildingInput, type UnitInput } from '../schema'
 import { logAudit } from '@/modules/audit/server/services'
-import { canManageCommunity } from '@/lib/permissions'
 import { prisma } from '@/lib/db'
 
 export async function getCommunityUnitsData(communityId: string) {

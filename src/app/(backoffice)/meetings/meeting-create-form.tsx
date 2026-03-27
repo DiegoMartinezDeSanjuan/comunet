@@ -41,14 +41,10 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
   const [communityId, setCommunityId] = useState(communities[0]?.id ?? '')
   const [title, setTitle] = useState('')
   const [meetingType, setMeetingType] = useState<'ORDINARY' | 'EXTRAORDINARY'>('ORDINARY')
-  const [scheduledAt, setScheduledAt] = useState('')
+  const [scheduledAt, setScheduledAt] = useState(getDefaultScheduledAt)
   const [location, setLocation] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<'DRAFT' | 'SCHEDULED'>('SCHEDULED')
-
-  useEffect(() => {
-    setScheduledAt((current) => current || getDefaultScheduledAt())
-  }, [])
 
   const handleSubmit = () => {
     startTransition(async () => {

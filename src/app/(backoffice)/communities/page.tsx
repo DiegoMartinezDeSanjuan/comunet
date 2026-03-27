@@ -1,6 +1,5 @@
 import { requireAuth } from '@/lib/auth'
 import { getCommunities } from '@/modules/communities/server/community-service'
-import { formatCurrency } from '@/lib/formatters'
 import { Building2, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
 

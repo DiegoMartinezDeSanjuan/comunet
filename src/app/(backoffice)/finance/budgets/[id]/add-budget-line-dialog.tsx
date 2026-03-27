@@ -30,7 +30,6 @@ import { Plus } from 'lucide-react'
 export function AddBudgetLineDialog({ budgetId }: { budgetId: string }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
   const { toast } = useToast()
 
   const form = useForm<BudgetLineInput>({

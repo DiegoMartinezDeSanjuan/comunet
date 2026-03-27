@@ -1,5 +1,5 @@
 import { requireAuth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+
 import { findBudgetsByOffice } from '@/modules/finances/server/budget-repository'
 import Link from 'next/link'
 import { Plus, Calculator } from 'lucide-react'

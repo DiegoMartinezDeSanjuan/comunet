@@ -2,7 +2,7 @@ import { requireAuth } from '@/lib/auth'
 import { getTenantDetails } from '@/modules/contacts/server/contact-service'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Edit, Home, Key, Mail, Phone, FileText } from 'lucide-react'
+import { ArrowLeft, Edit, Home, Key, FileText } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 

@@ -320,7 +320,6 @@ export async function canReadDocument(session: Session, documentId: string): Pro
 export function requirePermission(
   session: Session,
   permission: string,
-  _context?: PermissionContext,
 ): boolean {
   const permissionMap: Record<string, UserRole[]> = {
     'communities.read': BACKOFFICE_READ_ROLES,

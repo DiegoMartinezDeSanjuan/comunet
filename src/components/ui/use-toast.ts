@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-
 export function useToast() {
-  const [toasts, setToasts] = useState<any[]>([])
+  const [toasts] = useState<any[]>([])
 
   const toast = ({ title, description, variant, ...props }: any) => {
     // Basic mock implementation that alerts for errors

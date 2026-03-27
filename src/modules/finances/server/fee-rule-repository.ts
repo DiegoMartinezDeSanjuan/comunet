@@ -1,6 +1,5 @@
 import 'server-only'
 import { prisma } from '@/lib/db'
-import { Prisma } from '@prisma/client'
 import { FeeRuleInput } from '../schema'
 
 export async function findFeeRulesByCommunity(communityId: string) {
