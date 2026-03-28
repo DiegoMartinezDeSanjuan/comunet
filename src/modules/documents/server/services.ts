@@ -134,7 +134,7 @@ export async function uploadDocument(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'DOCUMENT',
@@ -189,7 +189,7 @@ export async function updateDocument(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'DOCUMENT',
@@ -234,7 +234,7 @@ export async function archiveDocument(officeId: string, userId: string, document
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'DOCUMENT',

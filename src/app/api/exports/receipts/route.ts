@@ -4,8 +4,12 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { requirePermission } from '@/lib/permissions'
+import { exportLimiter } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
+
+/** Safety limit to prevent OOM on large offices */
+const MAX_EXPORT_ROWS = 10_000
 
 export async function GET(request: Request) {
   try {
@@ -34,6 +38,18 @@ export async function GET(request: Request) {
       where.status = status as ReceiptStatus
     }
 
+    // Rate limit exports (heavy operation)
+    const rateResult = exportLimiter.check(session.userId)
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many export requests' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(rateResult.retryAfterMs / 1000)) },
+        },
+      )
+    }
+
     const receipts = await prisma.receipt.findMany({
       where,
       include: {
@@ -42,6 +58,7 @@ export async function GET(request: Request) {
         owner: true,
       },
       orderBy: { issueDate: 'desc' },
+      take: MAX_EXPORT_ROWS,
     })
 
     const headers = [

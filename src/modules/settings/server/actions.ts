@@ -30,7 +30,7 @@ export async function updateOfficeProfileAction(data: z.infer<typeof updateOffic
     data: parsed,
   })
 
-  await logAudit({
+  logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'OFFICE',

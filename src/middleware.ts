@@ -1,19 +1,57 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+import { loginLimiter, apiLimiter } from '@/lib/rate-limit'
+
 const PUBLIC_PATHS = ['/login', '/api/health', '/api/mock']
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
+function rateLimitResponse(retryAfterMs: number) {
+  return NextResponse.json(
+    { error: 'Too many requests' },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+      },
+    },
+  )
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  
-  // Allow public paths
-  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next()
-  }
+  const ip = getClientIp(request)
 
   // Allow static files and Next.js internals
   if (pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.includes('.')) {
     return NextResponse.next()
+  }
+
+  // Allow public paths (but rate-limit login)
+  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+    // Rate limit login POST
+    if (pathname === '/login' && request.method === 'POST') {
+      const result = loginLimiter.check(ip)
+      if (!result.allowed) {
+        return rateLimitResponse(result.retryAfterMs)
+      }
+    }
+    return NextResponse.next()
+  }
+
+  // Rate limit API routes
+  if (pathname.startsWith('/api/')) {
+    const result = apiLimiter.check(ip)
+    if (!result.allowed) {
+      return rateLimitResponse(result.retryAfterMs)
+    }
   }
 
   // Check for session cookie (real auth check happens in server components/actions)

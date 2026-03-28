@@ -28,7 +28,7 @@ export async function createProvider(
         notes: parsed.notes ?? null,
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'PROVIDER',
@@ -74,7 +74,7 @@ export async function updateProvider(
         archivedAt,
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'PROVIDER',

@@ -120,7 +120,7 @@ export async function createIncident(
         resolvedAt: null,
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'INCIDENT',
@@ -200,7 +200,7 @@ export async function updateIncident(
                 : null,
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'INCIDENT',
@@ -260,7 +260,7 @@ export async function assignProviderToIncident(
         resolvedAt: nextResolvedAt,
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'INCIDENT',
@@ -276,7 +276,7 @@ export async function assignProviderToIncident(
     })
 
     if (incident.status !== nextStatus) {
-        await logAudit({
+        logAudit({
             officeId,
             userId,
             entityType: 'INCIDENT',
@@ -331,7 +331,7 @@ export async function changeIncidentStatus(
         resolvedAt,
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'INCIDENT',
@@ -379,7 +379,7 @@ export async function addIncidentComment(
         visibility: mapCommentVisibilityToDb(parsed.visibility),
     })
 
-    await logAudit({
+    logAudit({
         officeId,
         userId,
         entityType: 'INCIDENT',

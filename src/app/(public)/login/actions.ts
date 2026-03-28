@@ -26,7 +26,7 @@ export async function loginAction(formData: FormData): Promise<{ error?: string;
 
   await createSession(session)
 
-  await logAudit({
+  logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'User',

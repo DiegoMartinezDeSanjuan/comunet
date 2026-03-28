@@ -23,7 +23,7 @@ export async function createFeeRuleService(officeId: string, userId: string, dat
 
   const rule = await repo.createFeeRule(valid)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'FeeRule',
@@ -55,7 +55,7 @@ export async function updateFeeRuleService(id: string, officeId: string, userId:
 
   const rule = await repo.updateFeeRule(id, valid)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'FeeRule',
@@ -79,7 +79,7 @@ export async function toggleFeeRuleService(id: string, officeId: string, userId:
 
   const rule = await repo.toggleFeeRuleStatus(id, active)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'FeeRule',

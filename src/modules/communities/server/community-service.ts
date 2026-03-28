@@ -16,7 +16,7 @@ export async function createCommunityService(officeId: string, userId: string, d
   
   const community = await repo.createCommunity(officeId, validData)
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Community',
@@ -33,7 +33,7 @@ export async function updateCommunityService(id: string, officeId: string, userI
   
   const community = await repo.updateCommunity(id, officeId, validData)
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Community',
@@ -48,7 +48,7 @@ export async function updateCommunityService(id: string, officeId: string, userI
 export async function archiveCommunityService(id: string, officeId: string, userId: string) {
   const community = await repo.archiveCommunity(id, officeId)
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Community',

@@ -59,6 +59,30 @@ export async function createNotificationRecord(
     })
 }
 
+/**
+ * Batch insert notifications — uses a single INSERT instead of N individual creates.
+ * Much more efficient for fan-out notifications (e.g. incident assigned to N users).
+ */
+export async function createManyNotificationRecords(
+    inputs: CreateNotificationRecordInput[],
+) {
+    if (inputs.length === 0) return { count: 0 }
+
+    const now = new Date()
+    return prisma.notification.createMany({
+        data: inputs.map((input) => ({
+            officeId: input.officeId,
+            communityId: input.communityId ?? null,
+            recipientUserId: input.recipientUserId ?? null,
+            channel: input.channel ?? 'IN_APP',
+            title: input.title,
+            body: input.body ?? null,
+            status: input.status ?? 'SENT',
+            sentAt: input.sentAt ?? now,
+        })),
+    })
+}
+
 export async function listNotificationPageForUser(
     officeId: string,
     userId: string,

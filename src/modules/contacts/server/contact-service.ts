@@ -16,7 +16,7 @@ export async function createOwnerService(officeId: string, userId: string, data:
   const valid = ownerSchema.parse(data)
   const owner = await repo.createOwner({ ...valid, officeId })
   
-  await logAudit({
+  logAudit({
     officeId, userId, entityType: 'Owner', entityId: owner.id,
     action: 'CREATE', meta: { fullName: owner.fullName, dni: owner.dni }
   })
@@ -28,7 +28,7 @@ export async function updateOwnerService(id: string, officeId: string, userId: s
   const valid = ownerSchema.parse(data)
   const owner = await repo.updateOwner(id, officeId, valid)
   
-  await logAudit({
+  logAudit({
     officeId, userId, entityType: 'Owner', entityId: owner.id,
     action: 'UPDATE', meta: { fullName: owner.fullName }
   })
@@ -49,7 +49,7 @@ export async function createTenantService(officeId: string, userId: string, data
   const valid = tenantSchema.parse(data)
   const tenant = await repo.createTenant({ ...valid, officeId })
   
-  await logAudit({
+  logAudit({
     officeId, userId, entityType: 'Tenant', entityId: tenant.id,
     action: 'CREATE', meta: { fullName: tenant.fullName }
   })
@@ -61,7 +61,7 @@ export async function updateTenantService(id: string, officeId: string, userId: 
   const valid = tenantSchema.parse(data)
   const tenant = await repo.updateTenant(id, officeId, valid)
   
-  await logAudit({
+  logAudit({
     officeId, userId, entityType: 'Tenant', entityId: tenant.id,
     action: 'UPDATE', meta: { fullName: tenant.fullName }
   })
@@ -78,7 +78,7 @@ export async function createOwnershipService(officeId: string, userId: string, d
     endDate: valid.endDate ? new Date(valid.endDate) : undefined,
   })
   
-  await logAudit({
+  logAudit({
     officeId, userId, entityType: 'Ownership', entityId: ownership.id,
     action: 'CREATE', meta: { ownerId: valid.ownerId, unitId: valid.unitId }
   })
@@ -94,7 +94,7 @@ export async function createBoardPositionService(officeId: string, userId: strin
     endDate: valid.endDate ? new Date(valid.endDate) : undefined,
   })
   
-  await logAudit({
+  logAudit({
     officeId, userId, entityType: 'BoardPosition', entityId: position.id,
     action: 'CREATE', meta: { ownerId: valid.ownerId, role: valid.role }
   })

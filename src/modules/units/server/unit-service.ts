@@ -21,7 +21,7 @@ export async function createBuildingService(officeId: string, userId: string, da
     
   const building = await repo.createBuilding(valid)
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Building',
@@ -49,7 +49,7 @@ export async function createUnitService(officeId: string, userId: string, data: 
     door: valid.door ?? undefined,
   })
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Unit',
@@ -74,7 +74,7 @@ export async function updateUnitService(id: string, officeId: string, userId: st
     door: valid.door ?? undefined,
   })
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Unit',
@@ -89,7 +89,7 @@ export async function updateUnitService(id: string, officeId: string, userId: st
 export async function archiveUnitService(id: string, officeId: string, userId: string) {
   const unit = await repo.archiveUnit(id)
   
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Unit',

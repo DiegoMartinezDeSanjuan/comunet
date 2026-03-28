@@ -224,7 +224,7 @@ export async function changeProviderIncidentStatus(
     data: { status: newStatus, resolvedAt },
   })
 
-  await logAudit({
+  logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'INCIDENT',

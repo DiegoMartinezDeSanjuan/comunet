@@ -122,7 +122,7 @@ export async function generateReceiptsService(officeId: string, userId: string, 
 
   await refreshDebtProjectionService(valid.communityId)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Receipt',
@@ -155,7 +155,7 @@ export async function markReceiptReturnedService(id: string, officeId: string, u
   const updated = await repo.markReceiptStatus(id, 'RETURNED')
   await refreshDebtProjectionService(updated.communityId)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Receipt',
@@ -177,7 +177,7 @@ export async function markReceiptCancelledService(id: string, officeId: string, 
   const updated = await repo.markReceiptStatus(id, 'CANCELLED')
   await refreshDebtProjectionService(updated.communityId)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Receipt',

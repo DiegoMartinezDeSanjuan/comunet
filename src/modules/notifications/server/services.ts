@@ -3,6 +3,7 @@ import 'server-only'
 import { isBackofficeRole } from '@/lib/auth'
 import {
     createNotificationRecord,
+    createManyNotificationRecords,
     listActiveUsersByRoles,
     listLinkedUsersForProvider,
 } from './repository'
@@ -69,13 +70,20 @@ async function createNotificationsForRecipients(
     recipients: { id: string }[],
     payload: Omit<CreateNotificationInput, 'recipientUserId'>,
 ) {
-    await Promise.all(
-        recipients.map((recipient) =>
-            createNotification({
-                ...payload,
-                recipientUserId: recipient.id,
-            }),
-        ),
+    if (recipients.length === 0) return
+
+    // Single INSERT with createMany instead of N individual creates
+    await createManyNotificationRecords(
+        recipients.map((recipient) => ({
+            officeId: payload.officeId,
+            communityId: payload.communityId ?? null,
+            recipientUserId: recipient.id,
+            channel: payload.channel ?? 'IN_APP',
+            title: payload.title,
+            body: payload.body ?? null,
+            status: payload.status ?? 'SENT',
+            sentAt: new Date(),
+        })),
     )
 }
 

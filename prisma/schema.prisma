@@ -338,6 +338,7 @@ model Ownership {
 
   @@index([unitId])
   @@index([ownerId])
+  @@index([ownerId, endDate])  // Portal: active ownerships lookup
   @@map("ownerships")
 }
 
@@ -458,6 +459,7 @@ model Receipt {
   @@index([ownerId])
   @@index([status])
   @@index([dueDate])
+  @@index([ownerId, communityId])  // Portal: owner receipts by community
   @@map("receipts")
 }
 
@@ -497,6 +499,8 @@ model Debt {
   @@index([communityId])
   @@index([ownerId])
   @@index([status])
+  @@index([communityId, status])  // Reports: debt aggregation by community
+  @@index([ownerId, status])      // Portal: owner pending debts
   @@map("debts")
 }
 

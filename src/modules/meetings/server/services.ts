@@ -128,7 +128,7 @@ export async function createMeeting(officeId: string, userId: string, rawInput: 
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -181,7 +181,7 @@ export async function updateMeeting(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -226,7 +226,7 @@ export async function addAgendaItem(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -268,7 +268,7 @@ export async function changeMeetingStatus(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -315,7 +315,7 @@ export async function saveMeetingMinute(
         },
       })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -361,7 +361,7 @@ export async function updateAgendaItem(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -398,7 +398,7 @@ export async function reorderAgendaItems(
 
   await prisma.$transaction(updates)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -430,7 +430,7 @@ export async function deleteAgendaItem(
   })
 
   if (deleted.count > 0) {
-    await logAudit({
+    logAudit({
       officeId,
       userId,
       entityType: 'MEETING',
@@ -469,7 +469,7 @@ export async function recordAttendance(
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -502,7 +502,7 @@ export async function deleteAttendance(
   })
 
   if (deleted.count > 0) {
-    await logAudit({
+    logAudit({
       officeId,
       userId,
       entityType: 'MEETING',
@@ -536,7 +536,7 @@ export async function recordVote(officeId: string, userId: string, rawInput: Rec
     },
   })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'MEETING',
@@ -565,7 +565,7 @@ export async function deleteVote(officeId: string, userId: string, rawInput: Del
   })
 
   if (deleted.count > 0) {
-    await logAudit({
+    logAudit({
       officeId,
       userId,
       entityType: 'MEETING',

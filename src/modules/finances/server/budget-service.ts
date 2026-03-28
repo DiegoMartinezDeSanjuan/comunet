@@ -29,7 +29,7 @@ export async function createBudgetService(officeId: string, userId: string, data
 
   const budget = await repo.createBudget(valid)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Budget',
@@ -50,7 +50,7 @@ export async function updateBudgetService(id: string, officeId: string, userId: 
 
   const budget = await repo.updateBudget(id, { status: data.status })
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'Budget',
@@ -80,7 +80,7 @@ export async function addBudgetLineService(officeId: string, userId: string, dat
   const newTotal = budget.lines.reduce((acc, curr) => acc + Number(curr.amount), 0) + valid.amount
   await repo.updateBudgetTotalAmount(budget.id, newTotal)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'BudgetLine',
@@ -121,7 +121,7 @@ export async function deleteBudgetLineService(id: string, officeId: string, user
   const newTotal = remainingLines.reduce((acc, curr) => acc + Number(curr.amount), 0)
   await repo.updateBudgetTotalAmount(line.budgetId, newTotal)
 
-  await logAudit({
+  logAudit({
     officeId,
     userId,
     entityType: 'BudgetLine',
