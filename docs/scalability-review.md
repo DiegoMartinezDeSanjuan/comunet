@@ -1,6 +1,7 @@
 # Scalability Review — COMUNET
 
-> Auditoría de preparación para producción con objetivo de 500 usuarios concurrentes.
+> Auditoría de preparación para producción — Fase 1 de hardening.
+> Objetivo: base técnica para soportar 500 usuarios concurrentes.
 > Fecha: 2026-03-28
 
 ---
@@ -31,10 +32,10 @@
 | Database | PostgreSQL | 16 |
 | Auth | jose (JWT) | 6.2.2 |
 | Validation | Zod | 4.3.6 |
-| UI | React 19 + Radix + Tailwind 4 | - |
+| UI | React 19 + Radix + Tailwind 4 | — |
 | Testing | Vitest | 4.1.0 |
 
-### 1.3 Puntos Fuertes (ya válidos para 500 usuarios)
+### 1.3 Puntos Fuertes (ya válidos para producción)
 
 - **JWT stateless**: No requiere consulta a DB por request para auth. El middleware solo verifica cookie presence; la verificación JWT real ocurre en server components.
 - **Prisma singleton**: Correctamente implementado con `globalThis` cache para development.
@@ -59,9 +60,9 @@
 | R8 | Export sin limit | 🟡 Medio | ✅ Corregido |
 | R9 | Sin PgBouncer para multi-instance | 🟡 Medio | ✅ Corregido |
 | R10 | Índices compuestos missing | 🟢 Bajo | ✅ Corregido |
-| R11 | Sin Redis para rate limiting distribuido | 🟢 Bajo | Pendiente |
-| R12 | Sin background job queue | 🟢 Bajo | Pendiente |
-| R13 | Sin APM/structured logging | 🟢 Bajo | Pendiente |
+| R11 | Sin Redis para rate limiting distribuido | 🟢 Bajo | Pendiente (fase 2) |
+| R12 | Sin background job queue | 🟢 Bajo | Pendiente (fase 2) |
+| R13 | Sin APM/structured logging | 🟢 Bajo | Pendiente (fase 2) |
 
 ---
 
@@ -98,22 +99,26 @@
 
 ### 2.1 Capacidad Estimada por Capa
 
-| Capa | Config | Capacidad |
-|------|--------|-----------|
-| PgBouncer | `MAX_CLIENT_CONN=500, DEFAULT_POOL_SIZE=25` | 500 conexiones frontend → 25 backend |
-| PostgreSQL | `max_connections=200, shared_buffers=256MB` | 200 conexiones reales |
-| Prisma | `connection_limit=20` por instancia | 20 conexiones por Next.js instance |
-| Next.js | 2-3 instancias | ~200 req/s por instancia |
+> **Nota importante:** Los valores de esta tabla son estimaciones orientativas basadas en la configuración aplicada. La capacidad real bajo carga depende de múltiples factores (tipo de páginas, complejidad de queries, tamaño de payloads, CPU de la máquina, etc.) y debe validarse empíricamente mediante las pruebas de carga descritas en la sección 5.
+
+| Capa | Config | Capacidad estimada |
+|------|--------|--------------------|
+| PgBouncer | `MAX_CLIENT_CONN=500, DEFAULT_POOL_SIZE=25` | Hasta 500 conexiones cliente → 25 conexiones reales a PG |
+| PostgreSQL | `max_connections=200, shared_buffers=256MB` | 200 conexiones máximas |
+| Prisma | `connection_limit=20` por instancia | 20 conexiones pool por instancia Next.js |
+| Next.js | 2-3 instancias | Estimación orientativa: ~150-250 req/s por instancia, pendiente de validación con carga |
 | Rate Limiting | In-memory (per-instance) | Login: 5/min/IP, API: 100/min/IP |
+
+> La capacidad de 500 conexiones cliente en PgBouncer no equivale directamente a 500 usuarios realizando operaciones intensivas simultáneamente. Es la capa que permite multiplexar muchas conexiones de aplicación sobre un pool reducido de conexiones reales a PostgreSQL. La validación real del rendimiento con 500 usuarios concurrentes requiere las pruebas de carga descritas más adelante.
 
 ### 2.2 Flujo de Datos Bajo Carga
 
 1. **Request llega** al reverse proxy
 2. **Reverse proxy** distribuye entre instancias Next.js
-3. **Middleware** verifica cookie + rate limit (in-memory, ~0.1ms)
+3. **Middleware** verifica cookie + rate limit (in-memory, sub-milisegundo)
 4. **Server Component/Action** verifica JWT (jose, ~1ms)
 5. **Prisma** usa pool de conexiones → PgBouncer → PostgreSQL
-6. **Audit log** se dispara fire-and-forget (no bloquea)
+6. **Audit log** se dispara fire-and-forget (no bloquea el response)
 7. **Respuesta** se envía al cliente
 
 ---
@@ -159,10 +164,12 @@ Connection pool size se configura via `DATABASE_URL` params: `?connection_limit=
 
 ### 3.5 Health + Readiness (`/api/health`)
 
-- `GET /api/health` → readiness (DB + storage check)
-- `GET /api/health?probe=liveness` → liveness (process alive)
+- `GET /api/health` → readiness (DB check + verificación de configuración de storage)
+- `GET /api/health?probe=liveness` → liveness (proceso vivo, sin dependencias externas)
 - Reporta uptime, version, environment, checks detallados
 - Compatible con Kubernetes liveness/readiness probes
+
+> **Nota sobre el storage check:** La comprobación de readiness para storage se limita a verificar que la configuración (variables de entorno) es correcta. No realiza operaciones de red a S3 en cada probe, para evitar añadir latencia innecesaria y dependencia de un servicio externo en el camino crítico del health check.
 
 ### 3.6 Audit Log Fire-and-Forget
 
@@ -173,7 +180,7 @@ Connection pool size se configura via `DATABASE_URL` params: `?connection_limit=
 +   prisma.auditLog.create(...).catch(console.error)
 ```
 
-Ahorra ~5-10ms por cada operación auditada.
+Reduce la latencia del request al sacar el INSERT de audit del camino síncrono. El INSERT se ejecuta en background; si falla, el error se registra en stderr pero no impacta la operación principal.
 
 ### 3.7 Notifications Batch Insert
 
@@ -182,7 +189,7 @@ Ahorra ~5-10ms por cada operación auditada.
 + await createManyNotificationRecords(recipients.map(...))
 ```
 
-N inserts → 1 `INSERT ... VALUES (...), (...), (...)`.
+N inserts individuales → 1 `INSERT ... VALUES (...), (...), (...)`.
 
 ### 3.8 Export Safety Limits
 
@@ -192,14 +199,14 @@ N inserts → 1 `INSERT ... VALUES (...), (...), (...)`.
 ### 3.9 Índices DB Compuestos
 
 ```prisma
-// Ownership — portal access scope
+// Ownership — portal access scope (filtro frecuente: ownerId + endDate IS NULL)
 @@index([ownerId, endDate])
 
-// Debt — reports + portal
+// Debt — reports + portal (groupBy communityId+status, filtro ownerId+status)
 @@index([communityId, status])
 @@index([ownerId, status])
 
-// Receipt — portal
+// Receipt — portal (filtro ownerId + communityId)
 @@index([ownerId, communityId])
 ```
 
@@ -246,7 +253,7 @@ N inserts → 1 `INSERT ... VALUES (...), (...), (...)`.
 - [ ] Health endpoint monitoreado (UptimeRobot, Pingdom, etc.)
 - [ ] Logs centralizados (stdout → CloudWatch/Datadog/etc.)
 - [ ] Alertas configuradas para errores 5xx y latencia alta
-- [ ] Disk usage monitoreado si uses local storage
+- [ ] Disk usage monitoreado si usa local storage
 
 ---
 
@@ -260,14 +267,14 @@ N inserts → 1 `INSERT ... VALUES (...), (...), (...)`.
 
 #### Scenario 1: Login Storm
 ```
-50 virtual users, each logging in 1x/second for 2 minutes.
-Target: p95 < 500ms, 0 errors (rate limit 429 is expected).
+50 virtual users, cada uno haciendo login 1x/segundo durante 2 minutos.
+Objetivo: p95 < 500ms, errores controlados (429 por rate limit es esperado y correcto).
 ```
 
 #### Scenario 2: Portal Dashboard
 ```
 200 virtual users con sesión activa, cargando /portal cada 5s.
-Target: p95 < 300ms, 0 errors.
+Objetivo: p95 < 300ms, 0 errores funcionales.
 ```
 
 #### Scenario 3: Backoffice CRUD
@@ -277,20 +284,20 @@ Target: p95 < 300ms, 0 errors.
 - Ver detalle de comunidad
 - Crear incidencia
 - Añadir comentario
-Target: p95 < 400ms, error rate < 0.1%.
+Objetivo: p95 < 400ms, error rate < 0.1%.
 ```
 
 #### Scenario 4: Document Upload/Download
 ```
 30 virtual users subiendo documentos de 2MB.
 20 virtual users descargando documentos de 5MB.
-Target: upload p95 < 2s, download p95 < 1s.
+Objetivo: upload p95 < 2s, download p95 < 1s.
 ```
 
 #### Scenario 5: Export Under Load
 ```
 10 usuarios exportando CSV de recibos mientras 200 usuarios navegan.
-Target: export < 5s, navegación no degradada.
+Objetivo: export < 5s, navegación no degradada.
 ```
 
 ### 5.3 Ejecución
@@ -309,8 +316,10 @@ k6 run --vus 200 --duration 5m load-test.js
 
 ## 6. Métricas Objetivo
 
-| Métrica | Objetivo | Crítico |
-|---------|----------|---------|
+> **Disclaimer:** Las siguientes métricas son objetivos operativos (SLOs) definidos como referencia para las pruebas de carga. No son compromisos garantizados hasta completar la validación empírica descrita en la sección 5. Los valores se ajustarán en función de los resultados reales.
+
+| Métrica | Objetivo | Umbral crítico |
+|---------|----------|----------------|
 | **Latencia p50** | < 100ms | < 200ms |
 | **Latencia p95** | < 300ms | < 500ms |
 | **Latencia p99** | < 500ms | < 1000ms |
@@ -319,7 +328,6 @@ k6 run --vus 200 --duration 5m load-test.js
 | **Conexiones PgBouncer** | < 300 | < 500 |
 | **CPU (app server)** | < 60% | < 80% |
 | **Memory (app server)** | < 70% (RSS) | < 85% |
-| **Storage IOPS** | N/A (S3) | - |
 | **Time to first byte** | < 200ms | < 400ms |
 | **Health check latency** | < 50ms | < 200ms |
 
@@ -327,31 +335,54 @@ k6 run --vus 200 --duration 5m load-test.js
 
 | Alerta | Condición | Acción |
 |--------|-----------|--------|
-| DB connections alto | > 80% pool_size | Revisar queries lentas |
-| Error rate alto | > 1% en 5 min | Revisar logs |
-| Latencia p95 alta | > 1s sostenido | Escalar horizontalmente |
-| Health check falla | 3 fallos consecutivos | Restart instancia |
-| Disk > 80% | Si usa local storage | Migrar a S3 |
+| DB connections alto | > 80% pool_size durante 5 min | Revisar queries lentas |
+| Error rate alto | > 1% en ventana de 5 min | Revisar logs inmediatamente |
+| Latencia p95 alta | > 1s sostenido durante 10 min | Evaluar escalado horizontal |
+| Health check falla | 3 fallos consecutivos | Restart automático de instancia |
+| Disk > 80% | Si usa local storage | Migrar a S3 o limpiar |
 
 ---
 
-## 7. Mejoras Pendientes (No Implementadas)
+## 7. Mejoras Pendientes (Fase 2)
+
+Estas mejoras no están implementadas en esta fase. Se documentan para planificar la siguiente iteración si las pruebas de carga o el crecimiento lo requieren.
 
 ### 7.1 Redis (Prioridad: Media)
-- Rate limiting distribuido (multi-instance)
-- Session blacklist (invalidación inmediata de JWT)
-- Cache de permissions (evitar queries DB repetidas)
+- Rate limiting distribuido (necesario si se escala a múltiples instancias)
+- Session blacklist (invalidación inmediata de JWT sin esperar expiración)
+- Cache de permissions (evitar queries DB repetidas por sesión)
+
+**Cuándo implementar:** cuando se desplieguen 2+ instancias de Next.js y el rate limiting in-memory deje de ser suficiente.
 
 ### 7.2 Background Jobs (Prioridad: Media)
 - Cola para emails reales (BullMQ o pg-boss)
 - Reports pesados asíncronos
-- Cleanup de archivos huérfanos
+- Cleanup de archivos huérfanos en storage
+
+**Cuándo implementar:** cuando se integre un proveedor de email real (SMTP/SES) y los emails dejen de ser mock.
 
 ### 7.3 APM / Observabilidad (Prioridad: Baja-Media)
 - OpenTelemetry para tracing distribuido
 - Structured logging (JSON) con correlation IDs
 - Métricas custom (Prisma query duration, cache hit rate)
 
-### 7.4 CDN (Prioridad: Baja)
+**Cuándo implementar:** cuando se necesite diagnosticar problemas de rendimiento en producción que los logs estándar no cubran.
+
+### 7.4 CDN + Presigned URLs (Prioridad: Baja)
 - Assets estáticos via CDN (Cloudflare, CloudFront)
-- Document downloads via presigned URLs (bypass app server)
+- Document downloads via presigned URLs (bypass app server para archivos grandes)
+
+**Cuándo implementar:** cuando el volumen de descargas de documentos genere carga significativa en el app server.
+
+---
+
+## 8. Conclusión
+
+### Estado antes de este hardening
+La aplicación no estaba suficientemente endurecida para hablar con tranquilidad de 500 usuarios concurrentes. Los principales bloqueantes eran: gestión de conexiones DB, storage síncrono y local, ausencia de rate limiting, y trabajo síncrono innecesario en el path crítico.
+
+### Estado después de este hardening
+La base técnica está preparada para empezar a validar seriamente el objetivo de 500 concurrentes. Los bloqueantes críticos están resueltos y la arquitectura permite escalar horizontalmente si las pruebas lo requieren.
+
+### Siguiente paso
+Ejecutar las pruebas de carga descritas en la sección 5, analizar los resultados contra los SLOs de la sección 6, y decidir si es necesaria una fase 2 con Redis, colas y observabilidad avanzada.
