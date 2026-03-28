@@ -56,6 +56,33 @@ docker compose -f docker-compose.production.yml logs -f postgres
 # Ctrl+C cuando vea "database system is ready to accept connections"
 ```
 
+> **⚠️ IMPORTANTE: PgBouncer y Prisma CLI**
+>
+> PgBouncer en modo `transaction` es incompatible con prepared statements,
+> que Prisma CLI usa internamente para migraciones y `prisma studio`.
+>
+> - **Aplicación (runtime):** Usa PgBouncer → `DATABASE_URL` apunta al port 6432
+> - **Migraciones y CLI:** Usa conexión directa → port 5432
+>
+> Prisma soporta esto con la variable `DIRECT_URL` en `schema.prisma`:
+>
+> ```prisma
+> datasource db {
+>   provider  = "postgresql"
+>   url       = env("DATABASE_URL")       // PgBouncer (port 6432) para runtime
+>   directUrl = env("DIRECT_DATABASE_URL") // Directo (port 5432) para migraciones
+> }
+> ```
+>
+> En `.env` de producción:
+> ```
+> DATABASE_URL="postgresql://comunet:PASSWORD@localhost:6432/comunet?schema=public"
+> DIRECT_DATABASE_URL="postgresql://comunet:PASSWORD@localhost:5432/comunet?schema=public"
+> ```
+>
+> Con esto, `prisma migrate deploy` y `prisma studio` usan la conexión directa
+> automáticamente, mientras que la aplicación usa el pool de PgBouncer.
+
 #### 3. Build y deploy
 
 ```bash

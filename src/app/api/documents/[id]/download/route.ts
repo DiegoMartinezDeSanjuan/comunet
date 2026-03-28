@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/lib/auth'
 import { canReadDocument } from '@/lib/permissions'
-import { getDocumentDownloadPayload } from '@/modules/documents/server/services'
+import {
+  getDocumentDownloadStream,
+  getDocumentPresignedUrl,
+} from '@/modules/documents/server/services'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,17 +22,27 @@ export async function GET(
       return NextResponse.json({ error: 'FORBIDDEN' }, { status: 403 })
     }
 
-    const { buffer, downloadName, document } = await getDocumentDownloadPayload(id)
-    const body = new Uint8Array(buffer)
+    // Strategy 1: Presigned URL redirect (S3 only — bypasses app server entirely)
+    const presignedUrl = await getDocumentPresignedUrl(id)
+    if (presignedUrl) {
+      return NextResponse.redirect(presignedUrl, 302)
+    }
 
-    return new NextResponse(body, {
-      headers: {
-        'Content-Type': document.mimeType || 'application/octet-stream',
-        'Content-Length': String(body.byteLength),
-        'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
-        'Cache-Control': 'private, no-store',
-      },
-    })
+    // Strategy 2: Stream through app server (local storage or S3 fallback)
+    const { stream, downloadName, document, size } = await getDocumentDownloadStream(id)
+
+    const headers: Record<string, string> = {
+      'Content-Type': document.mimeType || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`,
+      'Cache-Control': 'private, no-store',
+    }
+
+    // Include Content-Length if we know the size (helps clients show progress)
+    if (size && size > 0) {
+      headers['Content-Length'] = String(size)
+    }
+
+    return new NextResponse(stream, { headers })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'UNKNOWN'
 

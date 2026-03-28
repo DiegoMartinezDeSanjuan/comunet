@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   // Increase body size limit for file uploads (8MB matches Document service limit)
-  serverExternalPackages: ['@aws-sdk/client-s3'],
+  serverExternalPackages: ['@aws-sdk/client-s3', '@aws-sdk/s3-request-presigner'],
 };
 
 export default nextConfig;

@@ -15,9 +15,22 @@ export interface Session {
   linkedProviderId: string | null
 }
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || 'comunet-dev-secret-change-in-production-min-32-chars'
-)
+function getAuthSecret(): Uint8Array {
+  const secret = process.env.AUTH_SECRET
+
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'FATAL: AUTH_SECRET environment variable is not set. ' +
+      'This is required in production. Generate one with: openssl rand -base64 32',
+    )
+  }
+
+  return new TextEncoder().encode(
+    secret || 'comunet-dev-secret-do-not-use-in-production',
+  )
+}
+
+const SECRET = getAuthSecret()
 const COOKIE_NAME = 'comunet-session'
 const EXPIRATION = '7d'
 

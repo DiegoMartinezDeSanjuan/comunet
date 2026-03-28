@@ -249,6 +249,72 @@ export async function archiveDocument(officeId: string, userId: string, document
   return archived
 }
 
+/**
+ * Get a streaming download payload. The file is NOT loaded into memory.
+ * For local storage: returns a ReadableStream backed by fs.createReadStream.
+ * For S3: returns a ReadableStream from the SDK GetObjectCommand.
+ */
+export async function getDocumentDownloadStream(documentId: string) {
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      community: {
+        select: {
+          id: true,
+          officeId: true,
+        },
+      },
+    },
+  })
+
+  if (!document || document.archivedAt) {
+    throw new Error('DOCUMENT_NOT_FOUND')
+  }
+
+  const stream = await storage.getDownloadStream(document.storagePath)
+  const extension = path.extname(document.storagePath)
+  const baseTitle = sanitizeFilename(document.title)
+  const downloadName = extension ? `${baseTitle}${extension}` : baseTitle
+
+  return {
+    document,
+    stream,
+    downloadName,
+    size: document.size,
+  }
+}
+
+/**
+ * Try to get a presigned URL for direct download (S3 only).
+ * Returns null if storage adapter doesn't support presigned URLs (local).
+ * The caller should fall back to streaming through the app server.
+ */
+export async function getDocumentPresignedUrl(documentId: string) {
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      community: {
+        select: {
+          id: true,
+          officeId: true,
+        },
+      },
+    },
+  })
+
+  if (!document || document.archivedAt) {
+    throw new Error('DOCUMENT_NOT_FOUND')
+  }
+
+  const url = await storage.getSignedDownloadUrl(document.storagePath, 300)
+  return url
+}
+
+/**
+ * Legacy buffer-based download for backward compatibility.
+ * Use getDocumentDownloadStream() for new code.
+ * @deprecated Use getDocumentDownloadStream() instead.
+ */
 export async function getDocumentDownloadPayload(documentId: string) {
   const document = await prisma.document.findUnique({
     where: { id: documentId },

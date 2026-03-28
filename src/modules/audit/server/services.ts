@@ -12,14 +12,53 @@ interface AuditEntry {
 }
 
 /**
- * Fire-and-forget audit logging.
- *
- * The INSERT is executed asynchronously without awaiting.
- * This removes ~5-10ms latency from every request that logs audits.
- * If the insert fails, the error is logged to stderr but does NOT
- * propagate to the caller — auditing should never break business logic.
+ * Actions that must be audited synchronously (guaranteed write).
+ * These cover security-sensitive and financially-relevant operations
+ * where losing the audit trail is unacceptable.
  */
-export function logAudit(entry: AuditEntry): void {
+const SYNC_AUDIT_ACTIONS: Set<AuditAction> = new Set([
+  'LOGIN',
+  'CREATE',  // User creation includes role assignment
+  'UPDATE',  // User updates include role/permission changes
+  'DELETE',  // Irrecoverable actions
+  'ARCHIVE', // Soft-delete is also sensitive
+])
+
+/**
+ * Entity types that always require synchronous audit regardless of action.
+ */
+const SYNC_AUDIT_ENTITIES: Set<string> = new Set([
+  'User',      // Login, role changes
+  'Payment',   // Financial operations
+  'Receipt',   // Financial operations
+  'Debt',      // Financial operations
+  'Budget',    // Financial operations
+])
+
+function requiresSyncAudit(entry: AuditEntry): boolean {
+  if (SYNC_AUDIT_ENTITIES.has(entry.entityType)) return true
+  if (SYNC_AUDIT_ACTIONS.has(entry.action) && entry.entityType === 'User') return true
+  return false
+}
+
+/**
+ * Audit logging with selective sync/async behavior.
+ *
+ * - **Sync** (guaranteed): Login, user management, financial operations.
+ *   The INSERT is awaited. If it fails, the error propagates.
+ *
+ * - **Async** (best-effort): CRUD on communities, incidents, documents, etc.
+ *   The INSERT is fire-and-forget. Failures are logged to stderr
+ *   but do NOT propagate — auditing should never break general business logic.
+ *
+ * Use `logAuditSync()` to force synchronous behavior for custom cases.
+ */
+export function logAudit(entry: AuditEntry): void | Promise<void> {
+  if (requiresSyncAudit(entry)) {
+    return logAuditSync(entry)
+  }
+
+  // Fire-and-forget for non-sensitive operations
   prisma.auditLog
     .create({
       data: {
@@ -38,4 +77,21 @@ export function logAudit(entry: AuditEntry): void {
         action: entry.action,
       })
     })
+}
+
+/**
+ * Force synchronous audit logging. Use for operations where the
+ * audit trail MUST be written before the response is sent.
+ */
+export async function logAuditSync(entry: AuditEntry): Promise<void> {
+  await prisma.auditLog.create({
+    data: {
+      officeId: entry.officeId,
+      userId: entry.userId,
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      action: entry.action,
+      metaJson: entry.meta ? JSON.stringify(entry.meta) : null,
+    },
+  })
 }

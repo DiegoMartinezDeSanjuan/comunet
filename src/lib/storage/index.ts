@@ -2,15 +2,35 @@ import 'server-only'
 import * as fs from 'fs/promises'
 import * as fsSync from 'fs'
 import * as path from 'path'
+import { Readable } from 'stream'
 
 // ─── Interface ──────────────────────────────────────────
 
 export interface StorageAdapter {
   save(filename: string, data: Buffer, mimeType?: string): Promise<string>
+  /**
+   * Read file as Buffer. Use only for small files or when you need
+   * the full contents in memory (e.g. CSV generation).
+   * For downloads, prefer getDownloadStream() or getSignedDownloadUrl().
+   */
   read(storagePath: string): Promise<Buffer>
   delete(storagePath: string): Promise<void>
   exists(storagePath: string): Promise<boolean>
   getUrl(storagePath: string): string
+
+  /**
+   * Returns a ReadableStream for streaming file contents without loading
+   * the entire file into memory. Falls back to read() + wrapping if
+   * the adapter doesn't support native streaming.
+   */
+  getDownloadStream(storagePath: string): Promise<ReadableStream<Uint8Array>>
+
+  /**
+   * Returns a presigned URL for direct download (S3 only).
+   * Local storage returns null — the caller should fall back to streaming
+   * through the app server.
+   */
+  getSignedDownloadUrl(storagePath: string, expiresInSeconds?: number): Promise<string | null>
 }
 
 // ─── Local Storage (dev + single-instance prod) ─────────
@@ -36,6 +56,37 @@ class LocalStorageAdapter implements StorageAdapter {
   async read(storagePath: string): Promise<Buffer> {
     const fullPath = path.join(this.basePath, storagePath)
     return fs.readFile(fullPath)
+  }
+
+  async getDownloadStream(storagePath: string): Promise<ReadableStream<Uint8Array>> {
+    const fullPath = path.join(this.basePath, storagePath)
+
+    // Verify the file exists before creating the stream
+    await fs.access(fullPath)
+
+    const nodeStream = fsSync.createReadStream(fullPath)
+
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        nodeStream.on('data', (chunk) => {
+          controller.enqueue(new Uint8Array(chunk as Buffer))
+        })
+        nodeStream.on('end', () => {
+          controller.close()
+        })
+        nodeStream.on('error', (err) => {
+          controller.error(err)
+        })
+      },
+      cancel() {
+        nodeStream.destroy()
+      },
+    })
+  }
+
+  async getSignedDownloadUrl(): Promise<string | null> {
+    // Local storage doesn't support presigned URLs
+    return null
   }
 
   async delete(storagePath: string): Promise<void> {
@@ -80,7 +131,6 @@ class S3StorageAdapter implements StorageAdapter {
   }
 
   private async getClient() {
-    // Dynamic import to avoid bundling @aws-sdk when using local storage
     const { S3Client } = await import('@aws-sdk/client-s3')
     return new S3Client({
       region: this.region,
@@ -118,17 +168,13 @@ class S3StorageAdapter implements StorageAdapter {
     const key = this.getKey(storagePath)
 
     const response = await client.send(
-      new GetObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-      }),
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
     )
 
     if (!response.Body) {
       throw new Error(`S3: Empty body for key ${key}`)
     }
 
-    // Convert readable stream to Buffer
     const chunks: Uint8Array[] = []
     const stream = response.Body as AsyncIterable<Uint8Array>
     for await (const chunk of stream) {
@@ -137,16 +183,69 @@ class S3StorageAdapter implements StorageAdapter {
     return Buffer.concat(chunks)
   }
 
+  async getDownloadStream(storagePath: string): Promise<ReadableStream<Uint8Array>> {
+    const { GetObjectCommand } = await import('@aws-sdk/client-s3')
+    const client = await this.getClient()
+    const key = this.getKey(storagePath)
+
+    const response = await client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    )
+
+    if (!response.Body) {
+      throw new Error(`S3: Empty body for key ${key}`)
+    }
+
+    // S3 SDK returns a web ReadableStream or a Node.js Readable
+    const body = response.Body
+
+    // If it's already a web ReadableStream, return it
+    if ('getReader' in body && typeof body.getReader === 'function') {
+      return body as ReadableStream<Uint8Array>
+    }
+
+    // Otherwise, convert Node.js Readable to web ReadableStream
+    const nodeReadable = body as Readable
+    return new ReadableStream<Uint8Array>({
+      start(controller) {
+        nodeReadable.on('data', (chunk: Buffer) => {
+          controller.enqueue(new Uint8Array(chunk))
+        })
+        nodeReadable.on('end', () => {
+          controller.close()
+        })
+        nodeReadable.on('error', (err) => {
+          controller.error(err)
+        })
+      },
+      cancel() {
+        nodeReadable.destroy()
+      },
+    })
+  }
+
+  async getSignedDownloadUrl(storagePath: string, expiresInSeconds = 300): Promise<string | null> {
+    const { GetObjectCommand } = await import('@aws-sdk/client-s3')
+    const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner')
+    const client = await this.getClient()
+    const key = this.getKey(storagePath)
+
+    const url = await getSignedUrl(
+      client,
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      { expiresIn: expiresInSeconds },
+    )
+
+    return url
+  }
+
   async delete(storagePath: string): Promise<void> {
     const { DeleteObjectCommand } = await import('@aws-sdk/client-s3')
     const client = await this.getClient()
     const key = this.getKey(storagePath)
 
     await client.send(
-      new DeleteObjectCommand({
-        Bucket: this.bucket,
-        Key: key,
-      }),
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
     )
   }
 
@@ -157,10 +256,7 @@ class S3StorageAdapter implements StorageAdapter {
 
     try {
       await client.send(
-        new HeadObjectCommand({
-          Bucket: this.bucket,
-          Key: key,
-        }),
+        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
       )
       return true
     } catch {
@@ -169,7 +265,6 @@ class S3StorageAdapter implements StorageAdapter {
   }
 
   getUrl(storagePath: string): string {
-    // Always go through our API for auth checking
     return `/api/documents/${encodeURIComponent(storagePath)}/download`
   }
 }

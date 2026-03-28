@@ -62,7 +62,7 @@ export async function registerPaymentService(
 
   await refreshDebtProjectionService(receipt.communityId)
 
-  logAudit({
+  await logAudit({
     officeId,
     userId,
     entityType: 'Payment',

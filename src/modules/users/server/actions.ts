@@ -59,7 +59,7 @@ export async function createUser(data: z.infer<typeof userFormSchema>) {
     },
   })
 
-  logAudit({
+  await logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'USER',
@@ -115,7 +115,7 @@ export async function updateUser(userId: string, data: z.infer<typeof userFormSc
     },
   })
 
-  logAudit({
+  await logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'USER',
@@ -147,7 +147,7 @@ export async function archiveUser(userId: string) {
     data: { archivedAt: new Date() },
   })
 
-  logAudit({
+  await logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'USER',
@@ -176,7 +176,7 @@ export async function resetUserPassword(userId: string) {
     data: { passwordHash },
   })
 
-  logAudit({
+  await logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'USER',

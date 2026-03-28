@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 export async function logoutAction() {
   const session = await requireAuth()
   
-  logAudit({
+  await logAudit({
     officeId: session.officeId,
     userId: session.userId,
     entityType: 'User',
