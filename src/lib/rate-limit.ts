@@ -37,15 +37,8 @@ const redis = (redisUrl && redisToken)
   ? new Redis({ url: redisUrl, token: redisToken })
   : null
 
-// Warn in production if Redis is not configured (but don't crash)
-if (process.env.NODE_ENV === 'production' && !redis) {
-  console.warn(
-    '⚠️  [rate-limit] UPSTASH_REDIS_REST_URL / TOKEN not set. ' +
-    'Using in-memory rate limiter. This is NOT suitable for multi-instance deployments. ' +
-    'Set both variables for distributed rate limiting.',
-  )
-}
-
+// Ensure unambiguous fallback to in-memory store if Redis is unavailable
+// Perfect for single-instance Docker Compose deployments.
 function createMemoryRateLimiter(options: RateLimiterOptions): RateLimiter {
   const { windowMs, maxRequests } = options
   const store = new Map<string, { timestamps: number[] }>()
