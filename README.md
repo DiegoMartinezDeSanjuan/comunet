@@ -115,35 +115,62 @@ El servidor estará disponible en **http://localhost:3000**.
 
 ```
 src/
-├── app/               # App Router (rutas, layouts, pages)
-│   ├── (backoffice)/  # Rutas del backoffice (loading.tsx + error.tsx)
-│   ├── (portal)/      # Rutas del portal (loading.tsx + error.tsx)
-│   ├── (public)/      # Login
+├── app/                  # App Router — solo rutas, layouts, pages
+│   ├── (backoffice)/     # Rutas del backoffice (loading + error + not-found)
+│   │   └── dashboard/
+│   │       └── _components/  # UI local de página
+│   ├── (portal)/         # Rutas del portal (loading + error + not-found)
+│   ├── (public)/         # Login
+│   ├── api/              # API routes (health, exports, mock)
 │   ├── global-error.tsx  # Error boundary global
-│   ├── not-found.tsx   # 404 global
-│   └── api/           # API routes (health, exports, storage)
-├── components/        # Componentes React
-│   ├── layouts/       # Sidebars, headers
-│   ├── portal/        # Componentes del portal
-│   └── ui/            # shadcn/ui primitives + charts
-├── lib/               # Utilidades
-│   ├── auth/          # Autenticación JWT
-│   ├── db/            # Prisma Client (singleton + pool config)
-│   ├── permissions/   # RBAC centralizado (memoizado)
-│   ├── rate-limit.ts  # Upstash Redis / in-memory fallback
-│   └── storage/       # Local + S3 adapter (async)
-└── modules/           # Módulos de dominio
-    ├── audit/         # Auditoría (fire-and-forget)
-    ├── communities/   # Comunidades
-    ├── documents/     # Documentos
-    ├── finances/      # Finanzas
-    ├── incidents/     # Incidencias
-    ├── meetings/      # Reuniones
-    ├── notifications/ # Notificaciones (batch insert)
-    ├── portal/        # Lógica portal
-    ├── providers/     # Proveedores
-    ├── reports/       # Reportes
-    └── users/         # Usuarios
+│   └── not-found.tsx     # 404 global
+├── components/           # Shared UI únicamente
+│   ├── layouts/          # Sidebars, headers
+│   └── ui/               # shadcn/ui primitives + KPIs + badges + charts
+├── lib/                  # Infraestructura y utilidades
+│   ├── auth/             # JWT + bcrypt
+│   ├── cache/            # request-cache (React cache wrapper)
+│   ├── db/               # Prisma Client (singleton + pool config)
+│   ├── formatters/       # Formateo de moneda, fechas, etc.
+│   ├── permissions/      # RBAC centralizado (memoizado)
+│   ├── storage/          # Local + S3 adapter (async)
+│   ├── utils/            # cn(), helpers genéricos
+│   └── rate-limit.ts     # Upstash Redis / in-memory fallback
+├── modules/              # Módulos de dominio — dueños de lógica + UI de feature
+│   ├── communities/
+│   │   ├── server/       # actions.ts, repository.ts, service.ts
+│   │   └── schema.ts
+│   ├── incidents/
+│   │   ├── components/   # incident-create-dialog, form
+│   │   ├── server/       # actions, queries, repository, services
+│   │   ├── schema.ts
+│   │   └── policy.ts
+│   ├── portal/
+│   │   ├── components/   # ui.tsx (badges, labels, empty states)
+│   │   └── server/       # dashboard, incidents, receipts, provider, policy
+│   ├── reports/
+│   │   ├── components/   # reports-charts.tsx
+│   │   └── server/       # queries.ts
+│   ├── settings/
+│   │   ├── components/   # settings-nav, settings-profile-form
+│   │   └── server/       # actions, queries
+│   └── ...               # audit, auth, contacts, documents, finances,
+│                         # meetings, notifications, providers, units, users
+├── proxy.ts              # CSP nonces, rate limiting, auth check, mock protection
+tests/
+├── e2e/                  # Playwright tests
+├── load/                 # k6 load tests
+├── mocks/                # server-only mock, etc.
+├── modules/              # Unit tests espejando src/modules/
+│   ├── finances/
+│   ├── incidents/
+│   ├── meetings/
+│   ├── notifications/
+│   ├── portal/
+│   ├── providers/
+│   ├── reports/
+│   └── settings/
+└── setup.ts
 ```
 
 ## 🔒 Seguridad y Rendimiento
