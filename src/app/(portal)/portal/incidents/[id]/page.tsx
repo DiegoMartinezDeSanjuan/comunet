@@ -5,7 +5,6 @@ import {
   INCIDENT_STATUS_LABELS,
   PortalAlert,
   PortalBadge,
-  PortalPageHeader,
   getIncidentPriorityTone,
   getIncidentStatusTone,
 } from '@/components/portal/ui'
@@ -47,23 +46,22 @@ export default async function PortalIncidentDetailPage({
 
     return (
       <div className="space-y-8">
-        <div className="space-y-4">
-          <BackLink href="/portal/incidents">Volver a incidencias</BackLink>
-          <PortalPageHeader
-            eyebrow="Portal Proveedor"
-            title={incident.title}
-            description={`${incident.community.name} · ${incident.unit?.reference ?? 'Incidencia comunitaria'} · Reportada el ${formatDate(incident.reportedAt)}`}
-            action={
-              <div className="flex flex-wrap gap-2">
-                <PortalBadge tone={getIncidentPriorityTone(incident.priority)}>
-                  {INCIDENT_PRIORITY_LABELS[incident.priority] ?? incident.priority}
-                </PortalBadge>
-                <PortalBadge tone={getIncidentStatusTone(incident.status)}>
-                  {INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}
-                </PortalBadge>
-              </div>
-            }
-          />
+        <div className="space-y-6">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Detalle de incidencia (Proveedor)</h1>
+              <p className="mt-1 text-sm text-muted-foreground">{incident.title}</p>
+            </div>
+            <BackLink href="/portal/incidents">Volver a incidencias</BackLink>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <PortalBadge tone={getIncidentPriorityTone(incident.priority)}>
+              {INCIDENT_PRIORITY_LABELS[incident.priority] ?? incident.priority}
+            </PortalBadge>
+            <PortalBadge tone={getIncidentStatusTone(incident.status)}>
+              {INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}
+            </PortalBadge>
+          </div>
         </div>
 
         {statusChanged ? (
@@ -214,24 +212,21 @@ export default async function PortalIncidentDetailPage({
   if (!incident) notFound()
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-4">
-        <BackLink href="/portal/incidents">Volver a incidencias</BackLink>
-        <PortalPageHeader
-          eyebrow="Incidencias"
-          title={incident.title}
-          description={`${incident.community.name} · ${incident.unit?.reference ?? 'Incidencia comunitaria'} · Reportada el ${formatDate(incident.reportedAt)}`}
-          action={
-            <div className="flex flex-wrap gap-2">
-              <PortalBadge tone={getIncidentPriorityTone(incident.priority)}>
-                {INCIDENT_PRIORITY_LABELS[incident.priority] ?? incident.priority}
-              </PortalBadge>
-              <PortalBadge tone={getIncidentStatusTone(incident.status)}>
-                {INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}
-              </PortalBadge>
-            </div>
-          }
-        />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Detalle de incidencia</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{incident.title}</p>
+        </div>
+        <BackLink href="/portal/incidents">Volver a mis incidencias</BackLink>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <PortalBadge tone={getIncidentPriorityTone(incident.priority)}>
+          {INCIDENT_PRIORITY_LABELS[incident.priority] ?? incident.priority}
+        </PortalBadge>
+        <PortalBadge tone={getIncidentStatusTone(incident.status)}>
+          {INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}
+        </PortalBadge>
       </div>
 
       {created ? (

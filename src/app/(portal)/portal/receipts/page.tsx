@@ -5,11 +5,10 @@ import { Receipt, Wallet, AlertCircle } from 'lucide-react'
 import {
   PortalBadge,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalStatCard,
   getReceiptStatusTone,
   RECEIPT_STATUS_LABELS,
 } from '@/components/portal/ui'
+import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { listPortalReceipts } from '@/modules/portal/server/receipts'
@@ -38,31 +37,31 @@ export default async function PortalReceiptsPage({ searchParams }: PortalReceipt
   })
 
   return (
-    <div className="space-y-8">
-      <PortalPageHeader
-        eyebrow="Portal"
-        title="Recibos"
-        description="Consulta tus recibos autorizados, filtra por comunidad, unidad, estado o periodo y revisa el saldo pendiente sin salir del portal."
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Recibos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Consulta tus recibos autorizados, filtra por comunidad, unidad, estado o periodo y revisa el saldo pendiente sin salir del portal.</p>
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <PortalStatCard
+        <KPICard
           label="Recibos visibles"
-          value={String(data.summary.totalCount)}
-          hint="Resultado del filtro actual."
-          icon={Receipt}
+          value={data.summary.totalCount}
+          icon={<Receipt className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Saldo pendiente"
           value={formatCurrency(data.summary.pendingTotal)}
-          hint="Suma de importes aún no liquidados en este listado."
-          icon={Wallet}
+          icon={<Wallet className="h-5 w-5" />}
+          accent="warning"
         />
-        <PortalStatCard
+        <KPICard
           label="Recibos vencidos"
-          value={String(data.summary.overdueCount)}
-          hint="Necesitan seguimiento o revisión de cobro."
-          icon={AlertCircle}
+          value={data.summary.overdueCount}
+          icon={<AlertCircle className="h-5 w-5" />}
+          accent="danger"
         />
       </div>
 

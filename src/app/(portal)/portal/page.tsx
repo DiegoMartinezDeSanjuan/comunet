@@ -13,13 +13,12 @@ import {
 import {
   PortalBadge,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalStatCard,
   getIncidentStatusTone,
   getReceiptStatusTone,
   INCIDENT_STATUS_LABELS,
   RECEIPT_STATUS_LABELS,
 } from '@/components/portal/ui'
+import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/formatters'
 import { getPortalDashboardData } from '@/modules/portal/server/dashboard'
@@ -32,39 +31,38 @@ export default async function PortalDashboardPage() {
     const dashboard = await getProviderDashboardData(session)
 
     return (
-      <div className="space-y-8">
-        <PortalPageHeader
-          eyebrow="Portal Proveedor"
-          title={`Hola, ${session.name}`}
-          description="Panel de incidencias asignadas a tu cuenta de proveedor. Solo se muestran las incidencias donde estás asignado y los comentarios compartidos."
-          action={
-            <Link
-              href="/portal/incidents"
-              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Ver todas las incidencias
-            </Link>
-          }
-        />
+      <div className="space-y-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Hola, {session.name}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Panel de incidencias asignadas a tu cuenta de proveedor. Solo se muestran las incidencias donde estás asignado y los comentarios compartidos.</p>
+          </div>
+          <Link
+            href="/portal/incidents"
+            className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Ver todas las incidencias
+          </Link>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <PortalStatCard
+          <KPICard
             label="Asignadas activas"
-            value={String(dashboard.kpis.totalAssigned)}
-            hint="Incidencias no cerradas asignadas a tu cuenta."
-            icon={AlertTriangle}
+            value={dashboard.kpis.totalAssigned}
+            icon={<AlertTriangle className="h-5 w-5" />}
+            accent="warning"
           />
-          <PortalStatCard
+          <KPICard
             label="En curso"
-            value={String(dashboard.kpis.inProgressCount)}
-            hint="Incidencias marcadas como EN PROGRESO."
-            icon={Loader2}
+            value={dashboard.kpis.inProgressCount}
+            icon={<Loader2 className="h-5 w-5" />}
+            accent="default"
           />
-          <PortalStatCard
+          <KPICard
             label="Resueltas / Cerradas"
-            value={String(dashboard.kpis.resolvedCount)}
-            hint="Incidencias finalizadas con éxito."
-            icon={CheckCircle2}
+            value={dashboard.kpis.resolvedCount}
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            accent="success"
           />
         </div>
 
@@ -119,11 +117,12 @@ export default async function PortalDashboardPage() {
   if (!dashboard.scope || (!dashboard.scope.ownedCommunityIds.length && !dashboard.scope.presidentCommunityIds.length)) {
     return (
       <div className="space-y-6">
-        <PortalPageHeader
-          eyebrow="Portal"
-          title="Tu portal está listo, pero sin comunidades activas"
-          description="Cuando exista una vinculación activa con unidades o un cargo vigente de presidencia, aquí aparecerán tus recibos, incidencias y el resumen de comunidad dentro de tu alcance."
-        />
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Tu portal está listo, pero sin comunidades activas</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Cuando exista una vinculación activa con unidades o un cargo vigente de presidencia, aquí aparecerán tus recibos, incidencias y el resumen de comunidad dentro de tu alcance.</p>
+          </div>
+        </div>
 
         <PortalEmptyState
           title="Aún no hay datos visibles para esta cuenta"
@@ -134,53 +133,50 @@ export default async function PortalDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <PortalPageHeader
-        eyebrow="Portal"
-        title={`Hola, ${session.name}`}
-        description="Este resumen combina tus comunidades, unidades, deuda pendiente, recibos recientes e incidencias activas dentro de tu alcance autorizado."
-        action={
-          <>
-            <Link
-              href="/portal/receipts"
-              className="inline-flex items-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              Ver recibos
-            </Link>
-            <Link
-              href="/portal/incidents"
-              className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Gestionar incidencias
-            </Link>
-          </>
-        }
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Hola, {session.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Este resumen combina tus comunidades, unidades, deuda pendiente, recibos recientes e incidencias activas dentro de tu alcance autorizado.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/portal/receipts"
+            className="inline-flex items-center rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            Ver recibos
+          </Link>
+          <Link
+            href="/portal/incidents"
+            className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Gestionar incidencias
+          </Link>
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <PortalStatCard
+        <KPICard
           label="Comunidades"
-          value={String(dashboard.kpis?.ownedCommunitiesCount ?? 0)}
-          hint="Comunidades donde tienes una relación activa como propietario."
-          icon={Building2}
+          value={dashboard.kpis?.ownedCommunitiesCount ?? 0}
+          icon={<Building2 className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Unidades"
-          value={String(dashboard.kpis?.ownedUnitsCount ?? 0)}
-          hint="Tus unidades activas visibles en portal."
-          icon={Home}
+          value={dashboard.kpis?.ownedUnitsCount ?? 0}
+          icon={<Home className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Deuda pendiente"
           value={formatCurrency(dashboard.kpis?.ownerPendingDebtTotal ?? 0)}
-          hint="Calculada con deudas pendientes y parcialmente pagadas de tus recibos."
-          icon={Wallet}
+          icon={<Wallet className="h-5 w-5" />}
+          accent={(dashboard.kpis?.ownerPendingDebtTotal ?? 0) > 0 ? "danger" : "default"}
         />
-        <PortalStatCard
+        <KPICard
           label="Incidencias activas"
-          value={String(dashboard.kpis?.ownerActiveIncidentCount ?? 0)}
-          hint="Solo incidencias vinculadas a tus unidades autorizadas."
-          icon={AlertTriangle}
+          value={dashboard.kpis?.ownerActiveIncidentCount ?? 0}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          accent={(dashboard.kpis?.ownerActiveIncidentCount ?? 0) > 0 ? "warning" : "default"}
         />
       </div>
 
@@ -194,23 +190,22 @@ export default async function PortalDashboardPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <PortalStatCard
+            <KPICard
               label="Comunidades con cargo activo"
-              value={String(dashboard.kpis.presidentCommunitiesCount)}
-              hint="Validado contra BoardPosition activo."
-              icon={ShieldCheck}
+              value={dashboard.kpis.presidentCommunitiesCount}
+              icon={<ShieldCheck className="h-5 w-5" />}
             />
-            <PortalStatCard
+            <KPICard
               label="Incidencias comunitarias abiertas"
-              value={String(dashboard.kpis.presidentOpenIncidentCount)}
-              hint="Visión agregada para seguimiento, sin convertir el portal en backoffice."
-              icon={AlertTriangle}
+              value={dashboard.kpis.presidentOpenIncidentCount}
+              icon={<AlertTriangle className="h-5 w-5" />}
+              accent={dashboard.kpis.presidentOpenIncidentCount > 0 ? "warning" : "default"}
             />
-            <PortalStatCard
+            <KPICard
               label="Deuda comunitaria agregada"
               value={formatCurrency(dashboard.kpis.presidentPendingDebtTotal)}
-              hint="Solo visible en las comunidades donde el cargo activo es PRESIDENT."
-              icon={Wallet}
+              icon={<Wallet className="h-5 w-5" />}
+              accent={dashboard.kpis.presidentPendingDebtTotal > 0 ? "danger" : "default"}
             />
           </div>
         </section>

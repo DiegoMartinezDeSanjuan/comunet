@@ -4,11 +4,10 @@ import { Receipt, Wallet, CheckCircle2 } from 'lucide-react'
 import {
   BackLink,
   PortalBadge,
-  PortalPageHeader,
-  PortalStatCard,
   getReceiptStatusTone,
   RECEIPT_STATUS_LABELS,
 } from '@/components/portal/ui'
+import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
 import { getPortalReceiptDetail } from '@/modules/portal/server/receipts'
@@ -33,39 +32,37 @@ export default async function PortalReceiptDetailPage({ params }: PortalReceiptD
   }
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{receipt.reference}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{receipt.community.name} · Unidad {receipt.unit.reference} · Emitido el {formatDate(receipt.issueDate)}</p>
+        </div>
         <BackLink href="/portal/receipts">Volver a recibos</BackLink>
-        <PortalPageHeader
-          eyebrow="Recibos"
-          title={receipt.reference}
-          description={`${receipt.community.name} · Unidad ${receipt.unit.reference} · Emitido el ${formatDate(receipt.issueDate)}`}
-          action={
-            <PortalBadge tone={getReceiptStatusTone(receipt.status)}>
-              {RECEIPT_STATUS_LABELS[receipt.status] ?? receipt.status}
-            </PortalBadge>
-          }
-        />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <PortalBadge tone={getReceiptStatusTone(receipt.status)}>
+          {RECEIPT_STATUS_LABELS[receipt.status] ?? receipt.status}
+        </PortalBadge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <PortalStatCard
+        <KPICard
           label="Importe total"
           value={formatCurrency(receipt.amountValue)}
-          hint="Importe emitido en el recibo."
-          icon={Receipt}
+          icon={<Receipt className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Pagado"
           value={formatCurrency(receipt.paidAmountValue)}
-          hint="Suma registrada como cobrada en el recibo."
-          icon={CheckCircle2}
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          accent="success"
         />
-        <PortalStatCard
+        <KPICard
           label="Saldo pendiente"
           value={formatCurrency(receipt.pendingBalance)}
-          hint="Importe pendiente según amount - paidAmount."
-          icon={Wallet}
+          icon={<Wallet className="h-5 w-5" />}
+          accent="warning"
         />
       </div>
 

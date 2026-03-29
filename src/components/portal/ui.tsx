@@ -80,59 +80,7 @@ export function getIncidentPriorityTone(priority: string): 'neutral' | 'success'
   return 'neutral'
 }
 
-interface PortalPageHeaderProps {
-  eyebrow?: string
-  title: string
-  description?: string
-  action?: ReactNode
-}
 
-export function PortalPageHeader({ eyebrow, title, description, action }: PortalPageHeaderProps) {
-  return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="space-y-1.5">
-        {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {eyebrow}
-          </p>
-        ) : null}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
-          {description ? (
-            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>
-          ) : null}
-        </div>
-      </div>
-      {action ? <div className="flex flex-wrap items-center gap-3">{action}</div> : null}
-    </div>
-  )
-}
-
-interface PortalStatCardProps {
-  label: string
-  value: string
-  hint?: string
-  icon?: LucideIcon
-}
-
-export function PortalStatCard({ label, value, hint, icon: Icon }: PortalStatCardProps) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
-        </div>
-        {Icon ? (
-          <div className="rounded-xl border border-border bg-muted/40 p-2 text-muted-foreground">
-            <Icon className="h-4 w-4" />
-          </div>
-        ) : null}
-      </div>
-      {hint ? <p className="mt-3 text-xs text-muted-foreground">{hint}</p> : null}
-    </div>
-  )
-}
 
 interface PortalEmptyStateProps {
   title: string

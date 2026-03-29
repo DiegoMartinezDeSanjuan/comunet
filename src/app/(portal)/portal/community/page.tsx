@@ -1,6 +1,8 @@
 import { requireAuth } from '@/lib/auth'
 import { getPortalCommunitySummary } from '@/modules/portal/server/content'
 import Link from 'next/link'
+import { KPICard } from '@/components/ui/kpi-card'
+import { AlertTriangle, Receipt } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,32 +26,32 @@ export default async function Page() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Mi Comunidad</h1>
-        <p className="mt-2 text-muted-foreground">
-          Resumen de tu estado, propiedades y datos de contacto de tu administración.
-        </p>
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Mi Comunidad</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Resumen de tu estado, propiedades y datos de contacto de tu administración.</p>
+        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <Link href="/portal/receipts">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-primary">
-            <h3 className="font-semibold text-card-foreground">Recibos Pendientes</h3>
-            <p className="mt-2 text-4xl font-bold text-primary">{summary.stats.pendingReceipts}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Haz clic para ver tus recibos y métodos de pago.
-            </p>
-          </div>
+          <KPICard
+            label="Recibos Pendientes"
+            value={summary.stats.pendingReceipts}
+            icon={<Receipt className="h-5 w-5" />}
+            className="hover:border-primary cursor-pointer"
+            accent={summary.stats.pendingReceipts > 0 ? "warning" : "default"}
+          />
         </Link>
         <Link href="/portal/incidents">
-          <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-primary">
-            <h3 className="font-semibold text-card-foreground">Tus Incidencias</h3>
-            <p className="mt-2 text-4xl font-bold text-primary">{summary.stats.activeIncidents}</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Haz clic para revisar el estado de tus partes.
-            </p>
-          </div>
+          <KPICard
+            label="Tus Incidencias"
+            value={summary.stats.activeIncidents}
+            icon={<AlertTriangle className="h-5 w-5" />}
+            className="hover:border-primary cursor-pointer"
+            accent={summary.stats.activeIncidents > 0 ? "warning" : "default"}
+          />
         </Link>
       </div>
 

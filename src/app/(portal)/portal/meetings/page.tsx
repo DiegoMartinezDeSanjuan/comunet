@@ -5,9 +5,8 @@ import {
   MEETING_STATUS_LABELS,
   PortalBadge,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalStatCard,
 } from '@/components/portal/ui'
+import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatDateTime } from '@/lib/formatters'
 import { listPortalMeetings } from '@/modules/portal/server/content'
@@ -31,31 +30,31 @@ export default async function PortalMeetingsPage() {
   const withMinutesCount = meetings.filter((meeting) => meeting.minutes.length > 0).length
 
   return (
-    <div className="space-y-8">
-      <PortalPageHeader
-        eyebrow="Portal"
-        title="Reuniones"
-        description="Consulta convocatorias y reuniones visibles en tus comunidades. Esta vista es de lectura y prioriza claridad sobre amplitud artificial."
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Reuniones</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Consulta convocatorias y reuniones visibles en tus comunidades. Esta vista es de lectura y prioriza claridad sobre amplitud artificial.</p>
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <PortalStatCard
+        <KPICard
           label="Reuniones visibles"
-          value={String(meetings.length)}
-          hint="Convocatorias no borrador dentro de tu alcance portal."
-          icon={CalendarDays}
+          value={meetings.length}
+          icon={<CalendarDays className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Próximas"
-          value={String(upcomingCount)}
-          hint="Reuniones futuras ya publicadas en tus comunidades."
-          icon={Clock3}
+          value={upcomingCount}
+          icon={<Clock3 className="h-5 w-5" />}
+          accent="warning"
         />
-        <PortalStatCard
+        <KPICard
           label="Con acta asociada"
-          value={String(withMinutesCount)}
-          hint="Solo informativo. La edición de actas sigue fuera del portal."
-          icon={ShieldCheck}
+          value={withMinutesCount}
+          icon={<ShieldCheck className="h-5 w-5" />}
+          accent="success"
         />
       </div>
 

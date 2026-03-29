@@ -7,16 +7,16 @@ import {
   PortalAlert,
   PortalBadge,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalStatCard,
   getIncidentPriorityTone,
   getIncidentStatusTone,
 } from '@/components/portal/ui'
+import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatDate } from '@/lib/formatters'
 import { createPortalIncidentAction } from '@/modules/portal/server/actions'
 import { listPortalIncidents } from '@/modules/portal/server/incidents'
 import { listProviderIncidents } from '@/modules/portal/server/provider'
+import { PortalIncidentCreateForm } from './portal-incident-create-form'
 
 interface PortalIncidentsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -44,33 +44,33 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
     const resolvedCount = data.items.filter((i) => ['RESOLVED', 'CLOSED'].includes(i.status)).length
 
     return (
-      <div className="space-y-8">
-        <PortalPageHeader
-          eyebrow="Portal Proveedor"
-          title="Incidencias asignadas"
-          description="Solo se muestran incidencias asignadas a tu cuenta de proveedor. Los comentarios internos del despacho no son visibles."
-        />
+      <div className="space-y-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Incidencias asignadas (Proveedor)</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Solo se muestran incidencias asignadas a tu cuenta de proveedor. Los comentarios internos del despacho no son visibles.</p>
+          </div>
+        </div>
 
         {error ? <PortalAlert variant="error">{error}</PortalAlert> : null}
 
         <div className="grid gap-4 md:grid-cols-3">
-          <PortalStatCard
+          <KPICard
             label="Total asignadas"
-            value={String(data.items.length)}
-            hint="Resultado del filtro actual."
-            icon={AlertTriangle}
+            value={data.items.length}
+            icon={<AlertTriangle className="h-5 w-5" />}
           />
-          <PortalStatCard
+          <KPICard
             label="Activas"
-            value={String(openCount)}
-            hint="Abiertas, asignadas, en curso o esperando."
-            icon={Wrench}
+            value={openCount}
+            icon={<Wrench className="h-5 w-5" />}
+            accent="warning"
           />
-          <PortalStatCard
+          <KPICard
             label="Resueltas"
-            value={String(resolvedCount)}
-            hint="Resueltas o cerradas."
-            icon={CheckCircle2}
+            value={resolvedCount}
+            icon={<CheckCircle2 className="h-5 w-5" />}
+            accent="success"
           />
         </div>
 
@@ -180,156 +180,41 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
   const urgentCount = data.items.filter((incident) => incident.priority === 'URGENT').length
 
   return (
-    <div className="space-y-8">
-      <PortalPageHeader
-        eyebrow="Portal"
-        title="Incidencias"
-        description="Consulta incidencias visibles en tu alcance, revisa comentarios compartidos y crea nuevas incidencias para tus unidades o, si tienes cargo activo de presidencia, a nivel de comunidad."
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Incidencias</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Consulta incidencias visibles en tu alcance, revisa comentarios compartidos y crea nuevas incidencias para tus unidades o, si tienes cargo activo de presidencia, a nivel de comunidad.</p>
+        </div>
+      </div>
 
       {error ? <PortalAlert variant="error">{error}</PortalAlert> : null}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <PortalStatCard
+        <KPICard
           label="Incidencias visibles"
-          value={String(data.items.length)}
-          hint="Resultado del filtro actual en el portal."
-          icon={AlertTriangle}
+          value={data.items.length}
+          icon={<AlertTriangle className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Activas"
-          value={String(openCount)}
-          hint="Abiertas, asignadas, en curso o esperando proveedor."
-          icon={Wrench}
+          value={openCount}
+          icon={<Wrench className="h-5 w-5" />}
+          accent="warning"
         />
-        <PortalStatCard
+        <KPICard
           label="Urgentes"
-          value={String(urgentCount)}
-          hint="Prioridad URGENT dentro del alcance actual."
-          icon={ShieldCheck}
+          value={urgentCount}
+          icon={<ShieldCheck className="h-5 w-5" />}
+          accent="danger"
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">Alta de incidencia</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              El servidor valida siempre el alcance por unidad o por presidencia activa antes de crear la incidencia.
-            </p>
-          </div>
-
-          <form action={createPortalIncidentAction} className="mt-5 space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="createCommunityId" className="text-sm font-medium text-foreground">
-                Comunidad
-              </label>
-              <select
-                id="createCommunityId"
-                name="communityId"
-                required
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Selecciona una comunidad</option>
-                {data.composerOptions.communities.map((community) => (
-                  <option key={community.id} value={community.id}>
-                    {community.name}
-                    {community.canCreateCommunityIncident ? ' · Presidencia activa' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="createUnitId" className="text-sm font-medium text-foreground">
-                Unidad
-              </label>
-              <select
-                id="createUnitId"
-                name="unitId"
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Incidencia comunitaria (solo presidencia activa)</option>
-                {data.composerOptions.units.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.communityName} · {unit.reference}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">
-                Si no eliges unidad, el alta solo se aceptará cuando exista cargo activo de presidencia en la comunidad seleccionada.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="createIncidentTitle" className="text-sm font-medium text-foreground">
-                Título
-              </label>
-              <input
-                id="createIncidentTitle"
-                name="title"
-                type="text"
-                required
-                minLength={3}
-                maxLength={160}
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                placeholder="Describe brevemente la incidencia"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="createIncidentDescription" className="text-sm font-medium text-foreground">
-                Descripción
-              </label>
-              <textarea
-                id="createIncidentDescription"
-                name="description"
-                rows={5}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                placeholder="Añade contexto, ubicación exacta o cualquier dato útil para el seguimiento"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="createPriority" className="text-sm font-medium text-foreground">
-                  Prioridad
-                </label>
-                <select
-                  id="createPriority"
-                  name="priority"
-                  defaultValue="MEDIUM"
-                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                >
-                  {Object.entries(INCIDENT_PRIORITY_LABELS).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="createDueAt" className="text-sm font-medium text-foreground">
-                  Fecha objetivo
-                </label>
-                <input
-                  id="createDueAt"
-                  name="dueAt"
-                  type="date"
-                  className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Crear incidencia
-            </button>
-          </form>
-        </section>
+        <PortalIncidentCreateForm
+          communities={data.composerOptions.communities}
+          units={data.composerOptions.units}
+        />
 
         <section className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">

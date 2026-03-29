@@ -4,9 +4,8 @@ import { FileText, FolderOpen, ShieldCheck } from 'lucide-react'
 import {
   PortalBadge,
   PortalEmptyState,
-  PortalPageHeader,
-  PortalStatCard,
 } from '@/components/portal/ui'
+import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatDate } from '@/lib/formatters'
 import { listPortalDocuments } from '@/modules/portal/server/content'
@@ -26,31 +25,30 @@ export default async function PortalDocumentsPage() {
   const documents = await listPortalDocuments(session, 24)
 
   return (
-    <div className="space-y-8">
-      <PortalPageHeader
-        eyebrow="Portal"
-        title="Documentos"
-        description="Explora y descarga los documentos que la administración ha publicado para tu comunidad."
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Documentos</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Explora y descarga los documentos que la administración ha publicado para tu comunidad.</p>
+        </div>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <PortalStatCard
+        <KPICard
           label="Documentos visibles"
-          value={String(documents.length)}
-          hint="Solo documentos con visibilidad apta para propietarios en tus comunidades."
-          icon={FileText}
+          value={documents.length}
+          icon={<FileText className="h-5 w-5" />}
         />
-        <PortalStatCard
+        <KPICard
           label="Comunidades con documentación"
-          value={String(new Set(documents.map((document) => document.communityId)).size)}
-          hint="Comunidades donde ya existe documentación publicada para portal."
-          icon={FolderOpen}
+          value={new Set(documents.map((document) => document.communityId)).size}
+          icon={<FolderOpen className="h-5 w-5" />}
         />
-        <PortalStatCard
-          label="Descarga Directa"
+        <KPICard
+          label="Descarga Directa Segura"
           value="Segura"
-          hint="Todos los documentos listados aquí tienen acceso validado por tu cuenta de propietario."
-          icon={ShieldCheck}
+          icon={<ShieldCheck className="h-5 w-5" />}
+          accent="success"
         />
       </div>
 
