@@ -19,42 +19,57 @@ export let options = {
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 
-export default function () {
-  // 1. Test public page load (unauthenticated)
-  let homeRes = http.get(`${BASE_URL}/login`);
-  check(homeRes, {
-    'GET /login is 200': (r) => r.status === 200,
-  });
-  sleep(1);
-
-  // 2. Test login POST (this should hit the Brute Force Rate limiter eventually)
+export function setup() {
+  // 1. Authenticate once to get a valid session for the VUs
   let loginPayload = {
-    email: `testuser_${__VU}_${__ITER}@example.com`,
-    password: 'wrongpassword123',
+    email: 'admin@fincasmartinez.es',
+    password: 'Demo1234!',
   };
+  
   let loginRes = http.post(`${BASE_URL}/login`, loginPayload, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    redirects: 0 // Prevent following redirect to capture the cookie easily
   });
   
-  // Checking that it gets either a 200 (error shown on page) or 429/400
-  check(loginRes, {
-    'POST /login is bounded (200, 400, or 429)': (r) => [200, 400, 429].includes(r.status),
-    'Rate limit triggering (429)': (r) => r.status === 429,
-  });
-  sleep(1);
+  let sessionCookie = '';
+  
+  // Either from 303 Redirect or 200 OK
+  if (loginRes.cookies && loginRes.cookies['comunet-session']) {
+    sessionCookie = loginRes.cookies['comunet-session'][0].value;
+  }
+  
+  console.log(`Setup complete. Session cookie obtained: ${!!sessionCookie}`);
+  return { sessionCookie };
+}
 
-  // 3. Test protected API endpoints
-  // Simulated authenticated request passing a dummy cookie
-  let apiRes = http.get(`${BASE_URL}/api/documents/some-id/download`, {
+export default function (data) {
+  if (!data.sessionCookie) {
+    console.error("No session cookie available!");
+    return;
+  }
+
+  // Define headers with the real session cookie
+  const authHeaders = {
     headers: {
-      Cookie: 'comunet-session=fake.jwt.token'
-    },
-    redirects: 0 // Prevent following redirects to properly check response codes
-  });
+      Cookie: `comunet-session=${data.sessionCookie}`
+    }
+  };
+
+  // 1. Test Dashboard load (heavy queries: finances, incidents, recent activity)
+  let dashboardRes = http.get(`${BASE_URL}/dashboard`, authHeaders);
   
-  // It should return 401 Unauthorized or 403 Forbidden since the token is fake, or 429 Too Many Requests
-  check(apiRes, {
-    'Protected API is 401, 403, or 429': (r) => [401, 403, 429].includes(r.status),
+  check(dashboardRes, {
+    'GET /dashboard is 200': (r) => r.status === 200,
+    'Dashboard loaded successfully': (r) => r.body && r.body.includes('Dashboard')
+  });
+
+  sleep(Math.random() * 2 + 1);
+
+  // 2. Test Communities list
+  let communitiesRes = http.get(`${BASE_URL}/communities`, authHeaders);
+  
+  check(communitiesRes, {
+    'GET /communities is 200': (r) => r.status === 200,
   });
 
   sleep(Math.random() * 3 + 1); // Random sleep between 1-4s to simulate think time

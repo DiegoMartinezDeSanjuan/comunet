@@ -36,26 +36,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Security headers on all routes
   async headers() {
-    const isDev = process.env.NODE_ENV === 'development'
-    const scriptSrc = isDev 
-      ? "'self' 'unsafe-inline' 'unsafe-eval'" 
-      : "'self' 'unsafe-inline'"
-
-    // Update the CSP within the headers array dynamically
-    const dynamicHeaders = securityHeaders.map(header => {
-      if (header.key === 'Content-Security-Policy') {
-        return {
-          key: header.key,
-          value: `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';`
-        }
-      }
-      return header
-    })
-
     return [
       {
         source: '/(.*)',
-        headers: dynamicHeaders,
+        headers: securityHeaders.filter(h => h.key !== 'Content-Security-Policy'),
       },
     ]
   },

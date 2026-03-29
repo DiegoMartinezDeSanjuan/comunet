@@ -26,36 +26,61 @@ function rateLimitResponse(retryAfterMs: number) {
 }
 
 export async function middleware(request: NextRequest) {
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+  const isDev = process.env.NODE_ENV === 'development'
+  const scriptSrc = isDev 
+    ? `'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval'` 
+    : `'self' 'nonce-${nonce}' 'strict-dynamic'`
+
+  const cspHeader = `
+    default-src 'self';
+    script-src ${scriptSrc};
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: blob: https:;
+    connect-src 'self';
+    frame-ancestors 'self';
+    base-uri 'self';
+    form-action 'self';
+  `
+  const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, ' ').trim()
+
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-nonce', nonce)
+  requestHeaders.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
+
   const { pathname } = request.nextUrl
   const ip = getClientIp(request)
 
-  // Allow static files and Next.js internals
-  if (pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.includes('.')) {
-    return NextResponse.next()
+  const setCsp = (res: NextResponse) => {
+    res.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
+    return res
   }
 
-  // Allow public paths
-  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-    return NextResponse.next()
+  // Allow static files and Next.js internals
+  if (pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.includes('.')) {
+    return setCsp(NextResponse.next({ request: { headers: requestHeaders } }))
   }
 
   // Rate limit API routes
   if (pathname.startsWith('/api/')) {
     const result = await apiLimiter.check(ip)
     if (!result.allowed) {
-      return rateLimitResponse(result.retryAfterMs)
+      return setCsp(rateLimitResponse(result.retryAfterMs))
     }
   }
 
   // Check for session cookie (real auth check happens in server components/actions)
-  const sessionCookie = request.cookies.get('comunet-session')
-  if (!sessionCookie?.value) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('callbackUrl', pathname)
-    return NextResponse.redirect(loginUrl)
+  if (!PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+    const sessionCookie = request.cookies.get('comunet-session')
+    if (!sessionCookie?.value) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', pathname)
+      return setCsp(NextResponse.redirect(loginUrl))
+    }
   }
 
-  return NextResponse.next()
+  return setCsp(NextResponse.next({ request: { headers: requestHeaders } }))
 }
 
 export const config = {
