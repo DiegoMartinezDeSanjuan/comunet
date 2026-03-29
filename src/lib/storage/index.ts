@@ -1,6 +1,6 @@
 import 'server-only'
 import * as fs from 'fs/promises'
-import * as fsSync from 'fs'
+
 import * as path from 'path'
 import { Readable } from 'stream'
 
@@ -69,22 +69,26 @@ class LocalStorageAdapter implements StorageAdapter {
     // Verify the file exists before creating the stream
     await fs.access(fullPath)
 
-    const nodeStream = fsSync.createReadStream(fullPath)
+    const fileHandle = await fs.open(fullPath, 'r')
+    const nodeStream = fileHandle.createReadStream()
 
     return new ReadableStream<Uint8Array>({
       start(controller) {
         nodeStream.on('data', (chunk) => {
           controller.enqueue(new Uint8Array(chunk as Buffer))
         })
-        nodeStream.on('end', () => {
+        nodeStream.on('end', async () => {
+          await fileHandle.close()
           controller.close()
         })
-        nodeStream.on('error', (err) => {
+        nodeStream.on('error', async (err) => {
+          await fileHandle.close()
           controller.error(err)
         })
       },
-      cancel() {
+      async cancel() {
         nodeStream.destroy()
+        await fileHandle.close()
       },
     })
   }
@@ -110,7 +114,12 @@ class LocalStorageAdapter implements StorageAdapter {
 
   async exists(storagePath: string): Promise<boolean> {
     const fullPath = path.join(this.basePath, storagePath)
-    return fsSync.existsSync(fullPath)
+    try {
+      await fs.access(fullPath)
+      return true
+    } catch {
+      return false
+    }
   }
 
   getUrl(documentId: string): string {

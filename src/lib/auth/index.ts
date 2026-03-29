@@ -18,16 +18,14 @@ export interface Session {
 function getAuthSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET
 
-  if (!secret && process.env.NODE_ENV === 'production') {
+  if (!secret) {
     throw new Error(
       'FATAL: AUTH_SECRET environment variable is not set. ' +
-      'This is required in production. Generate one with: openssl rand -base64 32',
+      'This is required in all environments. Generate one with: openssl rand -base64 32',
     )
   }
 
-  return new TextEncoder().encode(
-    secret || 'comunet-dev-secret-do-not-use-in-production',
-  )
+  return new TextEncoder().encode(secret)
 }
 
 const SECRET = getAuthSecret()

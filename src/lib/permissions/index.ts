@@ -66,6 +66,20 @@ const getProviderForScopeCached = createRequestCache(async (providerId: string) 
   })
 })
 
+const getMeetingWithCommunity = createRequestCache(async (meetingId: string) => {
+  return prisma.meeting.findFirst({
+    where: { id: meetingId },
+    include: { community: true },
+  })
+})
+
+const getDocumentWithCommunity = createRequestCache(async (documentId: string) => {
+  return prisma.document.findFirst({
+    where: { id: documentId, archivedAt: null },
+    include: { community: true },
+  })
+})
+
 const BACKOFFICE_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
@@ -186,13 +200,7 @@ export async function canReadIncident(session: Session, incidentId: string): Pro
   }
 
   if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
-    const ownership = await prisma.ownership.findFirst({
-      where: {
-        ownerId: session.linkedOwnerId,
-        unit: { communityId: incident.communityId },
-        endDate: null,
-      },
-    })
+    const ownership = await getOwnershipForOwner(session.linkedOwnerId, incident.communityId)
 
     if (session.role === 'PRESIDENT') return !!ownership
 
@@ -275,10 +283,7 @@ export async function canManageProvider(session: Session, providerId?: string): 
 export async function canManageMeeting(session: Session, meetingId: string): Promise<boolean> {
   if (!isBackofficeManageRole(session.role)) return false
 
-  const meeting = await prisma.meeting.findFirst({
-    where: { id: meetingId },
-    include: { community: true },
-  })
+  const meeting = await getMeetingWithCommunity(meetingId)
 
   if (!meeting) return false
 
@@ -288,10 +293,7 @@ export async function canManageMeeting(session: Session, meetingId: string): Pro
 // ─── Document Permissions ───────────────────────────────
 
 export async function canReadDocument(session: Session, documentId: string): Promise<boolean> {
-  const document = await prisma.document.findFirst({
-    where: { id: documentId, archivedAt: null },
-    include: { community: true },
-  })
+  const document = await getDocumentWithCommunity(documentId)
 
   if (!document) return false
 
@@ -302,13 +304,7 @@ export async function canReadDocument(session: Session, documentId: string): Pro
   if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
     if (document.visibility === 'INTERNAL') return false
 
-    const ownership = await prisma.ownership.findFirst({
-      where: {
-        ownerId: session.linkedOwnerId,
-        unit: { communityId: document.communityId },
-        endDate: null,
-      },
-    })
+    const ownership = await getOwnershipForOwner(session.linkedOwnerId, document.communityId)
 
     return !!ownership
   }
