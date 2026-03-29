@@ -85,4 +85,4 @@ Nuevas actions:
 |-------|-------------------|
 | `proveedor.fontaneria@comunet.test` | Fontanería Rápida 24h |
 | `proveedor.ascensores@comunet.test` | Ascensores Hispania |
-| Contraseña: `Demo1234!` | |
+| Contraseña: `[via seed]` | |

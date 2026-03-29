@@ -112,7 +112,7 @@ Se amplía el seed para dejar el portal utilizable de forma real:
 ### Credenciales demo
 - `presidenta@comunet.test`
 - `propietario@comunet.test`
-- contraseña común: `Demo1234!`
+- contraseña común: `[generada de forma aleatoria por el seed]`
 
 ## Tests añadidos
 

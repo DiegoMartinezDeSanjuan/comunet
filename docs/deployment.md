@@ -2,182 +2,54 @@
 
 ## Opciones de Despliegue
 
-### Opción A: VPS / Bare Metal (Recomendado para empezar)
+### Opción A: PC Local Windows + Cloudflare Tunnels (Arquitectura Actual Activa)
 
-Infraestructura mínima para 500 usuarios concurrentes.
+Infraestructura actual utilizada para alojar la aplicación in-house reduciendo costes y maximizando la privacidad, logrando seguridad perimetral Enterprise sin VPS externos.
 
-#### Requisitos de Hardware
+#### Requisitos de Hardware (Servidor Local)
 
-| Componente | Mínimo | Recomendado |
+| Componente | Mínimo | Actual (Recomendado) |
 |-----------|--------|-------------|
-| CPU | 2 cores | 4 cores |
-| RAM | 4 GB | 8 GB |
-| Disk | 40 GB SSD | 80 GB SSD |
-| OS | Ubuntu 22.04+ / Debian 12+ | Ubuntu 24.04 |
+| CPU | 4 cores | Ryzen 9 / i7 moderno |
+| RAM | 8 GB | 32 GB |
+| OS | Windows 10/11 Pro | Windows 11 |
 
-#### 1. Instalar dependencias
+#### 1. Preparación del Sistema Host
+- Instalar **Docker Desktop** con WSL2 activado.
+- Instalar **Node.js 22 LTS**.
+- Crear la instancia de túnel en Cloudflare Zero Trust.
+- Instalar el servicio de `cloudflared` (Túnel de Windows) para comunicar de forma segura el exterior con nuestro localhost.
 
-```bash
-# Docker + Docker Compose
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-
-# Node.js 22 LTS
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
-
-# pnpm
-npm install -g pnpm
-
-# nginx (reverse proxy)
-sudo apt install -y nginx certbot python3-certbot-nginx
-```
-
-#### 2. Configurar infraestructura
+#### 2. Configurar infraestructura (Docker Compose)
 
 ```bash
-# Clonar repositorio
-git clone https://github.com/DiegoMartinezDeSanjuan/comunet.git
-cd comunet
-
-# Crear .env producción
+# Crear .env producción basado en el example
 cp .env.example .env
-# Editar .env con valores de producción:
-# - DATABASE_URL apuntar a PgBouncer (port 6432)
-# - AUTH_SECRET con valor aleatorio de 32+ chars
-# - STORAGE_ADAPTER=s3 si multi-instance
-# - S3_BUCKET, S3_REGION, etc.
 
-# Levantar PostgreSQL + PgBouncer + MinIO
-docker compose -f docker-compose.production.yml up -d
+# MUY IMPORTANTE: Variables de red
+# S3_PUBLIC_URL debe apuntar al "Public Hostname" del túnel de MinIo
+# DATABASE_URL debe apuntar a PgBouncer (6432)
+# DIRECT_DATABASE_URL debe apuntar directo a Postgres (5432)
 
-# Esperar a que PostgreSQL esté listo
-docker compose -f docker-compose.production.yml logs -f postgres
-# Ctrl+C cuando vea "database system is ready to accept connections"
+# Arrancar el stack completo (Postgres, MinIO, Next.js, PgBouncer)
+docker compose -f docker-compose.production.yml up -d --build
 ```
 
-> **⚠️ IMPORTANTE: PgBouncer y Prisma CLI**
->
-> PgBouncer en modo `transaction` es incompatible con prepared statements,
-> que Prisma CLI usa internamente para migraciones y `prisma studio`.
->
-> - **Aplicación (runtime):** Usa PgBouncer → `DATABASE_URL` apunta al port 6432
-> - **Migraciones y CLI:** Usa conexión directa → port 5432
->
-> Prisma soporta esto con la variable `DIRECT_DATABASE_URL` en `schema.prisma`:
->
-> ```prisma
-> datasource db {
->   provider  = "postgresql"
->   url       = env("DATABASE_URL")       // PgBouncer (port 6432) para runtime
->   directUrl = env("DIRECT_DATABASE_URL") // Directo (port 5432) para migraciones
-> }
-> ```
->
-> En `.env` de producción:
-> ```
-> DATABASE_URL="postgresql://comunet:PASSWORD@localhost:6432/comunet?schema=public"
-> DIRECT_DATABASE_URL="postgresql://comunet:PASSWORD@localhost:5432/comunet?schema=public"
-> ```
->
-> Con esto, `prisma migrate deploy` y `prisma studio` usan la conexión directa
-> automáticamente, mientras que la aplicación usa el pool de PgBouncer.
+#### 3. Configuración de Cloudflare Tunnels (Routing Externo)
+En el panel de Zero Trust de Cloudflare, configurar los "Public Hostnames":
 
-#### 3. Build y deploy
+1. **Ruta Principal (Aplicación Web)**:
+   - Dominio: `app.dominio.ext`
+   - Servicio: `http://localhost:3000` (Redirige al contenedor Next.js)
+   
+2. **Ruta Secundaria (Almacenamiento S3)**:
+   - Dominio: `s3.dominio.ext`
+   - Servicio: `http://localhost:9000` (Redirige a la API de MinIO)
 
-```bash
-# Instalar dependencias
-pnpm install --frozen-lockfile
-
-# Generar Prisma client
-pnpm prisma:generate
-
-# Aplicar migraciones
-npx prisma migrate deploy
-
-# Seed (solo primera vez)
-pnpm seed
-
-# Build producción
-pnpm build
-
-# Start (con PM2 para process management)
-npm install -g pm2
-pm2 start npm --name comunet -- start
-pm2 save
-pm2 startup
-```
-
-#### 4. Configurar nginx
-
-```nginx
-# /etc/nginx/sites-available/comunet
-upstream comunet {
-    server 127.0.0.1:3000;
-    # Para múltiples instancias:
-    # server 127.0.0.1:3001;
-    # server 127.0.0.1:3002;
-}
-
-server {
-    listen 80;
-    server_name app.comunet.es;
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name app.comunet.es;
-
-    # SSL (certbot lo configura automáticamente)
-    ssl_certificate /etc/letsencrypt/live/app.comunet.es/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/app.comunet.es/privkey.pem;
-
-    # Proxy headers
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    # File upload limit (8MB matches Document service limit)
-    client_max_body_size 10M;
-
-    location / {
-        proxy_pass http://comunet;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Health check (no logging)
-    location /api/health {
-        proxy_pass http://comunet;
-        access_log off;
-    }
-}
-```
-
-```bash
-# Activar sitio
-sudo ln -s /etc/nginx/sites-available/comunet /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-
-# SSL con Let's Encrypt
-sudo certbot --nginx -d app.comunet.es
-```
-
-#### 5. Escalar horizontalmente
-
-```bash
-# Abrir instancias adicionales en puertos diferentes
-PORT=3001 pm2 start npm --name comunet-2 -- start
-PORT=3002 pm2 start npm --name comunet-3 -- start
-
-# Actualizar nginx upstream
-# Y asegurar STORAGE_ADAPTER=s3 (local disk no funciona con multi-instance)
-```
+Esta arquitectura garantiza:
+- **Cero NAT/Port Forwarding**: No se abre ningún puerto en el router de la operadora.
+- **DDoS Protection**: El tráfico malicioso es filtrado por la CDN de Cloudflare antes de llegar a Windows.
+- **SSL Automático**: Los certificados HTTPS (candado verde) los gestiona y renueva Cloudflare en el Edge.iona con multi-instance)
 
 ---
 

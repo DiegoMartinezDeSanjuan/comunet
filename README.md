@@ -56,27 +56,16 @@ El servidor estará disponible en **http://localhost:3000**.
 | `pnpm prisma:generate` | Regenerar Prisma Client |
 | `pnpm prisma:studio` | Interfaz web de base de datos |
 
-## 👤 Credenciales Demo
+## 👤 Usuarios de Pruebas (Desarrollo)
 
-**Contraseña para todos los usuarios:** `Demo1234!`
+Para entornos de desarrollo local, la base de datos se precarga mediante el script de *seed* (`pnpm seed`). Este script genera usuarios ficticios con contraseñas temporales para que puedas testear cada uno de los roles y la segregación de permisos.
 
-### Backoffice (Despacho)
+### Estructura de Roles Autogenerados:
+- **Despacho (Backoffice)**: `OFFICE_ADMIN`, `MANAGER`, `ACCOUNTANT`, `VIEWER`.
+- **Portal (Comunidades)**: `PRESIDENT`, `OWNER`, `TENANT`, `PROVIDER`.
 
-| Email | Rol | Descripción |
-|-------|-----|-------------|
-| `admin@fincasmartinez.es` | OFFICE_ADMIN | Administrador del despacho |
-| `manager@fincasmartinez.es` | MANAGER | Gestión operativa |
-| `accountant@fincasmartinez.es` | ACCOUNTANT | Finanzas y contabilidad |
-| `viewer@fincasmartinez.es` | VIEWER | Solo lectura |
-
-### Portal (Propietarios / Presidentes / Proveedores)
-
-| Email | Rol | Descripción |
-|-------|-----|-------------|
-| `presidenta@comunet.test` | PRESIDENT | Presidenta de comunidad |
-| `propietario@comunet.test` | OWNER | Propietaria por unidades |
-| `proveedor.fontaneria@comunet.test` | PROVIDER | Proveedor de fontanería |
-| `proveedor.ascensores@comunet.test` | PROVIDER | Proveedor de ascensores |
+> [!WARNING]
+> Nunca utilices contraseñas genéricas ni datos de prueba generados por el de `seed.ts` en tu base de datos de Producción. La base de datos de Producción debe iniciarse limpia y forzar el reseteo de la contraseña del Administrador raíz en el primer inicio de sesión.
 
 ## 🗂️ Mapa de Rutas
 
@@ -111,7 +100,14 @@ El servidor estará disponible en **http://localhost:3000**.
 | `/portal/documents` | OWNER, PRESIDENT | Documentos publicados |
 | `/portal/meetings` | OWNER, PRESIDENT | Reuniones y actas |
 
-## 🏗️ Arquitectura
+## 🏗️ Arquitectura de Producción
+
+COMUNET está diseñado para correr en una infraestructura de vanguardia montada sobre un PC Local (Windows) y expuesta al mundo mediante **Cloudflare Tunnels**. Esta arquitectura permite alojar un SaaS completo in-house sin necesidad de servidores VPS externos ni abrir puertos (cero exposición NAT).
+
+- **Red Perimetral**: Cloudflare (SSL automático + WAF + Prevención DDoS).
+- **Rutas y Subdominios**: `app.dominio.ext` (Next.js) y `s3.dominio.ext` (MinIO API).
+- **Almacenamiento**: Servidor MinIO (S3-compatible) autoalojado gestionando PDFs y firmas HMAC.
+- **Orquestación**: Red puenteizada en Docker Compose uniendo Next.js Standalone, Postgres 16, MinIO y PgBouncer.
 
 ```
 src/
