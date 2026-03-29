@@ -1,7 +1,33 @@
 'use client'
 
-import { DonutChart, HBarChart } from '@/components/ui/charts'
+import dynamic from 'next/dynamic'
 import { formatCurrency } from '@/lib/formatters'
+
+const DonutChartLazy = dynamic(
+  () => import('@/components/ui/charts').then(mod => ({ default: mod.DonutChart })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center" style={{ height: 220 }}>
+        <div className="h-36 w-36 rounded-full bg-muted animate-pulse" />
+      </div>
+    ),
+    ssr: false,
+  },
+)
+
+const HBarChartLazy = dynamic(
+  () => import('@/components/ui/charts').then(mod => ({ default: mod.HBarChart })),
+  {
+    loading: () => (
+      <div className="space-y-3 animate-pulse p-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-5 rounded bg-muted" style={{ width: `${80 - i * 20}%` }} />
+        ))}
+      </div>
+    ),
+    ssr: false,
+  },
+)
 
 interface ReportsChartsProps {
   type: 'donut' | 'hbar'
@@ -27,7 +53,7 @@ export function ReportsCharts({
 
   if (type === 'donut' && donutData) {
     return (
-      <DonutChart
+      <DonutChartLazy
         data={donutData}
         centerValue={centerValue}
         centerLabel={centerLabel}
@@ -38,7 +64,7 @@ export function ReportsCharts({
 
   if (type === 'hbar' && hbarData) {
     return (
-      <HBarChart
+      <HBarChartLazy
         data={hbarData}
         height={Math.max(120, hbarData.length * 50)}
         formatValue={formatValue}

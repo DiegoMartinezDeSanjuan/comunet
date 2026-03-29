@@ -43,15 +43,20 @@ next-env.d.ts
 
 # debug output and temp logs
 *.log
-*_output.txt
-*lint*.txt
-*typecheck*.txt
-*error*.txt
+*_output*.txt
+*_out.txt
+*_err.txt
+*_files*.txt
+build_check.txt
+pages_list.txt
+compile.log
 lint-results.json
 
 # test artifacts
 /playwright-report/
 /test-results/
+k6_output*.txt
 
 # local file storage
 /storage/
+/uploads/

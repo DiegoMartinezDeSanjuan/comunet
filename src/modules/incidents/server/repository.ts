@@ -155,8 +155,20 @@ export async function findIncidentByIdForOffice(
             community: { officeId },
         },
         include: {
-            community: true,
-            unit: true,
+            community: {
+                select: {
+                    id: true,
+                    name: true,
+                    address: true,
+                    cif: true,
+                },
+            },
+            unit: {
+                select: {
+                    id: true,
+                    reference: true,
+                },
+            },
             createdBy: {
                 select: {
                     id: true,
@@ -164,7 +176,15 @@ export async function findIncidentByIdForOffice(
                     email: true,
                 },
             },
-            assignedProvider: true,
+            assignedProvider: {
+                select: {
+                    id: true,
+                    name: true,
+                    category: true,
+                    phone: true,
+                    email: true,
+                },
+            },
             comments: {
                 orderBy: { createdAt: 'asc' },
                 include: {

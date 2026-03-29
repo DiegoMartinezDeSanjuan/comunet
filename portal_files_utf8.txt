@@ -1,9 +1,0 @@
-﻿C:\Users\didim\source\repos\comunet\src\app\(portal)\layout.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\community\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\documents\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\incidents\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\incidents\[id]\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\meetings\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\receipts\page.tsx
-C:\Users\didim\source\repos\comunet\src\app\(portal)\portal\receipts\[id]\page.tsx
