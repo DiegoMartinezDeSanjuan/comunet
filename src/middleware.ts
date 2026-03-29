@@ -34,15 +34,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow public paths (but rate-limit login)
+  // Allow public paths
   if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
-    // Rate limit login POST
-    if (pathname === '/login' && request.method === 'POST') {
-      const result = await loginLimiter.check(ip)
-      if (!result.allowed) {
-        return rateLimitResponse(result.retryAfterMs)
-      }
-    }
     return NextResponse.next()
   }
 

@@ -28,16 +28,22 @@ export default function LoginPage() {
     setLoading(true)
 
     const formData = new FormData(event.currentTarget)
-    const result = await loginAction(formData)
+    try {
+      const result = await loginAction(formData)
 
-    if (result.error) {
-      setError(result.error)
+      if (result.error) {
+        setError(result.error)
+        setLoading(false)
+        return
+      }
+
+      if (result.redirect) {
+        router.push(result.redirect)
+      }
+    } catch (err) {
+      console.error(err)
+      setError('Error interno del servidor')
       setLoading(false)
-      return
-    }
-
-    if (result.redirect) {
-      router.push(result.redirect)
     }
   }
 
