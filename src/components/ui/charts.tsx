@@ -32,7 +32,7 @@ export function DonutChart({ data, centerLabel, centerValue, height = 200 }: Don
 
   return (
     <div className="relative" style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
         <PieChart>
           <Pie
             data={data}
@@ -101,7 +101,7 @@ interface HBarChartProps {
 
 export function HBarChart({ data, height = 200, formatValue }: HBarChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" height={height} minWidth={0} minHeight={0}>
       <BarChart
         data={data}
         layout="vertical"
