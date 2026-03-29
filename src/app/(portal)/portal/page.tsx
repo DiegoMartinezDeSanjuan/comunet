@@ -17,7 +17,7 @@ import {
   getReceiptStatusTone,
   INCIDENT_STATUS_LABELS,
   RECEIPT_STATUS_LABELS,
-} from '@/components/portal/ui'
+} from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/formatters'

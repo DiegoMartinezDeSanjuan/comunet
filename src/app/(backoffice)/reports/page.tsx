@@ -23,7 +23,7 @@ import {
 
 import { KPICard } from '@/components/ui/kpi-card'
 import { PriorityBadge, ReceiptStatusBadge } from '@/components/ui/badge'
-import { ReportsCharts } from './reports-charts'
+import { ReportsCharts } from '@/modules/reports/components/reports-charts'
 
 export const dynamic = 'force-dynamic'
 

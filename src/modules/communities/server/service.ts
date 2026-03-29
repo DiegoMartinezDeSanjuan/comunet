@@ -1,5 +1,5 @@
 import 'server-only'
-import * as repo from './community-repository'
+import * as repo from './repository'
 import { communitySchema, type CommunityInput } from '../schema'
 import { logAudit } from '@/modules/audit/server/services'
 

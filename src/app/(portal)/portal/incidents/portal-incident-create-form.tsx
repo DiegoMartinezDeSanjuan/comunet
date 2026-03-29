@@ -5,7 +5,7 @@ import { useFormStatus } from 'react-dom'
 import { ChevronDown, Plus } from 'lucide-react'
 
 import { createPortalIncidentAction } from '@/modules/portal/server/actions'
-import { INCIDENT_PRIORITY_LABELS } from '@/components/portal/ui'
+import { INCIDENT_PRIORITY_LABELS } from '@/modules/portal/components/ui'
 
 interface PortalIncidentCreateFormProps {
   communities: { id: string; name: string; canCreateCommunityIncident: boolean }[]

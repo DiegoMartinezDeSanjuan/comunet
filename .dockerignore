@@ -1,0 +1,33 @@
+# Build context exclusions — keeps Docker build fast
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+!.env.production
+
+# Dev/test artifacts
+tests
+playwright-report
+test-results
+coverage
+docs
+*.md
+!README.md
+
+# Local storage
+uploads
+storage
+
+# IDE & OS
+.vscode
+.idea
+.DS_Store
+*.swp
+*.swo
+
+# Build artifacts
+*.tsbuildinfo
+*.log
+k6_output*.txt

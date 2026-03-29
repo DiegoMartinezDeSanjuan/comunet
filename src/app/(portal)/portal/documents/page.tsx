@@ -4,7 +4,7 @@ import { FileText, FolderOpen, ShieldCheck } from 'lucide-react'
 import {
   PortalBadge,
   PortalEmptyState,
-} from '@/components/portal/ui'
+} from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { requireAuth } from '@/lib/auth'
 import { formatDate } from '@/lib/formatters'
