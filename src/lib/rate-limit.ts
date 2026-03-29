@@ -1,6 +1,12 @@
 /**
  * Distributed sliding-window rate limiter via Upstash Redis.
  * Falls back to an in-memory Map if Redis is not configured.
+ *
+ * Contract:
+ *  - Production: If UPSTASH_REDIS_REST_URL + TOKEN are set → uses Redis.
+ *                If they are NOT set → falls back to in-memory (single-instance only).
+ *                A warning is logged at startup but the app does NOT crash.
+ *  - Development: Always uses in-memory unless Redis vars are explicitly set.
  */
 
 import { Ratelimit } from '@upstash/ratelimit'
@@ -24,17 +30,21 @@ interface RateLimiter {
   reset(): void
 }
 
-const isProd = process.env.NODE_ENV === 'production'
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
-
-if (isProd && (!redisUrl || !redisToken)) {
-  throw new Error('FATAL: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be configured in production for distributed rate limiting.')
-}
 
 const redis = (redisUrl && redisToken)
   ? new Redis({ url: redisUrl, token: redisToken })
   : null
+
+// Warn in production if Redis is not configured (but don't crash)
+if (process.env.NODE_ENV === 'production' && !redis) {
+  console.warn(
+    '⚠️  [rate-limit] UPSTASH_REDIS_REST_URL / TOKEN not set. ' +
+    'Using in-memory rate limiter. This is NOT suitable for multi-instance deployments. ' +
+    'Set both variables for distributed rate limiting.',
+  )
+}
 
 function createMemoryRateLimiter(options: RateLimiterOptions): RateLimiter {
   const { windowMs, maxRequests } = options
@@ -96,7 +106,6 @@ function createMemoryRateLimiter(options: RateLimiterOptions): RateLimiter {
 function createRedisRateLimiter(options: RateLimiterOptions): RateLimiter {
   const { windowMs, maxRequests } = options
 
-  // Provide a reliable Ratelimit sliding window algorithm
   const upstashLimiter = new Ratelimit({
     redis: redis!,
     limiter: Ratelimit.slidingWindow(maxRequests, `${windowMs} ms`),
@@ -107,7 +116,7 @@ function createRedisRateLimiter(options: RateLimiterOptions): RateLimiter {
     async check(key: string): Promise<RateLimitResult> {
       if (!redis) throw new Error('Redis not initialized')
       
-      const { success, limit, remaining, reset } = await upstashLimiter.limit(key)
+      const { success, remaining, reset } = await upstashLimiter.limit(key)
 
       return {
         allowed: success,

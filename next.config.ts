@@ -46,6 +46,7 @@ const nextConfig: NextConfig = {
 
   // Optimize for production
   poweredByHeader: false,
+  output: 'standalone',
 
   // Increase body size limit for file uploads (8MB matches Document service limit)
   experimental: {

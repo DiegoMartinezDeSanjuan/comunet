@@ -75,10 +75,16 @@ export async function GET(request: Request) {
         while (hasMore && totalProcessed < MAX_EXPORT_ROWS) {
           const receipts = await prisma.receipt.findMany({
             where,
-            include: {
-              community: true,
-              unit: true,
-              owner: true,
+            select: {
+              reference: true,
+              issueDate: true,
+              dueDate: true,
+              amount: true,
+              paidAmount: true,
+              status: true,
+              community: { select: { name: true } },
+              unit: { select: { reference: true } },
+              owner: { select: { fullName: true } },
             },
             orderBy: [{ issueDate: 'desc' }, { id: 'desc' }],
             take: CHUNK_SIZE,

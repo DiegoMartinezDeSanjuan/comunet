@@ -17,6 +17,41 @@ type ReceiptPaginationInput = {
   pageSize?: number
 }
 
+/** Select clause for receipt list views — only fields consumed by the UI */
+const receiptListSelect = {
+  id: true,
+  reference: true,
+  amount: true,
+  paidAmount: true,
+  status: true,
+  issueDate: true,
+  dueDate: true,
+  periodStart: true,
+  periodEnd: true,
+  communityId: true,
+  unitId: true,
+  ownerId: true,
+  createdAt: true,
+  community: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  unit: {
+    select: {
+      id: true,
+      reference: true,
+    },
+  },
+  owner: {
+    select: {
+      id: true,
+      fullName: true,
+    },
+  },
+} satisfies Prisma.ReceiptSelect
+
 function buildReceiptWhereForCommunity(
   communityId: string,
   filters: ReceiptFilters = {},
@@ -72,10 +107,7 @@ export async function findReceiptsByCommunity(
 
   return prisma.receipt.findMany({
     where,
-    include: {
-      unit: true,
-      owner: true,
-    },
+    select: receiptListSelect,
     orderBy: { dueDate: 'desc' },
   })
 }
@@ -88,11 +120,7 @@ export async function findReceiptsByOffice(
 
   return prisma.receipt.findMany({
     where,
-    include: {
-      community: true,
-      unit: true,
-      owner: true,
-    },
+    select: receiptListSelect,
     orderBy: { dueDate: 'desc' },
   })
 }
@@ -112,11 +140,7 @@ export async function findReceiptsPageByOffice(
 
   const items = await prisma.receipt.findMany({
     where,
-    include: {
-      community: true,
-      unit: true,
-      owner: true,
-    },
+    select: receiptListSelect,
     orderBy: { dueDate: 'desc' },
     skip,
     take: pageSize,
@@ -137,9 +161,29 @@ export async function findReceiptById(id: string) {
   return prisma.receipt.findUnique({
     where: { id },
     include: {
-      community: true,
-      unit: true,
-      owner: true,
+      community: {
+        select: {
+          id: true,
+          name: true,
+          cif: true,
+          officeId: true,
+        },
+      },
+      unit: {
+        select: {
+          id: true,
+          reference: true,
+          type: true,
+        },
+      },
+      owner: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+        },
+      },
       payments: { orderBy: { paymentDate: 'desc' } },
       debts: true,
     },

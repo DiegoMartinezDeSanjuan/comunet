@@ -4,11 +4,10 @@ import {
   DollarSign,
   AlertTriangle,
   Building2,
-  TrendingDown,
-  Calendar,
   ArrowUpRight,
   Download,
 } from 'lucide-react'
+import { Suspense } from 'react'
 
 import { requireAuth } from '@/lib/auth'
 import { canReadReports } from '@/lib/permissions'
@@ -46,38 +45,8 @@ export default async function ReportsPage() {
     redirect('/dashboard')
   }
 
-  const [
-    kpis,
-    debtByCommunity,
-    receiptsStatus,
-    incidentsSummary,
-    upcomingMeetings,
-    providerPerformance,
-  ] = await Promise.all([
-    getReportsDashboard(session.officeId),
-    getDebtByCommunityReport(session.officeId),
-    getReceiptsStatusReport(session.officeId),
-    getIncidentsSummaryReport(session.officeId),
-    getUpcomingMeetingsReport(session.officeId),
-    getProviderPerformanceSummary(session.officeId),
-  ])
-
-  // Prepare chart data
-  const maxDebt = Math.max(...debtByCommunity.map((c) => c.totalDebt), 1)
-  const debtBarData = debtByCommunity.map((c) => ({
-    name: c.communityName,
-    value: c.totalDebt,
-    color: c.totalDebt > maxDebt * 0.7 ? '#ef4444' : c.totalDebt > maxDebt * 0.4 ? '#f59e0b' : '#3b82f6',
-  }))
-
-  const priorityDonutData = [
-    { name: 'Urgente', value: incidentsSummary.activeByPriority.find((p) => p.priority === 'URGENT')?.count || 0, color: '#ef4444' },
-    { name: 'Alta',    value: incidentsSummary.activeByPriority.find((p) => p.priority === 'HIGH')?.count || 0,   color: '#f97316' },
-    { name: 'Media',   value: incidentsSummary.activeByPriority.find((p) => p.priority === 'MEDIUM')?.count || 0, color: '#3b82f6' },
-    { name: 'Baja',    value: incidentsSummary.activeByPriority.find((p) => p.priority === 'LOW')?.count || 0,    color: '#64748b' },
-  ]
-
-  const totalIncidents = priorityDonutData.reduce((acc, d) => acc + d.value, 0)
+  // KPIs are fast — fetch before render
+  const kpis = await getReportsDashboard(session.officeId)
 
   return (
     <div className="space-y-6">
@@ -97,7 +66,7 @@ export default async function ReportsPage() {
         </Link>
       </header>
 
-      {/* KPIs */}
+      {/* KPIs — rendered immediately */}
       <section className="grid gap-4 md:grid-cols-3">
         <KPICard
           label="Deuda Total Pendiente"
@@ -121,45 +90,122 @@ export default async function ReportsPage() {
         />
       </section>
 
-      {/* Charts Row */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Debt bar chart */}
-        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
-            <h2 className="text-base font-semibold">Deuda por Comunidad</h2>
-            <Link href="/finance/receipts" className="text-sm text-primary hover:underline">
-              Ver detalles
-            </Link>
+      {/* Charts Row — streamed */}
+      <Suspense fallback={
+        <div className="grid gap-6 lg:grid-cols-2 animate-pulse">
+          <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 h-64">
+            <div className="h-5 w-40 rounded-md bg-muted mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-5 rounded bg-muted" style={{ width: `${80 - i * 15}%` }} />
+              ))}
+            </div>
           </div>
-          <div className="p-5">
-            {debtBarData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">No hay deuda registrada.</p>
-            ) : (
-              <ReportsCharts
-                type="hbar"
-                hbarData={debtBarData}
-                formatType="currency"
-              />
-            )}
+          <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 h-64">
+            <div className="h-5 w-44 rounded-md bg-muted mb-4" />
+            <div className="mx-auto h-36 w-36 rounded-full bg-muted/30" />
           </div>
         </div>
+      }>
+        <ChartsSection officeId={session.officeId} />
+      </Suspense>
 
-        {/* Priority donut chart */}
-        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
-          <div className="border-b border-border/50 px-5 py-4">
-            <h2 className="text-base font-semibold">Incidencias por Prioridad</h2>
+      {/* Receipt Status + Bottom sections — streamed */}
+      <Suspense fallback={
+        <div className="space-y-6 animate-pulse">
+          <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 h-24">
+            <div className="h-5 w-36 rounded-md bg-muted mb-3" />
+            <div className="flex gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex-1 h-16 rounded-xl bg-muted/30" />
+              ))}
+            </div>
           </div>
-          <div className="p-5">
-            <ReportsCharts
-              type="donut"
-              donutData={priorityDonutData}
-              centerValue={totalIncidents}
-              centerLabel="total"
-            />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 h-48" />
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 h-48" />
           </div>
+        </div>
+      }>
+        <DataTablesSection officeId={session.officeId} />
+      </Suspense>
+    </div>
+  )
+}
+
+/* ─── Streamed: Charts ──────────────────────────────── */
+
+async function ChartsSection({ officeId }: { officeId: string }) {
+  const [debtByCommunity, incidentsSummary] = await Promise.all([
+    getDebtByCommunityReport(officeId),
+    getIncidentsSummaryReport(officeId),
+  ])
+
+  const maxDebt = Math.max(...debtByCommunity.map((c) => c.totalDebt), 1)
+  const debtBarData = debtByCommunity.map((c) => ({
+    name: c.communityName,
+    value: c.totalDebt,
+    color: c.totalDebt > maxDebt * 0.7 ? '#ef4444' : c.totalDebt > maxDebt * 0.4 ? '#f59e0b' : '#3b82f6',
+  }))
+
+  const priorityDonutData = [
+    { name: 'Urgente', value: incidentsSummary.activeByPriority.find((p) => p.priority === 'URGENT')?.count || 0, color: '#ef4444' },
+    { name: 'Alta',    value: incidentsSummary.activeByPriority.find((p) => p.priority === 'HIGH')?.count || 0,   color: '#f97316' },
+    { name: 'Media',   value: incidentsSummary.activeByPriority.find((p) => p.priority === 'MEDIUM')?.count || 0, color: '#3b82f6' },
+    { name: 'Baja',    value: incidentsSummary.activeByPriority.find((p) => p.priority === 'LOW')?.count || 0,    color: '#64748b' },
+  ]
+
+  const totalIncidents = priorityDonutData.reduce((acc, d) => acc + d.value, 0)
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      {/* Debt bar chart */}
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+          <h2 className="text-base font-semibold">Deuda por Comunidad</h2>
+          <Link href="/finance/receipts" className="text-sm text-primary hover:underline">
+            Ver detalles
+          </Link>
+        </div>
+        <div className="p-5">
+          {debtBarData.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No hay deuda registrada.</p>
+          ) : (
+            <ReportsCharts type="hbar" hbarData={debtBarData} formatType="currency" />
+          )}
         </div>
       </div>
 
+      {/* Priority donut chart */}
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+        <div className="border-b border-border/50 px-5 py-4">
+          <h2 className="text-base font-semibold">Incidencias por Prioridad</h2>
+        </div>
+        <div className="p-5">
+          <ReportsCharts
+            type="donut"
+            donutData={priorityDonutData}
+            centerValue={totalIncidents}
+            centerLabel="total"
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Streamed: Data Tables ─────────────────────────── */
+
+async function DataTablesSection({ officeId }: { officeId: string }) {
+  const [receiptsStatus, incidentsSummary, upcomingMeetings, providerPerformance] = await Promise.all([
+    getReceiptsStatusReport(officeId),
+    getIncidentsSummaryReport(officeId),
+    getUpcomingMeetingsReport(officeId),
+    getProviderPerformanceSummary(officeId),
+  ])
+
+  return (
+    <>
       {/* Receipt Status Row */}
       <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
         <div className="border-b border-border/50 px-5 py-4">
@@ -202,18 +248,12 @@ export default async function ReportsPage() {
           ) : (
             <div className="divide-y divide-border/20">
               {incidentsSummary.recentActive.map((inc) => (
-                <div
-                  key={inc.id}
-                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/10"
-                >
+                <div key={inc.id} className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/10">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 shrink-0">
                     <AlertTriangle className="h-4 w-4 text-destructive" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/incidents/${inc.id}`}
-                      className="text-sm font-medium hover:underline truncate block"
-                    >
+                    <Link href={`/incidents/${inc.id}`} className="text-sm font-medium hover:underline truncate block">
                       {inc.title}
                     </Link>
                     <p className="text-xs text-muted-foreground">
@@ -244,19 +284,13 @@ export default async function ReportsPage() {
                 const day = d.getDate()
                 const month = d.toLocaleDateString('es-ES', { month: 'short' })
                 return (
-                  <div
-                    key={meeting.id}
-                    className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/10"
-                  >
+                  <div key={meeting.id} className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/10">
                     <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 w-12 h-12 shrink-0">
                       <span className="text-xs uppercase text-primary font-semibold">{month}</span>
                       <span className="text-lg font-bold text-primary leading-none">{day}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/meetings/${meeting.id}`}
-                        className="text-sm font-medium hover:underline truncate block"
-                      >
+                      <Link href={`/meetings/${meeting.id}`} className="text-sm font-medium hover:underline truncate block">
                         {meeting.title}
                       </Link>
                       <p className="text-xs text-muted-foreground">{meeting.communityName}</p>
@@ -302,6 +336,6 @@ export default async function ReportsPage() {
           </div>
         </section>
       ) : null}
-    </div>
+    </>
   )
 }

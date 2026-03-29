@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 import { loginLimiter, apiLimiter } from '@/lib/rate-limit'
 
-const PUBLIC_PATHS = ['/login', '/api/health', '/api/mock']
+const PUBLIC_PATHS = ['/login', '/api/health']
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -25,7 +25,7 @@ function rateLimitResponse(retryAfterMs: number) {
   )
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   const isDev = process.env.NODE_ENV === 'development'
   const scriptSrc = isDev 
@@ -59,6 +59,16 @@ export async function middleware(request: NextRequest) {
 
   // Allow static files and Next.js internals
   if (pathname.startsWith('/_next') || pathname.startsWith('/favicon') || pathname.includes('.')) {
+    return setCsp(NextResponse.next({ request: { headers: requestHeaders } }))
+  }
+
+  // Block mock endpoints in production
+  if (pathname.startsWith('/api/mock') && !isDev) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  // Allow mock endpoints in development without auth
+  if (pathname.startsWith('/api/mock') && isDev) {
     return setCsp(NextResponse.next({ request: { headers: requestHeaders } }))
   }
 

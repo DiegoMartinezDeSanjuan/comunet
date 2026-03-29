@@ -254,19 +254,21 @@ class S3StorageAdapter implements StorageAdapter {
     const client = await this.getClient()
     const key = this.getKey(storagePath)
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const commandConfig: any = { Bucket: this.bucket, Key: key }
+    const commandInput: { Bucket: string; Key: string; ResponseContentDisposition?: string; ResponseContentType?: string } = {
+      Bucket: this.bucket,
+      Key: key,
+    }
 
     if (downloadName) {
-      commandConfig.ResponseContentDisposition = `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`
+      commandInput.ResponseContentDisposition = `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`
     }
     if (mimeType) {
-      commandConfig.ResponseContentType = mimeType
+      commandInput.ResponseContentType = mimeType
     }
 
     const url = await getSignedUrl(
       client,
-      new GetObjectCommand(commandConfig),
+      new GetObjectCommand(commandInput),
       { expiresIn: expiresInSeconds },
     )
 
