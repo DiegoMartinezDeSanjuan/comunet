@@ -14,7 +14,7 @@
 - Cálculo de cuotas simplificado (base × coeficiente).
 
 ## Documentos
-- Almacenamiento local en filesystem, no cloud.
+- Storage local en dev, S3 preparado para producción.
 - No hay preview in-app de documentos.
 - No hay versionado de documentos.
 - Límite de tamaño gestionado por Next.js config.
@@ -34,20 +34,25 @@
 - No hay PWA.
 - No hay modo offline.
 - No hay internacionalización (solo español).
+- ~~Sin loading states~~ → ✅ **Implementado**: `loading.tsx` en todas las zonas.
+- ~~Sin error boundaries~~ → ✅ **Implementado**: `error.tsx` + `global-error.tsx` + `not-found.tsx`.
 
 ## Infraestructura
-- Solo ejecución local con Docker Compose.
+- ~~Sin connection pooling~~ → ✅ **Implementado**: PgBouncer configurado.
+- ~~Sin rate limiting~~ → ✅ **Implementado**: Upstash Redis / in-memory.
+- ~~Sin security headers~~ → ✅ **Implementado**: HSTS, CSP, etc.
+- ~~Sin health endpoint~~ → ✅ **Implementado**: `/api/health` (liveness + readiness).
 - No hay CI/CD configurado.
-- No hay despliegue a producción.
-- No hay monitorización ni alertas.
+- No hay monitorización ni alertas (APM pendiente).
 
-## Cómo completar cada limitación
+## Cómo completar cada limitación pendiente
 
 Cada limitación tiene su interfaz/adapter preparado. Para completar:
 
 1. **Email real**: Implementar `EmailAdapter` con SMTP/SendGrid en `src/lib/notifications/`.
 2. **SEPA**: Implementar `SepaAdapter` en `src/lib/integrations/sepa/`.
-3. **S3 Storage**: Implementar `S3StorageAdapter` en `src/lib/storage/`.
-4. **Firma digital**: Implementar `SignatureAdapter` en `src/lib/integrations/signature/`.
-5. **AEAT**: Implementar `AeatAdapter` en `src/lib/integrations/fiscal/`.
-6. **Recuperación de contraseña**: Añadir flujo en `src/modules/auth/`.
+3. **Firma digital**: Implementar `SignatureAdapter` en `src/lib/integrations/signature/`.
+4. **AEAT**: Implementar `AeatAdapter` en `src/lib/integrations/fiscal/`.
+5. **Recuperación de contraseña**: Añadir flujo en `src/modules/auth/`.
+6. **CI/CD**: GitHub Actions con build → test → deploy.
+7. **APM**: OpenTelemetry + structured logging.

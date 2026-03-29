@@ -7,12 +7,14 @@ Plataforma integral de administración de fincas desarrollada con Next.js 16, Po
 | Capa | Tecnología |
 |------|-----------|
 | Framework | Next.js 16 (App Router + Turbopack) |
-| Base de datos | PostgreSQL 16 (Docker Compose) |
+| Base de datos | PostgreSQL 16 (Docker Compose + PgBouncer) |
 | ORM | Prisma Client |
 | Autenticación | JWT + bcrypt (custom, sin NextAuth) |
-| UI | shadcn/ui + Lucide Icons |
+| UI | shadcn/ui + Lucide Icons + Recharts (lazy) |
 | Estilos | Tailwind CSS 4 |
-| Tests | Vitest (unit) + Playwright (e2e) |
+| Tests | Vitest (unit) + Playwright (e2e) + k6 (load) |
+| Rate Limiting | Upstash Redis (prod) / In-memory (dev) |
+| Storage | Local (dev) / S3-compatible (prod) |
 | Runtime | Node.js 22+ |
 
 ## 🚀 Inicio Rápido
@@ -36,6 +38,8 @@ pnpm dev
 ```
 
 El servidor estará disponible en **http://localhost:3000**.
+
+> **Nota sobre Rate Limiting en desarrollo:** Las variables `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` en `.env` deben estar vacías o comentadas para desarrollo local. El sistema usará automáticamente un rate limiter in-memory (sliding window).
 
 ## 📋 Scripts Disponibles
 
@@ -80,7 +84,7 @@ El servidor estará disponible en **http://localhost:3000**.
 
 | Ruta | Módulo |
 |------|--------|
-| `/dashboard` | Panel de control |
+| `/dashboard` | Panel de control (con streaming Suspense) |
 | `/communities` | Gestión de comunidades, unidades, juntas, cuotas |
 | `/owners` | Propietarios y relaciones de titularidad |
 | `/tenants` | Inquilinos |
@@ -90,7 +94,7 @@ El servidor estará disponible en **http://localhost:3000**.
 | `/meetings` | Reuniones, actas, votaciones, asistencia |
 | `/documents` | Documentos con descarga segura |
 | `/providers` | Proveedores |
-| `/reports` | Reportes y KPIs |
+| `/reports` | Reportes y KPIs (gráficos lazy-loaded) |
 | `/settings` | Configuración del despacho |
 | `/settings/users` | Gestión de usuarios |
 | `/settings/audit` | Auditoría |
@@ -112,44 +116,70 @@ El servidor estará disponible en **http://localhost:3000**.
 ```
 src/
 ├── app/               # App Router (rutas, layouts, pages)
-│   ├── (backoffice)/  # Rutas del backoffice
-│   ├── (portal)/      # Rutas del portal
-│   └── api/           # API routes
+│   ├── (backoffice)/  # Rutas del backoffice (loading.tsx + error.tsx)
+│   ├── (portal)/      # Rutas del portal (loading.tsx + error.tsx)
+│   ├── (public)/      # Login
+│   ├── global-error.tsx  # Error boundary global
+│   ├── not-found.tsx   # 404 global
+│   └── api/           # API routes (health, exports, storage)
 ├── components/        # Componentes React
 │   ├── layouts/       # Sidebars, headers
 │   ├── portal/        # Componentes del portal
-│   └── ui/            # shadcn/ui primitives
+│   └── ui/            # shadcn/ui primitives + charts
 ├── lib/               # Utilidades
 │   ├── auth/          # Autenticación JWT
-│   ├── db/            # Prisma Client
-│   └── permissions/   # RBAC centralizado
+│   ├── db/            # Prisma Client (singleton + pool config)
+│   ├── permissions/   # RBAC centralizado (memoizado)
+│   ├── rate-limit.ts  # Upstash Redis / in-memory fallback
+│   └── storage/       # Local + S3 adapter (async)
 └── modules/           # Módulos de dominio
-    ├── audit/         # Auditoría
+    ├── audit/         # Auditoría (fire-and-forget)
     ├── communities/   # Comunidades
     ├── documents/     # Documentos
     ├── finances/      # Finanzas
     ├── incidents/     # Incidencias
     ├── meetings/      # Reuniones
-    ├── notifications/ # Notificaciones
+    ├── notifications/ # Notificaciones (batch insert)
     ├── portal/        # Lógica portal
     ├── providers/     # Proveedores
     ├── reports/       # Reportes
     └── users/         # Usuarios
 ```
 
+## 🔒 Seguridad y Rendimiento
+
+### Seguridad
+- **CSP dinámica** con nonces criptográficos inyectados via proxy
+- **Security headers**: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **Rate limiting**: Login (5/min/IP), API (100/min/IP), Exports (5/min/usuario)
+- **Validación en 4 capas**: Proxy → Layout → Page/Action → Repository
+
+### Rendimiento
+- **Recharts lazy-loaded** via `next/dynamic` con `ssr: false` (~500KB menos en first load)
+- **Dashboard con Suspense streaming**: KPIs al instante, tabla y charts por streaming
+- **Prisma queries optimizadas**: `select:` en listados y detalles (solo campos necesarios)
+- **Audit log fire-and-forget**: INSERT asíncrono fuera del path crítico
+- **Notificaciones batch**: N inserts → 1 `INSERT ... VALUES`
+- **Connection pooling**: PgBouncer en producción
+
 ## 📝 Documentación
 
 Documentación técnica completa en la carpeta `docs/`:
 
-- `01-architecture.md` — Arquitectura y decisiones técnicas
-- `02-data-model.md` — Modelo de datos Prisma
-- `03-auth-rbac.md` — Autenticación y control de acceso
-- `04-finance.md` — Módulo financiero
-- `05-incidents.md` — Incidencias y proveedores
-- `06-portal.md` — Portal OWNER/PRESIDENT/PROVIDER
-- `07-testing.md` — Estrategia de testing
-- `08-roadmap.md` — Roadmap post-MVP
-- `09-limitations.md` — Limitaciones conocidas
+| Doc | Contenido |
+|-----|-----------|
+| `01-prd.md` | Producto y requisitos |
+| `02-architecture.md` | Arquitectura y decisiones técnicas |
+| `03-data-model.md` | Modelo de datos Prisma |
+| `04-modules-and-routes.md` | Módulos y rutas |
+| `05-business-rules.md` | Reglas de negocio |
+| `06-incidents-providers-notifications.md` | Incidencias, proveedores, notificaciones |
+| `06-security-and-permissions.md` | Seguridad, RBAC y permisos |
+| `07-testing.md` | Estrategia de testing |
+| `08-roadmap.md` | Roadmap y fases |
+| `09-limitations.md` | Limitaciones conocidas |
+| `deployment.md` | Guía de despliegue (VPS, Docker, Managed) |
+| `scalability-review.md` | Auditoría de escalabilidad y hardening |
 
 ## ⚠️ Limitaciones MVP
 
@@ -158,6 +188,8 @@ Documentación técnica completa en la carpeta `docs/`:
 - **Sin multi-tenancy real**: Un único despacho (Office) por instancia.
 - **Sin i18n**: Interfaz únicamente en castellano.
 - **Sin SSO/OAuth**: Autenticación por email+contraseña solamente.
+- **Sin CI/CD**: Pipeline de despliegue no configurado aún.
+- **Sin recuperación de contraseña**: Pendiente post-MVP.
 
 ## 📄 Licencia
 

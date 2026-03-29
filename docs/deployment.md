@@ -22,8 +22,8 @@ Infraestructura mínima para 500 usuarios concurrentes.
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 
-# Node.js 20 LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Node.js 22 LTS
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # pnpm
@@ -190,7 +190,7 @@ Toda la app en containers.
 ```dockerfile
 # Crear un archivo Dockerfile en la raíz del proyecto:
 
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 FROM base AS deps
@@ -247,6 +247,7 @@ Para Vercel, considerar:
 | Variable | Obligatoria | Descripción |
 |----------|-------------|-------------|
 | `DATABASE_URL` | ✅ | Connection string de PostgreSQL (via PgBouncer) |
+| `DIRECT_DATABASE_URL` | ✅ | Connection directa a PG (para migraciones) |
 | `AUTH_SECRET` | ✅ | JWT signing secret, min 32 chars |
 | `NEXT_PUBLIC_APP_URL` | ✅ | URL pública de la app |
 | `NODE_ENV` | ✅ | Debe ser `production` |
@@ -254,6 +255,8 @@ Para Vercel, considerar:
 | `S3_BUCKET` | si s3 | Nombre del bucket |
 | `S3_REGION` | si s3 | Región AWS/compatible |
 | `S3_ENDPOINT` | si MinIO | URL del endpoint |
+| `UPSTASH_REDIS_REST_URL` | ⬜ | URL de Upstash Redis (rate limiting distribuido) |
+| `UPSTASH_REDIS_REST_TOKEN` | ⬜ | Token de Upstash Redis |
 | `APP_VERSION` | ⬜ | Versión para health endpoint |
 
 ---

@@ -210,6 +210,37 @@ N inserts individuales → 1 `INSERT ... VALUES (...), (...), (...)`.
 @@index([ownerId, communityId])
 ```
 
+### 3.10 UX Resilience (`loading.tsx`, `error.tsx`, `not-found.tsx`)
+
+- **Loading states**: Skeleton animado en `(backoffice)/loading.tsx`, `(backoffice)/dashboard/loading.tsx`, `(portal)/loading.tsx`
+- **Error boundaries**: `(backoffice)/error.tsx`, `(portal)/error.tsx` con botón "Reintentar"
+- **Global error**: `global-error.tsx` para fallos catastróficos en el layout raíz
+- **Not found**: `not-found.tsx` global + contextualizados en backoffice y portal
+- Impacto: El usuario nunca ve una pantalla en blanco ni un error genérico de Next.js
+
+### 3.11 Performance Optimizations
+
+```diff
+# Dashboard Suspense streaming
+- const [stats, financeKPIs, incidents, receipts] = await Promise.all([...])
+- // Todo bloquea el render
++ // KPIs render al instante, incidents y charts por streaming
++ <Suspense fallback={<Skeleton />}><IncidentsSection /></Suspense>
++ <Suspense fallback={<Skeleton />}><ChartsSection /></Suspense>
+
+# Recharts lazy-loaded
+- import { DonutChart } from '@/components/ui/charts'
++ const DonutChartLazy = dynamic(() => import('@/components/ui/charts'), { ssr: false })
+
+# Prisma select optimization
+- include: { community: true, assignedProvider: true }
++ include: { community: { select: { id: true, name: true } }, ... }
+```
+
+- **~500KB menos** en first paint (recharts cargado solo cuando el viewport lo necesita)
+- **Perceived TTFB mejorado**: KPIs financieros se pintan antes que la tabla de incidencias
+- **Transferencia DB reducida**: Queries de detalle traen solo campos que la UI consume
+
 ---
 
 ## 4. Checklist de Producción
