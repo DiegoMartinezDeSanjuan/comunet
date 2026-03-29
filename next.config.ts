@@ -26,7 +26,9 @@ const securityHeaders = [
     value: 'camera=(), microphone=(), geolocation=()',
   },
   {
-    key: 'Content-Security-Policy-Report-Only',
+    key: 'Content-Security-Policy',
+    // Note: 'unsafe-inline' is currently kept for Next.js App Router internal scripts and hydration. 
+    // 'unsafe-eval' is needed for Turbopack/development environment.
     value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';",
   },
 ]

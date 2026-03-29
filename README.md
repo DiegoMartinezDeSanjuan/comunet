@@ -154,7 +154,6 @@ Documentación técnica completa en la carpeta `docs/`:
 ## ⚠️ Limitaciones MVP
 
 - **Sin firma digital**: Actas y documentos no soportan firma electrónica.
-- **Sin storage cloud**: Los documentos se almacenan en disco local (`/storage/`).
 - **Sin notificaciones reales**: Email y push son mock; solo se generan registros IN_APP.
 - **Sin multi-tenancy real**: Un único despacho (Office) por instancia.
 - **Sin i18n**: Interfaz únicamente en castellano.

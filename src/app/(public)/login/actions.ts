@@ -2,6 +2,8 @@
 
 import { authenticate, createSession, getPostLoginRedirect } from '@/lib/auth'
 import { logAudit } from '@/modules/audit/server/services'
+import { loginLimiter } from '@/lib/rate-limit'
+import { headers } from 'next/headers'
 import { z } from 'zod'
 
 const loginSchema = z.object({
@@ -10,6 +12,17 @@ const loginSchema = z.object({
 })
 
 export async function loginAction(formData: FormData): Promise<{ error?: string; redirect?: string }> {
+  // Rate limiting protection
+  const headersList = await headers()
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+             headersList.get('x-real-ip') || 
+             'unknown'
+             
+  const limitResult = await loginLimiter.check(ip)
+  if (!limitResult.allowed) {
+    return { error: 'Demasiados intentos. Por favor, inténtelo de nuevo más tarde.' }
+  }
+
   const parsed = loginSchema.safeParse({
     email: formData.get('email'),
     password: formData.get('password'),

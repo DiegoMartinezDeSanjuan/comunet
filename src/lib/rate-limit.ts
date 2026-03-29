@@ -3,6 +3,7 @@
  * Falls back to an in-memory Map if Redis is not configured.
  */
 
+import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
 interface RateLimiterOptions {
@@ -90,51 +91,23 @@ function createMemoryRateLimiter(options: RateLimiterOptions): RateLimiter {
 function createRedisRateLimiter(options: RateLimiterOptions): RateLimiter {
   const { windowMs, maxRequests } = options
 
+  // Provide a reliable Ratelimit sliding window algorithm
+  const upstashLimiter = new Ratelimit({
+    redis: redis!,
+    limiter: Ratelimit.slidingWindow(maxRequests, `${windowMs} ms`),
+    analytics: true,
+  })
+
   return {
     async check(key: string): Promise<RateLimitResult> {
       if (!redis) throw new Error('Redis not initialized')
-      const now = Date.now()
-      const clearBefore = now - windowMs
-
-      const redisKey = `ratelimit:${key}`
-      const pipeline = redis.pipeline()
-
-      // 1. Remove timestamps outside the window
-      pipeline.zremrangebyscore(redisKey, 0, clearBefore)
       
-      // 2. Count timestamps in the window
-      pipeline.zcount(redisKey, clearBefore, '+inf')
-
-      // 3. Get the oldest timestamp in the window (for retry logic)
-      pipeline.zrange(redisKey, 0, 0, { withScores: true })
-
-      const [remResult, countResult, oldestResult] = await pipeline.exec()
-      
-      const currentCount = Number(countResult)
-      
-      if (currentCount >= maxRequests) {
-        const oldestTimestamp = Array.isArray(oldestResult) && oldestResult.length > 1 
-           ? Number(oldestResult[1]) 
-           : now
-        const retryAfterMs = Math.max(0, oldestTimestamp + windowMs - now)
-        
-        return {
-          allowed: false,
-          remaining: 0,
-          retryAfterMs,
-        }
-      }
-
-      // 4. Add the new timestamp if allowed
-      const addPipeline = redis.pipeline()
-      addPipeline.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` })
-      addPipeline.pexpire(redisKey, windowMs)
-      await addPipeline.exec()
+      const { success, limit, remaining, reset } = await upstashLimiter.limit(key)
 
       return {
-        allowed: true,
-        remaining: Math.max(0, maxRequests - (currentCount + 1)),
-        retryAfterMs: 0,
+        allowed: success,
+        remaining,
+        retryAfterMs: Math.max(0, reset - Date.now()),
       }
     },
     reset() {
