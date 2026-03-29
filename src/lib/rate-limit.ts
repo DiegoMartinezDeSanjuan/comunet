@@ -24,11 +24,16 @@ interface RateLimiter {
   reset(): void
 }
 
-const redis = process.env.UPSTASH_REDIS_REST_URL
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-    })
+const isProd = process.env.NODE_ENV === 'production'
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
+
+if (isProd && (!redisUrl || !redisToken)) {
+  throw new Error('FATAL: UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be configured in production for distributed rate limiting.')
+}
+
+const redis = (redisUrl && redisToken)
+  ? new Redis({ url: redisUrl, token: redisToken })
   : null
 
 function createMemoryRateLimiter(options: RateLimiterOptions): RateLimiter {
