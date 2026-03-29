@@ -17,17 +17,13 @@ services:
     restart: unless-stopped
     ports:
       - '3000:3000'
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgres://comunet:${POSTGRES_PASSWORD:-comunet_prod_secret}@pgbouncer:5432/comunet?pgbouncer=true
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-comunet-admin}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-comunet-minio-secret}
-      - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-super_secret_comunet_jwt_signing_key_generated_here_in_prod}
     depends_on:
       - pgbouncer
+      - minio
 
   postgres:
     image: postgres:16-alpine
