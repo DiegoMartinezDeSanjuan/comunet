@@ -4,7 +4,7 @@ import { UserRole } from '@prisma/client'
 
 import type { Session } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { createRequestCache } from '@/lib/request-cache'
+import { createRequestCache } from '@/lib/cache/request-cache'
 
 export interface PermissionContext {
   communityId?: string

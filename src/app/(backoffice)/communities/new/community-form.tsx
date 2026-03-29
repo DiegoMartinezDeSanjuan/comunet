@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { communitySchema, type CommunityInput } from '@/modules/communities/schema'
-import { createCommunityAction, updateCommunityAction } from '@/modules/communities/server/community-actions'
+import { createCommunityAction, updateCommunityAction } from '@/modules/communities/server/actions'
 
 interface Props {
   initialData?: Partial<CommunityInput> & { id?: string }

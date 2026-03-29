@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { requireAuth } from '@/lib/auth'
 import { canReadSettings } from '@/lib/permissions'
-import { SettingsNav } from './settings-nav'
+import { SettingsNav } from '@/modules/settings/components/settings-nav'
 
 export const dynamic = 'force-dynamic'
 

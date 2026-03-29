@@ -5,7 +5,7 @@ import { Building2, Settings, Shield, Users, Wrench } from 'lucide-react'
 import { requireAuth } from '@/lib/auth'
 import { getOfficeProfile } from '@/modules/settings/server/queries'
 import { canManageOfficeSettings, canReadSettings } from '@/lib/permissions'
-import { SettingsProfileForm } from './settings-profile-form'
+import { SettingsProfileForm } from '@/modules/settings/components/settings-profile-form'
 
 export const dynamic = 'force-dynamic'
 

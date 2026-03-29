@@ -20,7 +20,7 @@ import { getIncidentDashboardSnapshotQuery } from '@/modules/incidents/server/qu
 
 import { KPICard } from '@/components/ui/kpi-card'
 import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
-import { DashboardCharts } from './dashboard-charts'
+import { DashboardCharts } from './_components/dashboard-charts'
 
 export const dynamic = 'force-dynamic'
 

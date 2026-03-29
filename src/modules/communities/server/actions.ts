@@ -2,7 +2,7 @@
 
 import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
-import * as service from './community-service'
+import * as service from './service'
 import { type CommunityInput } from '../schema'
 import { revalidatePath } from 'next/cache'
 

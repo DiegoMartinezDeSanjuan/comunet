@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import { redirect, notFound } from 'next/navigation'
 import { CommunityForm } from '../../new/community-form'
-import { getCommunityDetails } from '@/modules/communities/server/community-service'
+import { getCommunityDetails } from '@/modules/communities/server/service'
 
 export default async function EditCommunityPage({
   params,

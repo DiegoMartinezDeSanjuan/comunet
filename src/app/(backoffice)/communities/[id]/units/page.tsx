@@ -1,5 +1,5 @@
 import { requireAuth } from '@/lib/auth'
-import { getCommunityDetails } from '@/modules/communities/server/community-service'
+import { getCommunityDetails } from '@/modules/communities/server/service'
 import { getCommunityUnitsData } from '@/modules/units/server/unit-service'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'

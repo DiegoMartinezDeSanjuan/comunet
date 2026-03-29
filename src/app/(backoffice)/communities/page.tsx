@@ -1,5 +1,5 @@
 import { requireAuth } from '@/lib/auth'
-import { getCommunities } from '@/modules/communities/server/community-service'
+import { getCommunities } from '@/modules/communities/server/service'
 import { Building2, Home, MapPin, Plus, Search, Users } from 'lucide-react'
 import Link from 'next/link'
 

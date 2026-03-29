@@ -7,7 +7,7 @@ import { requirePermission } from '@/lib/permissions'
 import { listIncidentsQuery } from '@/modules/incidents/server/queries'
 import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
 
-import { IncidentCreateDialog } from './incident-create-dialog'
+import { IncidentCreateDialog } from '@/modules/incidents/components/incident-create-dialog'
 
 export const dynamic = 'force-dynamic'
 

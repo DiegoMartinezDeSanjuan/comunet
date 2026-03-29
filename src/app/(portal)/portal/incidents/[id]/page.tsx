@@ -7,7 +7,7 @@ import {
   PortalBadge,
   getIncidentPriorityTone,
   getIncidentStatusTone,
-} from '@/components/portal/ui'
+} from '@/modules/portal/components/ui'
 import { requireAuth } from '@/lib/auth'
 import { formatDate, formatDateTime } from '@/lib/formatters'
 import {
