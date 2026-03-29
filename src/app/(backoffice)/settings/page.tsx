@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { Building2, Settings, Shield, Users, Wrench } from 'lucide-react'
 
 import { requireAuth } from '@/lib/auth'
 import { getOfficeProfile } from '@/modules/settings/server/queries'
@@ -25,35 +26,88 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border bg-card p-6 shadow-sm">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Perfil del Despacho</h2>
-          <p className="text-sm text-muted-foreground">
-            Información fiscal y de contacto de la administración de fincas.
-          </p>
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <Settings className="h-6 w-6 text-primary" />
+          Configuración
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Gestión del perfil del despacho y métricas del sistema.
+        </p>
+      </div>
+
+      {/* Profile Card */}
+      <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <div className="border-b border-border/50 px-5 py-4 flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Shield className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">Perfil del Despacho</h2>
+            <p className="text-xs text-muted-foreground">
+              Información fiscal y de contacto de la administración de fincas.
+            </p>
+          </div>
         </div>
-        
-        <SettingsProfileForm office={office} canEdit={canEdit} />
+        <div className="p-5">
+          <SettingsProfileForm office={office} canEdit={canEdit} />
+        </div>
       </section>
 
-      <section className="rounded-lg border bg-card p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Métricas del Sistema</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-md border p-4 bg-muted/20">
-            <div className="text-sm font-medium text-muted-foreground">Comunidades Activas</div>
-            <div className="mt-2 text-2xl font-bold">{office._count.communities}</div>
-            <Link href="/communities" className="mt-2 block text-xs text-primary hover:underline">Gestionar comunidades</Link>
-          </div>
-          <div className="rounded-md border p-4 bg-muted/20">
-            <div className="text-sm font-medium text-muted-foreground">Usuarios Activos</div>
-            <div className="mt-2 text-2xl font-bold">{office._count.users}</div>
-            <Link href="/settings/users" className="mt-2 block text-xs text-primary hover:underline">Gestionar usuarios</Link>
-          </div>
-          <div className="rounded-md border p-4 bg-muted/20">
-            <div className="text-sm font-medium text-muted-foreground">Proveedores Activos</div>
-            <div className="mt-2 text-2xl font-bold">{office._count.providers}</div>
-            <Link href="/providers" className="mt-2 block text-xs text-primary hover:underline">Gestionar proveedores</Link>
-          </div>
+      {/* System Metrics */}
+      <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <div className="border-b border-border/50 px-5 py-4">
+          <h2 className="text-base font-semibold">Métricas del Sistema</h2>
+        </div>
+        <div className="grid gap-4 p-5 sm:grid-cols-3">
+          <Link
+            href="/communities"
+            className="group rounded-xl border border-border/50 bg-card/30 p-5 transition-all hover:border-border hover:shadow-lg hover:shadow-primary/5 hover:bg-card/60"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400 transition-colors group-hover:bg-blue-500/25">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{office._count.communities}</p>
+                <p className="text-xs text-muted-foreground">Comunidades Activas</p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">Gestionar comunidades →</p>
+          </Link>
+
+          <Link
+            href="/settings/users"
+            className="group rounded-xl border border-border/50 bg-card/30 p-5 transition-all hover:border-border hover:shadow-lg hover:shadow-primary/5 hover:bg-card/60"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400 transition-colors group-hover:bg-emerald-500/25">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{office._count.users}</p>
+                <p className="text-xs text-muted-foreground">Usuarios Activos</p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">Gestionar usuarios →</p>
+          </Link>
+
+          <Link
+            href="/providers"
+            className="group rounded-xl border border-border/50 bg-card/30 p-5 transition-all hover:border-border hover:shadow-lg hover:shadow-primary/5 hover:bg-card/60"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400 transition-colors group-hover:bg-amber-500/25">
+                <Wrench className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{office._count.providers}</p>
+                <p className="text-xs text-muted-foreground">Proveedores Activos</p>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">Gestionar proveedores →</p>
+          </Link>
         </div>
       </section>
     </div>

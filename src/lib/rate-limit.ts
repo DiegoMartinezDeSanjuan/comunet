@@ -1,15 +1,9 @@
 /**
- * In-memory sliding-window rate limiter.
- *
- * Good enough for a single-instance deployment (which covers 500 users).
- * For multi-instance (horizontal scaling), replace the Map with Redis
- * using the same interface.
- *
- * Usage:
- *   const limiter = createRateLimiter({ windowMs: 60_000, maxRequests: 10 })
- *   const result = limiter.check('user-ip')
- *   if (!result.allowed) return 429
+ * Distributed sliding-window rate limiter via Upstash Redis.
+ * Falls back to an in-memory Map if Redis is not configured.
  */
+
+import { Redis } from '@upstash/redis'
 
 interface RateLimiterOptions {
   /** Time window in milliseconds */
@@ -24,13 +18,21 @@ interface RateLimitResult {
   retryAfterMs: number
 }
 
-interface RateLimitEntry {
-  timestamps: number[]
+interface RateLimiter {
+  check(key: string): Promise<RateLimitResult>
+  reset(): void
 }
 
-export function createRateLimiter(options: RateLimiterOptions) {
+const redis = process.env.UPSTASH_REDIS_REST_URL
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+    })
+  : null
+
+function createMemoryRateLimiter(options: RateLimiterOptions): RateLimiter {
   const { windowMs, maxRequests } = options
-  const store = new Map<string, RateLimitEntry>()
+  const store = new Map<string, { timestamps: number[] }>()
 
   // Cleanup stale entries every 60 seconds to prevent memory leak
   const cleanupInterval = setInterval(() => {
@@ -49,7 +51,7 @@ export function createRateLimiter(options: RateLimiterOptions) {
   }
 
   return {
-    check(key: string): RateLimitResult {
+    async check(key: string): Promise<RateLimitResult> {
       const now = Date.now()
       let entry = store.get(key)
 
@@ -58,7 +60,6 @@ export function createRateLimiter(options: RateLimiterOptions) {
         store.set(key, entry)
       }
 
-      // Remove timestamps outside the window
       entry.timestamps = entry.timestamps.filter((t) => now - t < windowMs)
 
       if (entry.timestamps.length >= maxRequests) {
@@ -80,12 +81,70 @@ export function createRateLimiter(options: RateLimiterOptions) {
         retryAfterMs: 0,
       }
     },
-
-    /** For testing */
     reset() {
       store.clear()
     },
   }
+}
+
+function createRedisRateLimiter(options: RateLimiterOptions): RateLimiter {
+  const { windowMs, maxRequests } = options
+
+  return {
+    async check(key: string): Promise<RateLimitResult> {
+      if (!redis) throw new Error('Redis not initialized')
+      const now = Date.now()
+      const clearBefore = now - windowMs
+
+      const redisKey = `ratelimit:${key}`
+      const pipeline = redis.pipeline()
+
+      // 1. Remove timestamps outside the window
+      pipeline.zremrangebyscore(redisKey, 0, clearBefore)
+      
+      // 2. Count timestamps in the window
+      pipeline.zcount(redisKey, clearBefore, '+inf')
+
+      // 3. Get the oldest timestamp in the window (for retry logic)
+      pipeline.zrange(redisKey, 0, 0, { withScores: true })
+
+      const [remResult, countResult, oldestResult] = await pipeline.exec()
+      
+      const currentCount = Number(countResult)
+      
+      if (currentCount >= maxRequests) {
+        const oldestTimestamp = Array.isArray(oldestResult) && oldestResult.length > 1 
+           ? Number(oldestResult[1]) 
+           : now
+        const retryAfterMs = Math.max(0, oldestTimestamp + windowMs - now)
+        
+        return {
+          allowed: false,
+          remaining: 0,
+          retryAfterMs,
+        }
+      }
+
+      // 4. Add the new timestamp if allowed
+      const addPipeline = redis.pipeline()
+      addPipeline.zadd(redisKey, { score: now, member: `${now}-${Math.random()}` })
+      addPipeline.pexpire(redisKey, windowMs)
+      await addPipeline.exec()
+
+      return {
+        allowed: true,
+        remaining: Math.max(0, maxRequests - (currentCount + 1)),
+        retryAfterMs: 0,
+      }
+    },
+    reset() {
+      // noop for redis wildcard clear in this case
+    },
+  }
+}
+
+export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
+  return redis ? createRedisRateLimiter(options) : createMemoryRateLimiter(options)
 }
 
 // ─── Pre-configured limiters ────────────────────────────

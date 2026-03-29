@@ -1,0 +1,103 @@
+﻿Ôû▓ Next.js 16.2.1 (Turbopack)
+- Environments: .env
+
+node.exe : ÔÜá The 
+"middleware" file 
+convention is deprecated. 
+Please use "proxy" 
+instead. Learn more: https
+://nextjs.org/docs/message
+s/middleware-to-proxy
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (Ô  
+  Üá The "middle...lewa   
+ re-to-proxy:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 2.4s
+  Running TypeScript ...
+  Finished TypeScript in 5.0s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/5) ...
+  Generating static pages using 15 workers (1/5) 
+  Generating static pages using 15 workers (2/5) 
+  Generating static pages using 15 workers (3/5) 
+Ô£ô Generating static pages using 15 workers (5/5) in 147ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ ãÆ /api/documents/[id]/download
+Ôö£ ãÆ /api/export/[entity]
+Ôö£ ãÆ /api/exports/receipts
+Ôö£ ãÆ /api/health
+Ôö£ ãÆ /api/mock/email
+Ôö£ ãÆ /communities
+Ôö£ ãÆ /communities/[id]
+Ôö£ ãÆ /communities/[id]/board
+Ôö£ ãÆ /communities/[id]/edit
+Ôö£ ãÆ /communities/[id]/fee-rules
+Ôö£ ãÆ /communities/[id]/fee-rules/new
+Ôö£ ãÆ /communities/[id]/units
+Ôö£ ãÆ /communities/[id]/units/[unitId]/edit
+Ôö£ ãÆ /communities/[id]/units/[unitId]/ownership
+Ôö£ ãÆ /communities/[id]/units/new
+Ôö£ ãÆ /communities/[id]/units/new-building
+Ôö£ ãÆ /communities/new
+Ôö£ ãÆ /dashboard
+Ôö£ ãÆ /documents
+Ôö£ ãÆ /documents/[id]
+Ôö£ ãÆ /finance/budgets
+Ôö£ ãÆ /finance/budgets/[id]
+Ôö£ ãÆ /finance/budgets/new
+Ôö£ ãÆ /finance/receipts
+Ôö£ ãÆ /finance/receipts/[id]
+Ôö£ ãÆ /finance/receipts/generate
+Ôö£ ãÆ /incidents
+Ôö£ ãÆ /incidents/[id]
+Ôö£ Ôùï /login
+Ôö£ ãÆ /meetings
+Ôö£ ãÆ /meetings/[id]
+Ôö£ ãÆ /notifications
+Ôö£ ãÆ /owners
+Ôö£ ãÆ /owners/[id]
+Ôö£ ãÆ /owners/[id]/edit
+Ôö£ ãÆ /owners/new
+Ôö£ ãÆ /portal
+Ôö£ ãÆ /portal/community
+Ôö£ ãÆ /portal/documents
+Ôö£ ãÆ /portal/incidents
+Ôö£ ãÆ /portal/incidents/[id]
+Ôö£ ãÆ /portal/meetings
+Ôö£ ãÆ /portal/receipts
+Ôö£ ãÆ /portal/receipts/[id]
+Ôö£ ãÆ /providers
+Ôö£ ãÆ /providers/[id]
+Ôö£ ãÆ /reports
+Ôö£ ãÆ /settings
+Ôö£ ãÆ /settings/audit
+Ôö£ ãÆ /settings/users
+Ôö£ ãÆ /tenants
+Ôö£ ãÆ /tenants/[id]
+Ôö£ ãÆ /tenants/[id]/edit
+Ôöö ãÆ /tenants/new
+
+
+ãÆ Proxy (Middleware)
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

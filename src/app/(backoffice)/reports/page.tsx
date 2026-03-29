@@ -1,5 +1,14 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import {
+  DollarSign,
+  AlertTriangle,
+  Building2,
+  TrendingDown,
+  Calendar,
+  ArrowUpRight,
+  Download,
+} from 'lucide-react'
 
 import { requireAuth } from '@/lib/auth'
 import { canReadReports } from '@/lib/permissions'
@@ -13,11 +22,21 @@ import {
   getProviderPerformanceSummary,
 } from '@/modules/reports/server/queries'
 
+import { KPICard } from '@/components/ui/kpi-card'
+import { PriorityBadge, ReceiptStatusBadge } from '@/components/ui/badge'
+import { ReportsCharts } from './reports-charts'
+
 export const dynamic = 'force-dynamic'
 
-function formatDate(value: Date | null): string {
-  if (!value) return '-'
-  return new Date(value).toLocaleDateString('es-ES')
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+  if (seconds < 60) return 'Hace un momento'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `Hace ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Hace ${hours}h`
+  const days = Math.floor(hours / 24)
+  return `Hace ${days} días`
 }
 
 export default async function ReportsPage() {
@@ -43,206 +62,246 @@ export default async function ReportsPage() {
     getProviderPerformanceSummary(session.officeId),
   ])
 
+  // Prepare chart data
+  const maxDebt = Math.max(...debtByCommunity.map((c) => c.totalDebt), 1)
+  const debtBarData = debtByCommunity.map((c) => ({
+    name: c.communityName,
+    value: c.totalDebt,
+    color: c.totalDebt > maxDebt * 0.7 ? '#ef4444' : c.totalDebt > maxDebt * 0.4 ? '#f59e0b' : '#3b82f6',
+  }))
+
+  const priorityDonutData = [
+    { name: 'Urgente', value: incidentsSummary.activeByPriority.find((p) => p.priority === 'URGENT')?.count || 0, color: '#ef4444' },
+    { name: 'Alta',    value: incidentsSummary.activeByPriority.find((p) => p.priority === 'HIGH')?.count || 0,   color: '#f97316' },
+    { name: 'Media',   value: incidentsSummary.activeByPriority.find((p) => p.priority === 'MEDIUM')?.count || 0, color: '#3b82f6' },
+    { name: 'Baja',    value: incidentsSummary.activeByPriority.find((p) => p.priority === 'LOW')?.count || 0,    color: '#64748b' },
+  ]
+
+  const totalIncidents = priorityDonutData.reduce((acc, d) => acc + d.value, 0)
+
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Reportes</h1>
-        <p className="text-sm text-muted-foreground">
-          Indicadores clave, deuda por comunidad, recibos y estatus general operativo.
-        </p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">COMUNET Analytics</h1>
+          <p className="text-sm text-muted-foreground">
+            Resumen detallado del estado financiero y operativo de tus comunidades.
+          </p>
+        </div>
+        <Link
+          href="/api/reports/export"
+          className="inline-flex items-center gap-2 rounded-lg border border-primary text-primary px-4 py-2 text-sm font-medium transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          <Download className="h-4 w-4" />
+          Exportar datos
+        </Link>
       </header>
 
-      {/* KPIs Section */}
+      {/* KPIs */}
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">Deuda Total Pendiente</div>
-          <div className="mt-2 text-3xl font-bold text-red-600">
-            {formatCurrency(kpis.totalPendingDebt)}
+        <KPICard
+          label="Deuda Total Pendiente"
+          value={formatCurrency(kpis.totalPendingDebt)}
+          icon={<DollarSign className="h-5 w-5" />}
+          accent="danger"
+          trend="down"
+          trendLabel="Cobros pendientes"
+        />
+        <KPICard
+          label="Incidencias Abiertas"
+          value={kpis.openIncidents}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          accent={kpis.openIncidents > 5 ? 'warning' : 'default'}
+        />
+        <KPICard
+          label="Comunidades Activas"
+          value={kpis.communitiesCount}
+          icon={<Building2 className="h-5 w-5" />}
+          accent="success"
+        />
+      </section>
+
+      {/* Charts Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Debt bar chart */}
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+            <h2 className="text-base font-semibold">Deuda por Comunidad</h2>
+            <Link href="/finance/receipts" className="text-sm text-primary hover:underline">
+              Ver detalles
+            </Link>
+          </div>
+          <div className="p-5">
+            {debtBarData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">No hay deuda registrada.</p>
+            ) : (
+              <ReportsCharts
+                type="hbar"
+                hbarData={debtBarData}
+                formatType="currency"
+              />
+            )}
           </div>
         </div>
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">Incidencias Abiertas</div>
-          <div className="mt-2 text-3xl font-bold">
-            {kpis.openIncidents}
+
+        {/* Priority donut chart */}
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="border-b border-border/50 px-5 py-4">
+            <h2 className="text-base font-semibold">Incidencias por Prioridad</h2>
+          </div>
+          <div className="p-5">
+            <ReportsCharts
+              type="donut"
+              donutData={priorityDonutData}
+              centerValue={totalIncidents}
+              centerLabel="total"
+            />
           </div>
         </div>
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">Comunidades Activas</div>
-          <div className="mt-2 text-3xl font-bold">
-            {kpis.communitiesCount}
-          </div>
+      </div>
+
+      {/* Receipt Status Row */}
+      <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+        <div className="border-b border-border/50 px-5 py-4">
+          <h2 className="text-base font-semibold">Estado de Recibos</h2>
+        </div>
+        <div className="p-5">
+          {receiptsStatus.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No hay recibos generados.</p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {receiptsStatus.map((s) => (
+                <div
+                  key={s.status}
+                  className="flex items-center gap-3 rounded-xl border border-border/50 bg-background/50 px-5 py-3 min-w-[180px] flex-1"
+                >
+                  <div>
+                    <ReceiptStatusBadge status={s.status} />
+                    <p className="text-lg font-bold mt-1 tabular-nums">{formatCurrency(s.amount)}</p>
+                    <p className="text-xs text-muted-foreground">{s.count} recibos</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Main Grid: left column (debt & receipts) / right column (incidents & meetings) */}
+      {/* Bottom Row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <section className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 p-4 border-b">
-              <h2 className="text-lg font-semibold">Deuda por Comunidad</h2>
-            </div>
-            {debtByCommunity.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground text-center">No hay deuda registrada.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
-                      <th className="h-10 px-4 text-left font-medium text-muted-foreground">Comunidad</th>
-                      <th className="h-10 px-4 text-right font-medium text-muted-foreground">Deudores</th>
-                      <th className="h-10 px-4 text-right font-medium text-muted-foreground">Deuda</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {debtByCommunity.map((comm) => (
-                      <tr key={comm.communityId} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="p-4">{comm.communityName}</td>
-                        <td className="p-4 text-right">{comm.debtorsCount}</td>
-                        <td className="p-4 text-right font-medium text-red-600">
-                          {formatCurrency(comm.totalDebt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 p-4 border-b">
-              <h2 className="text-lg font-semibold">Estado de Recibos</h2>
-            </div>
-            <div className="p-4 grid gap-4 grid-cols-2 sm:grid-cols-3">
-              {receiptsStatus.length === 0 ? (
-                <div className="col-span-full text-sm text-muted-foreground text-center py-4">No hay recibos generados.</div>
-              ) : (
-                receiptsStatus.map((status) => (
-                  <div key={status.status} className="rounded-md border p-3 bg-muted/10">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">{status.status}</div>
-                    <div className="text-xl font-semibold">{status.count}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{formatCurrency(status.amount)}</div>
+        {/* Recent incidents */}
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+            <h2 className="text-base font-semibold">Incidencias Recientes</h2>
+            <Link href="/incidents" className="flex items-center gap-1 text-sm text-primary hover:underline">
+              Ver todas <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+          {incidentsSummary.recentActive.length === 0 ? (
+            <div className="p-6 text-sm text-muted-foreground text-center">No hay incidencias activas.</div>
+          ) : (
+            <div className="divide-y divide-border/20">
+              {incidentsSummary.recentActive.map((inc) => (
+                <div
+                  key={inc.id}
+                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-muted/10"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 shrink-0">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
                   </div>
-                ))
-              )}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/incidents/${inc.id}`}
+                      className="text-sm font-medium hover:underline truncate block"
+                    >
+                      {inc.title}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">
+                      {inc.communityName} · {timeAgo(inc.createdAt)}
+                    </p>
+                  </div>
+                  <PriorityBadge priority={inc.priority} />
+                </div>
+              ))}
             </div>
-          </section>
-          
-          <section className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 p-4 border-b">
-              <h2 className="text-lg font-semibold">Carga de Proveedores</h2>
-            </div>
-            {providerPerformance.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground text-center">No hay carga asignada actual.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
-                      <th className="h-10 px-4 text-left font-medium text-muted-foreground">Proveedor</th>
-                      <th className="h-10 px-4 text-right font-medium text-muted-foreground">Inc. Activas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {providerPerformance.map((prov) => (
-                      <tr key={prov.providerId} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="p-4">
-                          <div className="font-medium">{prov.name}</div>
-                          <div className="text-xs text-muted-foreground">{prov.category || 'Sin categoría'}</div>
-                        </td>
-                        <td className="p-4 text-right font-medium">{prov.activeIncidents}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+          )}
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          <section className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 p-4 border-b">
-              <h2 className="text-lg font-semibold">Incidencias por Prioridad</h2>
-            </div>
-            <div className="p-4 grid gap-4 grid-cols-2 sm:grid-cols-4">
-              {['URGENT', 'HIGH', 'MEDIUM', 'LOW'].map((priorityLabel) => {
-                const priorityData = incidentsSummary.activeByPriority.find(p => p.priority === priorityLabel)
+        {/* Upcoming meetings */}
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+            <h2 className="text-base font-semibold">Próximas Reuniones</h2>
+            <Link href="/meetings" className="flex items-center gap-1 text-sm text-primary hover:underline">
+              Ver todas <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+          {upcomingMeetings.length === 0 ? (
+            <div className="p-6 text-sm text-muted-foreground text-center">No hay reuniones programadas.</div>
+          ) : (
+            <div className="divide-y divide-border/20">
+              {upcomingMeetings.map((meeting) => {
+                const d = new Date(meeting.scheduledAt)
+                const day = d.getDate()
+                const month = d.toLocaleDateString('es-ES', { month: 'short' })
                 return (
-                  <div key={priorityLabel} className="rounded-md border p-3 flex flex-col items-center justify-center bg-muted/10">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">{priorityLabel}</div>
-                    <div className="text-2xl font-semibold">{priorityData?.count || 0}</div>
+                  <div
+                    key={meeting.id}
+                    className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/10"
+                  >
+                    <div className="flex flex-col items-center justify-center rounded-lg bg-primary/10 w-12 h-12 shrink-0">
+                      <span className="text-xs uppercase text-primary font-semibold">{month}</span>
+                      <span className="text-lg font-bold text-primary leading-none">{day}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link
+                        href={`/meetings/${meeting.id}`}
+                        className="text-sm font-medium hover:underline truncate block"
+                      >
+                        {meeting.title}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">{meeting.communityName}</p>
+                    </div>
                   </div>
                 )
               })}
             </div>
-          </section>
-
-          <section className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 p-4 border-b flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Incidencias Recientes</h2>
-              <Link href="/incidents" className="text-sm text-primary hover:underline">Ver todas</Link>
-            </div>
-            {incidentsSummary.recentActive.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground text-center">No hay incidencias activas.</div>
-            ) : (
-              <div className="divide-y">
-                {incidentsSummary.recentActive.map((inc) => (
-                  <div key={inc.id} className="p-4 flex flex-col gap-1 transition-colors hover:bg-muted/20">
-                    <div className="flex justify-between">
-                      <Link href={`/incidents/${inc.id}`} className="font-medium hover:underline flex-1 truncate pr-2">
-                        {inc.title}
-                      </Link>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full border bg-muted">{inc.priority}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{inc.communityName}</span>
-                      <span>{formatDate(inc.createdAt)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-lg border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 p-4 border-b flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Próximas Reuniones</h2>
-              <Link href="/meetings" className="text-sm text-primary hover:underline">Ver todas</Link>
-            </div>
-            {upcomingMeetings.length === 0 ? (
-              <div className="p-6 text-sm text-muted-foreground text-center">No hay reuniones programadas.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
-                      <th className="h-10 px-4 text-left font-medium text-muted-foreground">Fecha</th>
-                      <th className="h-10 px-4 text-left font-medium text-muted-foreground">Comunidad</th>
-                      <th className="h-10 px-4 text-left font-medium text-muted-foreground">Título</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {upcomingMeetings.map((meeting) => (
-                      <tr key={meeting.id} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="p-4 whitespace-nowrap">{formatDate(meeting.scheduledAt)}</td>
-                        <td className="p-4">{meeting.communityName}</td>
-                        <td className="p-4">
-                          <Link href={`/meetings/${meeting.id}`} className="hover:underline">
-                            {meeting.title}
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+          )}
         </div>
       </div>
+
+      {/* Provider workload */}
+      {providerPerformance.length > 0 ? (
+        <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="border-b border-border/50 px-5 py-4">
+            <h2 className="text-base font-semibold">Carga de Proveedores</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/30 text-left text-muted-foreground">
+                  <th className="px-5 py-3 font-medium">Proveedor</th>
+                  <th className="px-5 py-3 text-right font-medium">Inc. Activas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {providerPerformance.map((prov) => (
+                  <tr key={prov.providerId} className="border-b border-border/20 transition-colors hover:bg-muted/10">
+                    <td className="px-5 py-3">
+                      <div className="font-medium">{prov.name}</div>
+                      <div className="text-xs text-muted-foreground">{prov.category || ''}</div>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <span className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs h-6 w-6">
+                        {prov.activeIncidents}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }

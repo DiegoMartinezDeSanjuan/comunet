@@ -102,4 +102,21 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Smooth transitions for focusable elements */
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    @apply transition-colors duration-200;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/50 backdrop-blur-sm border border-border/50;
+  }
+  .glass-hover {
+    @apply hover:border-border hover:shadow-md;
+  }
 }

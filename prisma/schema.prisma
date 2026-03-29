@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ─── ENUMS ──────────────────────────────────────────────
@@ -258,9 +257,9 @@ model Unit {
   type        UnitType @default(APARTMENT)
   floor       String?
   door        String?
-  areaM2      Decimal? @db.Decimal(10, 2)
-  coefficient Decimal  @default(1.0) @db.Decimal(10, 6)
-  quotaPercent Decimal @default(0.0) @db.Decimal(10, 6)
+  areaM2      Float?
+  coefficient Float  @default(1.0)
+  quotaPercent Float @default(0.0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -329,7 +328,7 @@ model Ownership {
   id                    String    @id @default(cuid())
   unitId                String
   ownerId               String
-  ownershipPercent      Decimal   @default(100) @db.Decimal(10, 4)
+  ownershipPercent      Float   @default(100)
   isPrimaryBillingContact Boolean @default(false)
   startDate             DateTime  @default(now())
   endDate               DateTime?
@@ -385,7 +384,7 @@ model Budget {
   id          String       @id @default(cuid())
   communityId String
   year        Int
-  totalAmount Decimal      @default(0) @db.Decimal(12, 2)
+  totalAmount Float      @default(0)
   status      BudgetStatus @default(DRAFT)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -403,7 +402,7 @@ model BudgetLine {
   budgetId    String
   concept     String
   category    String?
-  amount      Decimal  @default(0) @db.Decimal(12, 2)
+  amount      Float  @default(0)
   periodicity String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -421,7 +420,7 @@ model FeeRule {
   frequency       FeeFrequency @default(MONTHLY)
   startDate       DateTime     @default(now())
   calculationBase String?      // 'COEFFICIENT', 'QUOTA_PERCENT', 'FIXED'
-  fixedAmount     Decimal?     @db.Decimal(12, 2)
+  fixedAmount     Float?
   notes           String?
   active          Boolean      @default(true)
   createdAt       DateTime     @default(now())
@@ -442,8 +441,8 @@ model Receipt {
   periodEnd   DateTime
   issueDate   DateTime      @default(now())
   dueDate     DateTime
-  amount      Decimal       @db.Decimal(12, 2)
-  paidAmount  Decimal       @default(0) @db.Decimal(12, 2)
+  amount      Float
+  paidAmount  Float       @default(0)
   status      ReceiptStatus @default(DRAFT)
   reference   String        @unique
   createdAt   DateTime      @default(now())
@@ -468,7 +467,7 @@ model Payment {
   id          String        @id @default(cuid())
   receiptId   String
   paymentDate DateTime      @default(now())
-  amount      Decimal       @db.Decimal(12, 2)
+  amount      Float
   method      PaymentMethod @default(BANK_TRANSFER)
   reference   String?
   notes       String?
@@ -486,8 +485,8 @@ model Debt {
   unitId      String
   ownerId     String
   receiptId   String?
-  principal   Decimal    @db.Decimal(12, 2)
-  surcharge   Decimal    @default(0) @db.Decimal(12, 2)
+  principal   Float
+  surcharge   Float    @default(0)
   status      DebtStatus @default(PENDING)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -591,7 +590,7 @@ model Attendance {
   ownerId           String?
   unitId            String?
   attendeeName      String
-  coefficientPresent Decimal       @default(0) @db.Decimal(10, 6)
+  coefficientPresent Float       @default(0)
   attendanceType    AttendanceType @default(IN_PERSON)
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
@@ -608,7 +607,7 @@ model Vote {
   ownerId          String?
   unitId           String?
   vote             VoteValue @default(ABSTAIN)
-  coefficientWeight Decimal  @default(0) @db.Decimal(10, 6)
+  coefficientWeight Float  @default(0)
 
   agendaItem AgendaItem @relation(fields: [agendaItemId], references: [id], onDelete: Cascade)
   owner      Owner?     @relation(fields: [ownerId], references: [id])

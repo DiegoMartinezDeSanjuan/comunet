@@ -20,12 +20,19 @@ export default async function EditUnitPage({
   const unit = units.find(u => u.id === unitId)
   if (!unit) notFound()
 
-  // Prepare initialData to match UnitInput schema
+  // Prepare initialData — only pick fields the form needs, convert Decimals
   const initialData = {
-    ...unit,
-    areaM2: unit.areaM2 ? Number(unit.areaM2) : null,
-    coefficient: unit.coefficient ? Number(unit.coefficient) : null,
-    quotaPercent: unit.quotaPercent ? Number(unit.quotaPercent) : null,
+    id: unit.id,
+    communityId: unit.communityId,
+    buildingId: unit.buildingId,
+    reference: unit.reference,
+    type: unit.type,
+    floor: unit.floor,
+    door: unit.door,
+    areaM2: unit.areaM2 !== null && unit.areaM2 !== undefined ? Number(unit.areaM2) : null,
+    coefficient: unit.coefficient !== null && unit.coefficient !== undefined ? Number(unit.coefficient) : null,
+    quotaPercent: unit.quotaPercent !== null && unit.quotaPercent !== undefined ? Number(unit.quotaPercent) : null,
+    active: unit.active,
   }
 
   return (

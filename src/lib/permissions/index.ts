@@ -4,6 +4,7 @@ import { UserRole } from '@prisma/client'
 
 import type { Session } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { createRequestCache } from '@/lib/request-cache'
 
 export interface PermissionContext {
   communityId?: string
@@ -12,6 +13,58 @@ export interface PermissionContext {
   providerId?: string
   incidentId?: string
 }
+
+// ─── Cached DB Fetchers ─────────────────────────────────
+
+const getCommunityForOffice = createRequestCache(async (communityId: string, officeId: string) => {
+  return prisma.community.findFirst({
+    where: { id: communityId, officeId, archivedAt: null },
+  })
+})
+
+const getOwnershipForOwner = createRequestCache(async (ownerId: string, communityId: string) => {
+  return prisma.ownership.findFirst({
+    where: { ownerId, unit: { communityId }, endDate: null },
+  })
+})
+
+const getIncidentForProvider = createRequestCache(async (providerId: string, communityId: string) => {
+  return prisma.incident.findFirst({
+    where: { communityId, assignedProviderId: providerId },
+  })
+})
+
+const getUnitWithCommunity = createRequestCache(async (unitId: string) => {
+  return prisma.unit.findFirst({
+    where: { id: unitId },
+    include: { community: true },
+  })
+})
+
+const getOwnershipForUnit = createRequestCache(async (unitId: string, ownerId: string) => {
+  return prisma.ownership.findFirst({
+    where: { unitId, ownerId, endDate: null },
+  })
+})
+
+const getOwnerForOffice = createRequestCache(async (ownerId: string, officeId: string) => {
+  return prisma.owner.findFirst({
+    where: { id: ownerId, officeId, archivedAt: null },
+  })
+})
+
+const getIncidentForScopeCached = createRequestCache(async (incidentId: string) => {
+  return prisma.incident.findFirst({
+    where: { id: incidentId },
+    include: { community: true },
+  })
+})
+
+const getProviderForScopeCached = createRequestCache(async (providerId: string) => {
+  return prisma.provider.findFirst({
+    where: { id: providerId },
+  })
+})
 
 const BACKOFFICE_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
@@ -54,37 +107,17 @@ function isBackofficeManageRole(role: UserRole) {
 
 export async function canReadCommunity(session: Session, communityId: string): Promise<boolean> {
   if (isBackofficeReadRole(session.role)) {
-    const community = await prisma.community.findFirst({
-      where: {
-        id: communityId,
-        officeId: session.officeId,
-        archivedAt: null,
-      },
-    })
-
+    const community = await getCommunityForOffice(communityId, session.officeId)
     return !!community
   }
 
   if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
-    const ownership = await prisma.ownership.findFirst({
-      where: {
-        ownerId: session.linkedOwnerId,
-        unit: { communityId },
-        endDate: null,
-      },
-    })
-
+    const ownership = await getOwnershipForOwner(session.linkedOwnerId, communityId)
     return !!ownership
   }
 
   if (session.role === 'PROVIDER' && session.linkedProviderId) {
-    const incident = await prisma.incident.findFirst({
-      where: {
-        communityId,
-        assignedProviderId: session.linkedProviderId,
-      },
-    })
-
+    const incident = await getIncidentForProvider(session.linkedProviderId, communityId)
     return !!incident
   }
 
@@ -94,25 +127,14 @@ export async function canReadCommunity(session: Session, communityId: string): P
 export async function canManageCommunity(session: Session, communityId: string): Promise<boolean> {
   if (!isBackofficeManageRole(session.role)) return false
 
-  const community = await prisma.community.findFirst({
-    where: {
-      id: communityId,
-      officeId: session.officeId,
-      archivedAt: null,
-    },
-  })
-
+  const community = await getCommunityForOffice(communityId, session.officeId)
   return !!community
 }
 
 // ─── Unit Permissions ───────────────────────────────────
 
 export async function canReadUnit(session: Session, unitId: string): Promise<boolean> {
-  const unit = await prisma.unit.findFirst({
-    where: { id: unitId },
-    include: { community: true },
-  })
-
+  const unit = await getUnitWithCommunity(unitId)
   if (!unit) return false
 
   if (isBackofficeReadRole(session.role)) {
@@ -120,14 +142,7 @@ export async function canReadUnit(session: Session, unitId: string): Promise<boo
   }
 
   if ((session.role === 'OWNER' || session.role === 'PRESIDENT') && session.linkedOwnerId) {
-    const ownership = await prisma.ownership.findFirst({
-      where: {
-        unitId,
-        ownerId: session.linkedOwnerId,
-        endDate: null,
-      },
-    })
-
+    const ownership = await getOwnershipForUnit(unitId, session.linkedOwnerId)
     return !!ownership
   }
 
@@ -138,14 +153,7 @@ export async function canReadUnit(session: Session, unitId: string): Promise<boo
 
 export async function canReadOwner(session: Session, ownerId: string): Promise<boolean> {
   if (isBackofficeReadRole(session.role)) {
-    const owner = await prisma.owner.findFirst({
-      where: {
-        id: ownerId,
-        officeId: session.officeId,
-        archivedAt: null,
-      },
-    })
-
+    const owner = await getOwnerForOffice(ownerId, session.officeId)
     return !!owner
   }
 
@@ -165,12 +173,7 @@ export function canManageFinance(session: Session): boolean {
 // ─── Incident Permissions ───────────────────────────────
 
 async function getIncidentForScope(incidentId: string) {
-  return prisma.incident.findFirst({
-    where: { id: incidentId },
-    include: {
-      community: true,
-    },
-  })
+  return getIncidentForScopeCached(incidentId)
 }
 
 export async function canReadIncident(session: Session, incidentId: string): Promise<boolean> {
@@ -239,9 +242,7 @@ export async function canCommentIncident(session: Session, incidentId: string): 
 // ─── Provider Permissions ───────────────────────────────
 
 async function getProviderForScope(providerId: string) {
-  return prisma.provider.findFirst({
-    where: { id: providerId },
-  })
+  return getProviderForScopeCached(providerId)
 }
 
 export async function canReadProvider(session: Session, providerId: string): Promise<boolean> {

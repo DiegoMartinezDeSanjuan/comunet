@@ -28,16 +28,18 @@ const SYNC_AUDIT_ACTIONS: Set<AuditAction> = new Set([
  * Entity types that always require synchronous audit regardless of action.
  */
 const SYNC_AUDIT_ENTITIES: Set<string> = new Set([
-  'User',      // Login, role changes
-  'Payment',   // Financial operations
-  'Receipt',   // Financial operations
-  'Debt',      // Financial operations
-  'Budget',    // Financial operations
+  'user',      // Login, role changes
+  'payment',   // Financial operations
+  'receipt',   // Financial operations
+  'debt',      // Financial operations
+  'budget',    // Financial operations
+  'office',    // Settings changes
 ])
 
 function requiresSyncAudit(entry: AuditEntry): boolean {
-  if (SYNC_AUDIT_ENTITIES.has(entry.entityType)) return true
-  if (SYNC_AUDIT_ACTIONS.has(entry.action) && entry.entityType === 'User') return true
+  const typeLower = entry.entityType.toLowerCase()
+  if (SYNC_AUDIT_ENTITIES.has(typeLower)) return true
+  if (SYNC_AUDIT_ACTIONS.has(entry.action) && typeLower === 'user') return true
   return false
 }
 

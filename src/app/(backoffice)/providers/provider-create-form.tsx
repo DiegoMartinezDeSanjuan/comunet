@@ -8,11 +8,13 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { createProviderAction } from '@/modules/providers/server/actions'
+import { ChevronDown, Wrench } from 'lucide-react'
 
 export function ProviderCreateForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
+  const [isOpen, setIsOpen] = useState(false)
 
   const [name, setName] = useState('')
   const [cif, setCif] = useState('')
@@ -55,89 +57,119 @@ export function ProviderCreateForm() {
   }
 
   return (
-    <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">Nuevo proveedor</h2>
-        <p className="text-sm text-muted-foreground">
-          Crea una ficha de proveedor para poder asignarlo a incidencias.
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Nombre</label>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Ej. Fontaneria Lopez"
-          />
+    <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      {/* Collapsible Header */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-muted/10 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+            <Wrench className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">Nuevo proveedor</h2>
+            <p className="text-xs text-muted-foreground">
+              Crea una ficha de proveedor para poder asignarlo a incidencias.
+            </p>
+          </div>
         </div>
+        <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Categoria</label>
-          <Input
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            placeholder="Fontaneria, ascensores, limpieza..."
-          />
+      {/* Collapsible Body */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="border-t border-border/30 p-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Nombre</label>
+              <Input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Ej. Fontaneria Lopez"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Categoría</label>
+              <Input
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                placeholder="Fontaneria, ascensores, limpieza..."
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">CIF</label>
+              <Input
+                value={cif}
+                onChange={(event) => setCif(event.target.value)}
+                placeholder="B12345678"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Teléfono</label>
+              <Input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="600123123"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="proveedor@ejemplo.com"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Dirección</label>
+              <Input
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="Calle, numero, ciudad"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-xs font-medium text-muted-foreground">Notas</label>
+              <Textarea
+                rows={3}
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Condiciones, horarios, alcance del servicio..."
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isPending || name.trim().length < 2}
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:brightness-110"
+            >
+              {isPending ? 'Guardando...' : 'Crear proveedor'}
+            </Button>
+          </div>
         </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">CIF</label>
-          <Input
-            value={cif}
-            onChange={(event) => setCif(event.target.value)}
-            placeholder="B12345678"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Telefono</label>
-          <Input
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            placeholder="600123123"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Email</label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="proveedor@ejemplo.com"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Direccion</label>
-          <Input
-            value={address}
-            onChange={(event) => setAddress(event.target.value)}
-            placeholder="Calle, numero, ciudad"
-          />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium">Notas</label>
-          <Textarea
-            rows={4}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Condiciones, horarios, alcance del servicio..."
-          />
-        </div>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isPending || name.trim().length < 2}
-        >
-          {isPending ? 'Guardando...' : 'Crear proveedor'}
-        </Button>
       </div>
     </section>
   )

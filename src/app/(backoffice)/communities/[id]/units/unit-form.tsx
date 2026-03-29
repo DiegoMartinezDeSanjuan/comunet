@@ -30,7 +30,6 @@ export function UnitForm({ communityId, buildings, initialData }: Props) {
       areaM2: initialData?.areaM2 || null,
       coefficient: initialData?.coefficient || null,
       quotaPercent: initialData?.quotaPercent || null,
-      cadastralRef: initialData?.cadastralRef || '',
       active: initialData?.active ?? true,
     },
   })
@@ -60,6 +59,9 @@ export function UnitForm({ communityId, buildings, initialData }: Props) {
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             placeholder="Ej: 1A, Local 2, Plaza 14..."
           />
+          {form.formState.errors.reference && (
+            <p className="text-xs text-red-400">{form.formState.errors.reference.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">Edificio</label>
@@ -81,11 +83,14 @@ export function UnitForm({ communityId, buildings, initialData }: Props) {
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             <option value="APARTMENT">Vivienda</option>
-            <option value="PARKING">Plaza de Garaje</option>
+            <option value="GARAGE">Plaza de Garaje</option>
             <option value="STORAGE">Trastero</option>
             <option value="COMMERCIAL">Local Comercial</option>
             <option value="OTHER">Otro</option>
           </select>
+          {form.formState.errors.type && (
+            <p className="text-xs text-red-400">{form.formState.errors.type.message}</p>
+          )}
         </div>
         
         <div className="grid grid-cols-2 gap-2">
@@ -104,7 +109,7 @@ export function UnitForm({ communityId, buildings, initialData }: Props) {
           <input
             type="number"
             step="0.01"
-            {...form.register('coefficient')}
+            {...form.register('coefficient', { setValueAs: (v) => v === '' || v === null || v === undefined ? null : Number(v) })}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -113,7 +118,7 @@ export function UnitForm({ communityId, buildings, initialData }: Props) {
           <input
             type="number"
             step="0.01"
-            {...form.register('areaM2')}
+            {...form.register('areaM2', { setValueAs: (v) => v === '' || v === null || v === undefined ? null : Number(v) })}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>

@@ -1,6 +1,6 @@
 import { requireAuth } from '@/lib/auth'
 import { getCommunities } from '@/modules/communities/server/community-service'
-import { Building2, Plus, Search } from 'lucide-react'
+import { Building2, Home, MapPin, Plus, Search, Users } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -13,11 +13,15 @@ export default async function CommunitiesPage({
   const session = await requireAuth()
   const resolvedParams = await searchParams
   const query = resolvedParams.q || ''
-  
+
   const communities = await getCommunities(session.officeId, query)
+
+  const totalUnits = communities.reduce((sum, c) => sum + c._count.units, 0)
+  const canManage = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role)
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Comunidades</h1>
@@ -25,80 +29,107 @@ export default async function CommunitiesPage({
             Gestiona las comunidades de propietarios del despacho
           </p>
         </div>
-        
-        {['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role) && (
-          <Link 
-            href="/communities/new" 
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+
+        {canManage && (
+          <Link
+            href="/communities/new"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:brightness-110"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nueva Comunidad
           </Link>
         )}
       </div>
 
-      <div className="flex items-center space-x-2">
-        <form className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
-            type="search"
-            name="q"
-            defaultValue={query}
-            placeholder="Buscar por nombre o CIF..."
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 pl-9"
-          />
-        </form>
-      </div>
-
-      <div className="rounded-md border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Comunidad</th>
-                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">CIF</th>
-                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Unidades</th>
-                <th className="h-10 px-4 text-right align-middle font-medium text-muted-foreground">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {communities.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="p-4 text-center text-muted-foreground h-24">
-                    No se encontraron comunidades.
-                  </td>
-                </tr>
-              ) : (
-                communities.map((community) => (
-                  <tr key={community.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <td className="p-4 align-middle">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background text-muted-foreground">
-                          <Building2 className="h-4 w-4" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-foreground">{community.name}</span>
-                          {community.address && <span className="text-xs text-muted-foreground">{community.address}</span>}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">{community.cif || '-'}</td>
-                    <td className="p-4 align-middle">{community._count.units}</td>
-                    <td className="p-4 align-middle text-right">
-                      <Link 
-                        href={`/communities/${community.id}`}
-                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-8 px-3"
-                      >
-                        Ver detalles
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* KPI Row */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+            <Building2 className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold">{communities.length}</p>
+            <p className="text-xs text-muted-foreground">Comunidades</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+            <Home className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold">{totalUnits}</p>
+            <p className="text-xs text-muted-foreground">Unidades</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
+            <Users className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold">{communities.length > 0 ? Math.round(totalUnits / communities.length) : 0}</p>
+            <p className="text-xs text-muted-foreground">Media uds/comunidad</p>
+          </div>
         </div>
       </div>
+
+      {/* Search */}
+      <form className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          type="search"
+          name="q"
+          defaultValue={query}
+          placeholder="Buscar por nombre o CIF..."
+          className="h-10 w-full rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+        />
+      </form>
+
+      {/* Community cards grid */}
+      {communities.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
+          <Building2 className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground">No se encontraron comunidades.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {communities.map((community) => (
+            <Link
+              key={community.id}
+              href={`/communities/${community.id}`}
+              className="group rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 transition-all hover:border-border hover:shadow-lg hover:shadow-primary/5 hover:bg-card/80"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                    {community.name}
+                  </h3>
+                  {community.address && (
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5 truncate">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      {community.address}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <span className="inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  <Home className="mr-1 h-3 w-3" />
+                  {community._count.units} uds
+                </span>
+                {community.cif && (
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {community.cif}
+                  </span>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

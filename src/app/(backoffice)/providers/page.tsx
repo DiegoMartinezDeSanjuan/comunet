@@ -1,11 +1,10 @@
 import Link from 'next/link'
-
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { requirePermission } from '@/lib/permissions'
 import { listProvidersQuery } from '@/modules/providers/server/queries'
-
 import { ProviderCreateForm } from './provider-create-form'
+import { ChevronLeft, ChevronRight, Mail, Phone, Search, Wrench } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,9 +21,18 @@ function parsePositiveInt(value: string, fallback: number): number {
   return Math.trunc(parsed)
 }
 
-function formatDate(value: Date | null): string {
-  if (!value) return '-'
-  return new Date(value).toLocaleDateString('es-ES')
+// Category color mapping
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Fontanería: { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-l-blue-500' },
+  Electricidad: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-l-amber-500' },
+  Ascensores: { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-l-purple-500' },
+  Pintura: { bg: 'bg-rose-500/15', text: 'text-rose-400', border: 'border-l-rose-500' },
+  Limpieza: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-l-emerald-500' },
+}
+
+function getCategoryColor(category: string | null) {
+  if (!category) return { bg: 'bg-muted/20', text: 'text-muted-foreground', border: 'border-l-border' }
+  return CATEGORY_COLORS[category] ?? { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-l-cyan-500' }
 }
 
 export default async function ProvidersPage({
@@ -65,7 +73,6 @@ export default async function ProvidersPage({
   ])
 
   const canManage = requirePermission(session, 'providers.manage')
-
   const startItem = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1
   const endItem = result.total === 0 ? 0 : Math.min(result.page * result.pageSize, result.total)
 
@@ -77,174 +84,172 @@ export default async function ProvidersPage({
     ),
   )
 
+  const activeCount = result.items.filter(p => !p.archivedAt).length
+
   const buildHref = (targetPage: number) => {
     const query = new URLSearchParams()
-
     if (q) query.set('q', q)
     if (category) query.set('category', category)
     if (archivedParam) query.set('archived', archivedParam)
     if (targetPage > 1) query.set('page', String(targetPage))
-
     const search = query.toString()
     return search ? `/providers?${search}` : '/providers'
   }
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-foreground">Proveedores</h1>
-        <p className="text-sm text-muted-foreground">
-          Directorio operativo con datos de contacto, categoria y vinculo con
-          incidencias asignadas.
-        </p>
-      </header>
-
-      {canManage ? <ProviderCreateForm /> : null}
-
-      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Listado</h2>
-          <p className="text-sm text-muted-foreground">
-            Mostrando {startItem}-{endItem} de {result.total} proveedores.
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Proveedores</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Directorio operativo con datos de contacto, categoría y vínculo con incidencias asignadas.
           </p>
         </div>
+      </div>
 
-        <form className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="Buscar por nombre, CIF, telefono o email"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-
-          <select
-            name="category"
-            defaultValue={category}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Todas las categorias</option>
-            {categoryOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="archived"
-            defaultValue={archivedParam}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Activos y archivados</option>
-            <option value="false">Solo activos</option>
-            <option value="true">Solo archivados</option>
-          </select>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-            >
-              Filtrar
-            </button>
+      {/* Category Pill Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href="/providers"
+          className={`inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors ${
+            !category ? 'bg-primary text-primary-foreground' : 'border border-border/50 bg-card/50 hover:bg-muted/20'
+          }`}
+        >
+          Todos
+        </Link>
+        {categoryOptions.map((cat) => {
+          const colors = getCategoryColor(cat)
+          const isActive = category === cat
+          return (
             <Link
-              href="/providers"
-              className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
+              key={cat}
+              href={`/providers?category=${encodeURIComponent(cat)}`}
+              className={`inline-flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors ${
+                isActive
+                  ? `${colors.bg} ${colors.text} border border-current/30`
+                  : 'border border-border/50 bg-card/50 hover:bg-muted/20'
+              }`}
             >
-              Limpiar
+              {cat}
             </Link>
-          </div>
-        </form>
+          )
+        })}
 
-        {result.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-            No hay proveedores que coincidan con los filtros.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
-              <thead>
-                <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Proveedor</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Categoria</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Contacto</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Archivado</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Actualizado</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.items.map((provider) => (
-                  <tr key={provider.id} className="border-b transition-colors hover:bg-muted/50">
-                    <td className="p-4 align-middle">
-                      <div className="font-medium">{provider.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {provider.cif || 'Sin CIF'}
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">{provider.category || '-'}</td>
-                    <td className="p-4 align-middle">
-                      <div>{provider.email || '-'}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {provider.phone || '-'}
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      {provider.archivedAt ? 'Si' : 'No'}
-                    </td>
-                    <td className="p-4 align-middle">
-                      {formatDate(provider.updatedAt)}
-                    </td>
-                    <td className="p-4 align-middle">
-                      <Link
-                        href={`/providers/${provider.id}`}
-                        className="font-medium text-primary underline-offset-4 hover:underline"
-                      >
-                        Ver ficha
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <div className="text-sm text-muted-foreground">
-            Pagina {result.page} de {result.totalPages}
-          </div>
-
-          <div className="flex gap-2">
-            {result.hasPreviousPage ? (
-              <Link
-                href={buildHref(result.page - 1)}
-                className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
-              >
-                Anterior
-              </Link>
-            ) : (
-              <span className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium text-muted-foreground">
-                Anterior
-              </span>
-            )}
-
-            {result.hasNextPage ? (
-              <Link
-                href={buildHref(result.page + 1)}
-                className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
-              >
-                Siguiente
-              </Link>
-            ) : (
-              <span className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium text-muted-foreground">
-                Siguiente
-              </span>
-            )}
-          </div>
+        {/* Search */}
+        <div className="relative ml-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <form>
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Buscar proveedor..."
+              className="h-9 w-56 rounded-full border border-border/50 bg-card/50 backdrop-blur-sm pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+            />
+          </form>
         </div>
-      </section>
+      </div>
+
+      {/* Stats Bar */}
+      <div className="flex items-center gap-6 px-1 text-sm text-muted-foreground">
+        <span><strong className="text-foreground">{result.total}</strong> Total proveedores</span>
+        <span><strong className="text-foreground">{activeCount}</strong> Activos en vista</span>
+        <span>Mostrando {startItem}-{endItem}</span>
+      </div>
+
+      {canManage ? (
+        <div id="provider-form">
+          <ProviderCreateForm />
+        </div>
+      ) : null}
+
+      {/* Provider Card Grid */}
+      {result.items.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border/50 bg-card/30 p-12 text-center">
+          <Wrench className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
+          <p className="text-muted-foreground">No hay proveedores que coincidan con los filtros.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {result.items.map((provider) => {
+            const colors = getCategoryColor(provider.category)
+            const isArchived = !!provider.archivedAt
+            return (
+              <Link
+                key={provider.id}
+                href={`/providers/${provider.id}`}
+                className={`group relative rounded-xl border border-l-4 ${colors.border} border-border/50 bg-card/50 backdrop-blur-sm p-5 transition-all hover:border-border hover:shadow-lg hover:shadow-primary/5 hover:bg-card/80 ${isArchived ? 'opacity-60' : ''}`}
+              >
+                {/* Header */}
+                <div className="flex items-start gap-3">
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${colors.bg} ${colors.text} text-lg font-bold`}>
+                    {provider.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold text-foreground truncate group-hover:text-primary transition-colors ${isArchived ? 'line-through' : ''}`}>
+                      {provider.name}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {/* Status dot */}
+                      <span className={`inline-block h-2 w-2 rounded-full ${isArchived ? 'bg-slate-500' : 'bg-emerald-500'}`} />
+                      <span className="text-xs text-muted-foreground">
+                        {isArchived ? 'Archivado' : 'Activo'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Category Tag */}
+                {provider.category && (
+                  <div className="mt-3">
+                    <span className={`inline-flex rounded-full ${colors.bg} ${colors.text} border border-current/20 px-2.5 py-0.5 text-xs font-medium`}>
+                      {provider.category}
+                    </span>
+                  </div>
+                )}
+
+                {/* Contact Info */}
+                <div className="mt-3 space-y-1">
+                  {provider.email && (
+                    <p className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      {provider.email}
+                    </p>
+                  )}
+                  {provider.phone && (
+                    <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone className="h-3 w-3 shrink-0" />
+                      {provider.phone}
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="mt-3 pt-3 border-t border-border/30 flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground/60">{provider.cif || 'Sin CIF'}</span>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">Página {result.page} de {result.totalPages}</span>
+        <div className="flex gap-1">
+          {result.hasPreviousPage ? (
+            <Link href={buildHref(result.page - 1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-card/50 hover:bg-muted/30 transition-colors"><ChevronLeft className="h-4 w-4" /></Link>
+          ) : (
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/40"><ChevronLeft className="h-4 w-4" /></span>
+          )}
+          {result.hasNextPage ? (
+            <Link href={buildHref(result.page + 1)} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-card/50 hover:bg-muted/30 transition-colors"><ChevronRight className="h-4 w-4" /></Link>
+          ) : (
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground/40"><ChevronRight className="h-4 w-4" /></span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,0 +1,13 @@
+﻿src/app/(backoffice)/dashboard/page.tsx(89,82): error TS2367: This comparison appears to be unintentional because the types '"DRAFT" | "PARTIALLY_PAID" | "OVERDUE" | "RETURNED" | "CANCELLED"' and '"PARTIAL"' have no overlap.
+src/app/(backoffice)/dashboard/page.tsx(91,82): error TS2367: This comparison appears to be unintentional because the types '"DRAFT" | "PARTIALLY_PAID" | "OVERDUE" | "RETURNED" | "CANCELLED"' and '"PARTIAL"' have no overlap.
+src/app/(backoffice)/dashboard/page.tsx(95,72): error TS2551: Property '_count' does not exist on type '{ status: ReceiptStatus; count: number; }'. Did you mean 'count'?
+src/components/ui/charts.tsx(59,13): error TS2322: Type '(value: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: number) => [string, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.
+src/components/ui/charts.tsx(127,11): error TS2322: Type '(value: number) => [string | number, string]' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: number) => [string | number, string]' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'value' and 'value' are incompatible.
+      Type 'ValueType | undefined' is not assignable to type 'number'.
+        Type 'undefined' is not assignable to type 'number'.

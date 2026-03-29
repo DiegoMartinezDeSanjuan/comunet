@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/use-toast'
 import { createMeetingAction } from '@/modules/meetings/server/actions'
+import { CalendarPlus, ChevronDown } from 'lucide-react'
 
 type CommunityOption = {
   id: string
@@ -37,6 +38,7 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
+  const [isOpen, setIsOpen] = useState(false)
 
   const [communityId, setCommunityId] = useState(communities[0]?.id ?? '')
   const [title, setTitle] = useState('')
@@ -76,105 +78,132 @@ export function MeetingCreateForm({ communities }: MeetingCreateFormProps) {
     })
   }
 
+  const selectClass = "w-full rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+
   return (
-    <section className="rounded-lg border border-border bg-card text-card-foreground p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Nueva reunión</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Crea convocatorias desde backoffice con comunidad, fecha, tipo y estado inicial.
-          </p>
+    <section className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+      {/* Collapsible Header */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-muted/10 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+            <CalendarPlus className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold">Nueva reunión</h2>
+            <p className="text-xs text-muted-foreground">
+              Crea convocatorias desde backoffice con comunidad, fecha, tipo y estado inicial.
+            </p>
+          </div>
         </div>
-      </div>
+        <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Título</label>
-          <Input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            placeholder="Ej. Junta ordinaria de primavera"
-          />
+      {/* Collapsible Body */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="border-t border-border/30 p-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2 space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Título</label>
+              <Input
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Ej. Junta ordinaria de primavera"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Comunidad</label>
+              <select
+                className={selectClass}
+                value={communityId}
+                onChange={(event) => setCommunityId(event.target.value)}
+              >
+                <option value="">Selecciona una comunidad</option>
+                {communities.map((community) => (
+                  <option key={community.id} value={community.id}>
+                    {community.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Tipo de reunión</label>
+              <select
+                className={selectClass}
+                value={meetingType}
+                onChange={(event) => setMeetingType(event.target.value as 'ORDINARY' | 'EXTRAORDINARY')}
+              >
+                <option value="ORDINARY">Ordinaria</option>
+                <option value="EXTRAORDINARY">Extraordinaria</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Fecha y hora</label>
+              <Input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(event) => setScheduledAt(event.target.value)}
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Estado inicial</label>
+              <select
+                className={selectClass}
+                value={status}
+                onChange={(event) => setStatus(event.target.value as 'DRAFT' | 'SCHEDULED')}
+              >
+                <option value="DRAFT">Borrador</option>
+                <option value="SCHEDULED">Programada</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2 space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Ubicación</label>
+              <Input
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="Ej. Sala social, despacho o videollamada"
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+
+            <div className="md:col-span-2 space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Descripción</label>
+              <Textarea
+                rows={3}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Contexto, motivos de convocatoria y notas previas."
+                className="rounded-xl border-border/50 bg-card/50"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button
+              type="button"
+              data-testid="meeting-create-submit"
+              onClick={handleSubmit}
+              disabled={isPending || !communityId || title.trim().length < 3 || !scheduledAt}
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:brightness-110"
+            >
+              {isPending ? 'Guardando...' : 'Crear reunión'}
+            </Button>
+          </div>
         </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Comunidad</label>
-          <select
-            className="w-full rounded-md border border-input bg-card text-card-foreground px-3 py-2 text-sm text-foreground"
-            value={communityId}
-            onChange={(event) => setCommunityId(event.target.value)}
-          >
-            <option value="">Selecciona una comunidad</option>
-            {communities.map((community) => (
-              <option key={community.id} value={community.id}>
-                {community.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Tipo de reunión</label>
-          <select
-            className="w-full rounded-md border border-input bg-card text-card-foreground px-3 py-2 text-sm text-foreground"
-            value={meetingType}
-            onChange={(event) => setMeetingType(event.target.value as 'ORDINARY' | 'EXTRAORDINARY')}
-          >
-            <option value="ORDINARY">ORDINARY</option>
-            <option value="EXTRAORDINARY">EXTRAORDINARY</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Fecha y hora</label>
-          <Input
-            type="datetime-local"
-            value={scheduledAt}
-            onChange={(event) => setScheduledAt(event.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Estado inicial</label>
-          <select
-            className="w-full rounded-md border border-input bg-card text-card-foreground px-3 py-2 text-sm text-foreground"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as 'DRAFT' | 'SCHEDULED')}
-          >
-            <option value="DRAFT">DRAFT</option>
-            <option value="SCHEDULED">SCHEDULED</option>
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Ubicación</label>
-          <Input
-            value={location}
-            onChange={(event) => setLocation(event.target.value)}
-            placeholder="Ej. Sala social, despacho o videollamada"
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-sm font-medium text-muted-foreground">Descripción</label>
-          <Textarea
-            rows={4}
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="Contexto, motivos de convocatoria y notas previas."
-          />
-        </div>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <Button
-          type="button"
-          data-testid="meeting-create-submit"
-          onClick={handleSubmit}
-          disabled={isPending || !communityId || title.trim().length < 3 || !scheduledAt}
-        >
-          {isPending ? 'Guardando...' : 'Crear reunión'}
-        </Button>
       </div>
     </section>
   )

@@ -25,7 +25,7 @@ function rateLimitResponse(retryAfterMs: number) {
   )
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const ip = getClientIp(request)
 
@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
   if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
     // Rate limit login POST
     if (pathname === '/login' && request.method === 'POST') {
-      const result = loginLimiter.check(ip)
+      const result = await loginLimiter.check(ip)
       if (!result.allowed) {
         return rateLimitResponse(result.retryAfterMs)
       }
@@ -48,7 +48,7 @@ export function middleware(request: NextRequest) {
 
   // Rate limit API routes
   if (pathname.startsWith('/api/')) {
-    const result = apiLimiter.check(ip)
+    const result = await apiLimiter.check(ip)
     if (!result.allowed) {
       return rateLimitResponse(result.retryAfterMs)
     }

@@ -64,7 +64,7 @@ docker compose -f docker-compose.production.yml logs -f postgres
 > - **Aplicación (runtime):** Usa PgBouncer → `DATABASE_URL` apunta al port 6432
 > - **Migraciones y CLI:** Usa conexión directa → port 5432
 >
-> Prisma soporta esto con la variable `DIRECT_URL` en `schema.prisma`:
+> Prisma soporta esto con la variable `DIRECT_DATABASE_URL` en `schema.prisma`:
 >
 > ```prisma
 > datasource db {

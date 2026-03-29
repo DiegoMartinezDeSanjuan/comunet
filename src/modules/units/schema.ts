@@ -16,7 +16,6 @@ export const unitSchema = z.object({
   areaM2: z.number().min(0).optional().nullable(),
   coefficient: z.number().min(0).max(100).optional().nullable(),
   quotaPercent: z.number().min(0).max(100).optional().nullable(),
-  cadastralRef: z.string().optional().nullable(),
   active: z.boolean(),
 })
 export type UnitInput = z.infer<typeof unitSchema>

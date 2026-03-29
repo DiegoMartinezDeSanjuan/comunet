@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     }
 
     // Rate limit exports (heavy operation)
-    const rateResult = exportLimiter.check(session.userId)
+    const rateResult = await exportLimiter.check(session.userId)
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: 'Too many export requests' },
@@ -49,17 +49,6 @@ export async function GET(request: Request) {
         },
       )
     }
-
-    const receipts = await prisma.receipt.findMany({
-      where,
-      include: {
-        community: true,
-        unit: true,
-        owner: true,
-      },
-      orderBy: { issueDate: 'desc' },
-      take: MAX_EXPORT_ROWS,
-    })
 
     const headers = [
       'ID Recibo',
@@ -73,35 +62,74 @@ export async function GET(request: Request) {
       'Estado',
     ].join(';')
 
-    const rows = receipts
-      .map((r) => {
-        const ownerName = r.owner.fullName.replace(/;/g, ',')
-        const communityName = r.community.name.replace(/;/g, ',')
-        const unitName = r.unit.reference.replace(/;/g, ',')
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder()
+        controller.enqueue(encoder.encode(headers + '\n'))
 
-        return [
-          r.reference,
-          communityName,
-          unitName,
-          ownerName,
-          new Date(r.issueDate).toLocaleDateString(),
-          new Date(r.dueDate).toLocaleDateString(),
-          Number(r.amount).toFixed(2),
-          Number(r.paidAmount).toFixed(2),
-          r.status,
-        ].join(';')
-      })
-      .join('\n')
+        const CHUNK_SIZE = 1000
+        let skip = 0
+        let hasMore = true
+        let totalProcessed = 0
 
-    const csvContent = `${headers}\n${rows}`
+        while (hasMore && totalProcessed < MAX_EXPORT_ROWS) {
+          const receipts = await prisma.receipt.findMany({
+            where,
+            include: {
+              community: true,
+              unit: true,
+              owner: true,
+            },
+            orderBy: [{ issueDate: 'desc' }, { id: 'desc' }],
+            take: CHUNK_SIZE,
+            skip,
+          })
 
-    return new NextResponse(csvContent, {
+          if (receipts.length === 0) {
+            hasMore = false
+            break
+          }
+
+          const rows = receipts
+            .map((r) => {
+              const ownerName = r.owner.fullName.replace(/;/g, ',')
+              const communityName = r.community.name.replace(/;/g, ',')
+              const unitName = r.unit.reference.replace(/;/g, ',')
+
+              return [
+                r.reference,
+                communityName,
+                unitName,
+                ownerName,
+                new Date(r.issueDate).toLocaleDateString(),
+                new Date(r.dueDate).toLocaleDateString(),
+                Number(r.amount).toFixed(2),
+                Number(r.paidAmount).toFixed(2),
+                r.status,
+              ].join(';')
+            })
+            .join('\n')
+
+          controller.enqueue(encoder.encode(rows + '\n'))
+
+          skip += receipts.length
+          totalProcessed += receipts.length
+
+          if (receipts.length < CHUNK_SIZE) {
+            hasMore = false
+          }
+        }
+        controller.close()
+      },
+    })
+
+    return new NextResponse(stream, {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="recibos_${new Date()
           .toISOString()
-          .substring(0, 10)}.csv"`,
+          .split('T')[0]}.csv"`,
       },
     })
   } catch (error) {

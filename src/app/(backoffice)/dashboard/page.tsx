@@ -1,10 +1,25 @@
 import Link from 'next/link'
+import {
+  DollarSign,
+  Receipt,
+  AlertTriangle,
+  Clock,
+  Building2,
+  Users,
+  Calendar,
+  FileText,
+  ArrowUpRight,
+} from 'lucide-react'
 
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { formatCurrency } from '@/lib/formatters'
 import { computeOfficeFinanceKPIs } from '@/modules/finances/server/kpi-service'
 import { getIncidentDashboardSnapshotQuery } from '@/modules/incidents/server/queries'
+
+import { KPICard } from '@/components/ui/kpi-card'
+import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
+import { DashboardCharts } from './dashboard-charts'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,12 +47,16 @@ async function getGeneralStats(officeId: string) {
       }),
     ])
 
-  return {
-    communitiesCount,
-    ownersCount,
-    pendingReceipts,
-    upcomingMeetings,
-  }
+  return { communitiesCount, ownersCount, pendingReceipts, upcomingMeetings }
+}
+
+async function getReceiptStatusBreakdown(officeId: string) {
+  const receipts = await prisma.receipt.groupBy({
+    by: ['status'],
+    where: { community: { officeId } },
+    _count: { id: true },
+  })
+  return receipts.map((r) => ({ status: r.status, count: r._count.id }))
 }
 
 function formatDate(value: Date | null): string {
@@ -45,207 +64,191 @@ function formatDate(value: Date | null): string {
   return new Date(value).toLocaleDateString('es-ES')
 }
 
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+  if (seconds < 60) return 'Hace un momento'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `Hace ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Hace ${hours}h`
+  const days = Math.floor(hours / 24)
+  return `Hace ${days} días`
+}
+
 export default async function DashboardPage() {
   const session = await requireAuth()
 
-  const [stats, financeKPIs, incidentSnapshot] = await Promise.all([
+  const [stats, financeKPIs, incidentSnapshot, receiptBreakdown] = await Promise.all([
     getGeneralStats(session.officeId),
     computeOfficeFinanceKPIs(session.officeId),
     getIncidentDashboardSnapshotQuery(),
+    getReceiptStatusBreakdown(session.officeId),
   ])
 
-  const financialCards = [
-    { label: 'Total emitido', value: formatCurrency(financeKPIs.totalEmitido) },
-    { label: 'Total cobrado', value: formatCurrency(financeKPIs.totalCobrado) },
-    { label: 'Deuda pendiente', value: formatCurrency(financeKPIs.totalPendiente) },
-    { label: 'Recibos vencidos', value: String(financeKPIs.overdueCount) },
-  ]
+  const chartData = receiptBreakdown.map((r) => ({
+    name: r.status === 'PAID' ? 'Pagados' : r.status === 'ISSUED' ? 'Emitidos' : r.status === 'PARTIALLY_PAID' ? 'Parciales' : r.status === 'OVERDUE' ? 'Vencidos' : r.status === 'DRAFT' ? 'Borrador' : r.status,
+    value: r.count,
+    color: r.status === 'PAID' ? '#22c55e' : r.status === 'ISSUED' ? '#3b82f6' : r.status === 'PARTIALLY_PAID' ? '#f59e0b' : r.status === 'OVERDUE' ? '#ef4444' : '#64748b',
+  }))
 
-  const activityCards = [
-    { label: 'Comunidades', value: String(stats.communitiesCount) },
-    { label: 'Propietarios', value: String(stats.ownersCount) },
-    { label: 'Recibos pendientes', value: String(stats.pendingReceipts) },
-    { label: 'Reuniones proximas', value: String(stats.upcomingMeetings) },
-  ]
+  const totalReceipts = chartData.reduce((acc, d) => acc + d.value, 0)
+  const paidCount = receiptBreakdown.find((r) => r.status === 'PAID')?.count ?? 0
+  const paidPct = totalReceipts > 0 ? Math.round((paidCount / totalReceipts) * 100) : 0
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumen operativo del despacho con foco en finanzas e incidencias.
-        </p>
-      </header>
-
-      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Estado financiero global</h2>
-            <p className="text-sm text-muted-foreground">
-              Indicadores basicos de emision, cobro y deuda.
-            </p>
-          </div>
-          <Link
-            href="/finance/receipts"
-            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Ir a recibos
-          </Link>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {financialCards.map((card) => (
-            <div key={card.label} className="rounded-lg border p-4">
-              <div className="text-sm text-muted-foreground">{card.label}</div>
-              <div className="mt-2 text-2xl font-semibold">{card.value}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">KPIs de incidencias</h2>
-            <p className="text-sm text-muted-foreground">
-              Volumen abierto, urgencias, vencidas y carga por proveedor.
-            </p>
-          </div>
-          <div className="flex gap-4 text-sm">
-            <Link
-              href="/incidents"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Ver incidencias
-            </Link>
-            <Link
-              href="/providers"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Ver proveedores
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="rounded-lg border p-4">
-                <div className="text-sm text-muted-foreground">Abiertas</div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {incidentSnapshot.openCount}
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="text-sm text-muted-foreground">Urgentes</div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {incidentSnapshot.urgentCount}
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="text-sm text-muted-foreground">Vencidas</div>
-                <div className="mt-2 text-2xl font-semibold">
-                  {incidentSnapshot.overdueCount}
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border p-4">
-              <h3 className="font-medium">Incidencias por proveedor</h3>
-              <div className="mt-3 space-y-3">
-                {incidentSnapshot.incidentsByProvider.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Todavia no hay incidencias activas.
-                  </p>
-                ) : (
-                  incidentSnapshot.incidentsByProvider.map((item) => (
-                    <div key={item.providerId ?? 'unassigned'}>
-                      <div className="flex items-center justify-between gap-3 text-sm">
-                        <span>{item.providerName}</span>
-                        <span className="font-medium">{item.count}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="font-medium">Ultimas incidencias activas</h3>
-              <Link
-                href="/notifications"
-                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                Ver notificaciones
-              </Link>
-            </div>
-
-            {incidentSnapshot.latestActive.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-                No hay incidencias activas en este momento.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="px-3 py-2 font-medium">Incidencia</th>
-                      <th className="px-3 py-2 font-medium">Comunidad</th>
-                      <th className="px-3 py-2 font-medium">Proveedor</th>
-                      <th className="px-3 py-2 font-medium">Estado</th>
-                      <th className="px-3 py-2 font-medium">Vence</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {incidentSnapshot.latestActive.map((incident) => (
-                      <tr key={incident.id} className="border-b align-top">
-                        <td className="px-3 py-3">
-                          <Link
-                            href={`/incidents/${incident.id}`}
-                            className="font-medium text-primary underline-offset-4 hover:underline"
-                          >
-                            {incident.title}
-                          </Link>
-                          <div className="text-xs text-muted-foreground">
-                            {incident.priority}
-                            {incident.unit ? ` · Unidad ${incident.unit.reference}` : ''}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3">{incident.community.name}</td>
-                        <td className="px-3 py-3">
-                          {incident.assignedProvider?.name || 'Sin asignar'}
-                        </td>
-                        <td className="px-3 py-3">{incident.status}</td>
-                        <td className="px-3 py-3">{formatDate(incident.dueAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold">Actividad general</h2>
+      <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Panel de Control</h1>
           <p className="text-sm text-muted-foreground">
-            Indicadores estructurales del backoffice para el despacho.
+            Resumen operativo de la cartera inmobiliaria al día de hoy.
           </p>
         </div>
+        <Link
+          href="/finance/receipts"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Receipt className="h-4 w-4" />
+          Nueva factura
+        </Link>
+      </header>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {activityCards.map((card) => (
-            <div key={card.label} className="rounded-lg border p-4">
-              <div className="text-sm text-muted-foreground">{card.label}</div>
-              <div className="mt-2 text-2xl font-semibold">{card.value}</div>
-            </div>
-          ))}
-        </div>
+      {/* Financial KPIs */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KPICard
+          label="Total emitido"
+          value={formatCurrency(financeKPIs.totalEmitido)}
+          icon={<DollarSign className="h-5 w-5" />}
+          accent="default"
+        />
+        <KPICard
+          label="Total cobrado"
+          value={formatCurrency(financeKPIs.totalCobrado)}
+          icon={<Receipt className="h-5 w-5" />}
+          accent="success"
+          trend="up"
+          trendLabel={`${paidPct}% cobrado`}
+        />
+        <KPICard
+          label="Deuda pendiente"
+          value={formatCurrency(financeKPIs.totalPendiente)}
+          icon={<AlertTriangle className="h-5 w-5" />}
+          accent="warning"
+        />
+        <KPICard
+          label="Recibos vencidos"
+          value={String(financeKPIs.overdueCount)}
+          icon={<Clock className="h-5 w-5" />}
+          accent={financeKPIs.overdueCount > 0 ? 'danger' : 'default'}
+        />
       </section>
+
+      {/* Main content: incidents + charts */}
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        {/* Left: Active incidents table */}
+        <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+            <h2 className="text-base font-semibold">Incidencias activas</h2>
+            <Link
+              href="/incidents"
+              className="flex items-center gap-1 text-sm text-primary hover:underline underline-offset-4"
+            >
+              Ver todas <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          {incidentSnapshot.latestActive.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              No hay incidencias activas en este momento.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/30 text-left text-muted-foreground">
+                    <th className="px-5 py-3 font-medium">Prioridad</th>
+                    <th className="px-5 py-3 font-medium">Incidencia</th>
+                    <th className="px-5 py-3 font-medium">Estado</th>
+                    <th className="px-5 py-3 font-medium">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {incidentSnapshot.latestActive.map((incident) => (
+                    <tr
+                      key={incident.id}
+                      className="border-b border-border/20 transition-colors hover:bg-muted/10"
+                    >
+                      <td className="px-5 py-3">
+                        <PriorityBadge priority={incident.priority} />
+                      </td>
+                      <td className="px-5 py-3">
+                        <Link
+                          href={`/incidents/${incident.id}`}
+                          className="font-medium text-foreground hover:text-primary transition-colors"
+                        >
+                          {incident.title}
+                        </Link>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {incident.community.name}
+                          {incident.unit ? ` · ${incident.unit.reference}` : ''}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <StatusBadge status={incident.status} />
+                      </td>
+                      <td className="px-5 py-3 text-muted-foreground whitespace-nowrap">
+                        {timeAgo(incident.createdAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Charts + mini stats */}
+        <div className="space-y-6">
+          {/* Receipt donut chart */}
+          <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-5 shadow-sm">
+            <h3 className="text-base font-semibold mb-3">Estado de Recibos</h3>
+            {chartData.length > 0 ? (
+              <DashboardCharts
+                donutData={chartData}
+                paidPct={paidPct}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Sin datos de recibos.
+              </p>
+            )}
+          </div>
+
+          {/* Activity summary cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+              <Building2 className="h-5 w-5 mx-auto text-primary mb-1" />
+              <p className="text-xl font-bold">{stats.communitiesCount}</p>
+              <p className="text-xs text-muted-foreground">Comunidades</p>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+              <Users className="h-5 w-5 mx-auto text-primary mb-1" />
+              <p className="text-xl font-bold">{stats.ownersCount}</p>
+              <p className="text-xs text-muted-foreground">Propietarios</p>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+              <FileText className="h-5 w-5 mx-auto text-amber-400 mb-1" />
+              <p className="text-xl font-bold">{stats.pendingReceipts}</p>
+              <p className="text-xs text-muted-foreground">Rec. pendientes</p>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 text-center">
+              <Calendar className="h-5 w-5 mx-auto text-green-400 mb-1" />
+              <p className="text-xl font-bold">{stats.upcomingMeetings}</p>
+              <p className="text-xs text-muted-foreground">Reuniones prox.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

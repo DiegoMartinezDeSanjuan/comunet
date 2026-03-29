@@ -16,7 +16,7 @@ export interface StorageAdapter {
   read(storagePath: string): Promise<Buffer>
   delete(storagePath: string): Promise<void>
   exists(storagePath: string): Promise<boolean>
-  getUrl(storagePath: string): string
+  getUrl(documentId: string): string
 
   /**
    * Returns a ReadableStream for streaming file contents without loading
@@ -30,7 +30,12 @@ export interface StorageAdapter {
    * Local storage returns null — the caller should fall back to streaming
    * through the app server.
    */
-  getSignedDownloadUrl(storagePath: string, expiresInSeconds?: number): Promise<string | null>
+  getSignedDownloadUrl(
+    storagePath: string,
+    expiresInSeconds?: number,
+    downloadName?: string,
+    mimeType?: string
+  ): Promise<string | null>
 }
 
 // ─── Local Storage (dev + single-instance prod) ─────────
@@ -84,7 +89,12 @@ class LocalStorageAdapter implements StorageAdapter {
     })
   }
 
-  async getSignedDownloadUrl(): Promise<string | null> {
+  async getSignedDownloadUrl(
+    storagePath: string,
+    expiresInSeconds?: number,
+    downloadName?: string,
+    mimeType?: string
+  ): Promise<string | null> {
     // Local storage doesn't support presigned URLs
     return null
   }
@@ -103,8 +113,8 @@ class LocalStorageAdapter implements StorageAdapter {
     return fsSync.existsSync(fullPath)
   }
 
-  getUrl(storagePath: string): string {
-    return `/api/documents/${encodeURIComponent(storagePath)}/download`
+  getUrl(documentId: string): string {
+    return `/api/documents/${encodeURIComponent(documentId)}/download`
   }
 }
 
@@ -224,15 +234,30 @@ class S3StorageAdapter implements StorageAdapter {
     })
   }
 
-  async getSignedDownloadUrl(storagePath: string, expiresInSeconds = 300): Promise<string | null> {
+  async getSignedDownloadUrl(
+    storagePath: string,
+    expiresInSeconds = 300,
+    downloadName?: string,
+    mimeType?: string
+  ): Promise<string | null> {
     const { GetObjectCommand } = await import('@aws-sdk/client-s3')
     const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner')
     const client = await this.getClient()
     const key = this.getKey(storagePath)
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const commandConfig: any = { Bucket: this.bucket, Key: key }
+
+    if (downloadName) {
+      commandConfig.ResponseContentDisposition = `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`
+    }
+    if (mimeType) {
+      commandConfig.ResponseContentType = mimeType
+    }
+
     const url = await getSignedUrl(
       client,
-      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      new GetObjectCommand(commandConfig),
       { expiresIn: expiresInSeconds },
     )
 
@@ -264,8 +289,8 @@ class S3StorageAdapter implements StorageAdapter {
     }
   }
 
-  getUrl(storagePath: string): string {
-    return `/api/documents/${encodeURIComponent(storagePath)}/download`
+  getUrl(documentId: string): string {
+    return `/api/documents/${encodeURIComponent(documentId)}/download`
   }
 }
 

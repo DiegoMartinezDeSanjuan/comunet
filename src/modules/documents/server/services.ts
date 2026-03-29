@@ -306,7 +306,12 @@ export async function getDocumentPresignedUrl(documentId: string) {
     throw new Error('DOCUMENT_NOT_FOUND')
   }
 
-  const url = await storage.getSignedDownloadUrl(document.storagePath, 300)
+  const url = await storage.getSignedDownloadUrl(
+    document.storagePath,
+    300,
+    document.title,
+    document.mimeType || undefined
+  )
   return url
 }
 

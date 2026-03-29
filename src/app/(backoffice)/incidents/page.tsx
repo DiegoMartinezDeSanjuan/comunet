@@ -1,11 +1,13 @@
 import Link from 'next/link'
+import { Search, Filter } from 'lucide-react'
 
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { requirePermission } from '@/lib/permissions'
 import { listIncidentsQuery } from '@/modules/incidents/server/queries'
+import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
 
-import { IncidentCreateForm } from './incident-create-form'
+import { IncidentCreateDialog } from './incident-create-dialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +34,6 @@ function parsePositiveInt(value: string, fallback: number): number {
   return Math.trunc(parsed)
 }
 
-
 function formatDate(value: Date | null): string {
   if (!value) return '-'
   return new Date(value).toLocaleDateString('es-ES')
@@ -42,25 +43,6 @@ function isOverdue(dueAt: Date | null, status: string): boolean {
   if (!dueAt) return false
   if (status === 'RESOLVED' || status === 'CLOSED') return false
   return dueAt.getTime() < Date.now()
-}
-
-function badgeClasses(value: string): string {
-  switch (value) {
-    case 'URGENT':
-    case 'CLOSED':
-      return 'border-red-200 bg-red-50 text-red-700'
-    case 'HIGH':
-    case 'RESOLVED':
-      return 'border-orange-200 bg-orange-50 text-orange-700'
-    case 'WAITING_VENDOR':
-      return 'border-amber-200 bg-amber-50 text-amber-700'
-    case 'ASSIGNED':
-      return 'border-blue-200 bg-blue-50 text-blue-700'
-    case 'IN_PROGRESS':
-      return 'border-cyan-200 bg-cyan-50 text-cyan-700'
-    default:
-      return 'border-border bg-slate-50 text-muted-foreground'
-  }
 }
 
 export default async function IncidentsPage({
@@ -133,7 +115,6 @@ export default async function IncidentsPage({
 
   const buildHref = (targetPage: number) => {
     const query = new URLSearchParams()
-
     if (q) query.set('q', q)
     if (communityId) query.set('communityId', communityId)
     if (providerId) query.set('providerId', providerId)
@@ -143,218 +124,165 @@ export default async function IncidentsPage({
     if (overdue) query.set('overdue', '1')
     if (view) query.set('view', view)
     if (targetPage > 1) query.set('page', String(targetPage))
-
     const search = query.toString()
     return search ? `/incidents?${search}` : '/incidents'
   }
 
+  // Generate page numbers for pagination
+  const pageNumbers: number[] = []
+  for (let i = Math.max(1, result.page - 2); i <= Math.min(result.totalPages, result.page + 2); i++) {
+    pageNumbers.push(i)
+  }
+
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-foreground">Incidencias</h1>
-        <p className="text-sm text-muted-foreground">
-          Gestion operativa de incidencias con filtros, asignacion,
-          seguimiento y trazabilidad.
-        </p>
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Incidencias</h1>
+          <p className="text-sm text-muted-foreground">
+            Supervisa y gestiona las solicitudes de mantenimiento y reparaciones.
+          </p>
+        </div>
+        {canManage ? (
+          <IncidentCreateDialog communities={communities} providers={providers} />
+        ) : null}
       </header>
 
-      {canManage ? (
-        <IncidentCreateForm communities={communities} providers={providers} />
-      ) : null}
-
-      <section className="rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold">Listado</h2>
-            <p className="text-sm text-muted-foreground">
-              Mostrando {startItem}-{endItem} de {result.total} incidencias.
-            </p>
+      {/* Filters */}
+      <form className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-4 shadow-sm">
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              name="q"
+              defaultValue={q}
+              placeholder="Buscar incidencia..."
+              className="w-full rounded-lg border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
-        </div>
-
-        <form className="mb-6 grid gap-3 md:grid-cols-3 xl:grid-cols-4">
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="Buscar por titulo o descripcion"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
 
           <select
             name="communityId"
             defaultValue={communityId}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[160px]"
           >
-            <option value="">Todas las comunidades</option>
-            {communities.map((community) => (
-              <option key={community.id} value={community.id}>
-                {community.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="providerId"
-            defaultValue={providerId}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Todos los proveedores</option>
-            {providers.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.name}
-              </option>
+            <option value="">Comunidad</option>
+            {communities.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
 
           <select
             name="status"
             defaultValue={status}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[130px]"
           >
-            <option value="">Todos los estados</option>
-            {STATUSES.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
+            <option value="">Estado</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>{s}</option>
             ))}
           </select>
 
           <select
             name="priority"
             defaultValue={priority}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="rounded-lg border border-input bg-background px-3 py-2 text-sm min-w-[130px]"
           >
-            <option value="">Todas las prioridades</option>
-            {PRIORITIES.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
+            <option value="">Prioridad</option>
+            {PRIORITIES.map((p) => (
+              <option key={p} value={p}>{p}</option>
             ))}
           </select>
 
-          <select
-            name="createdByUserId"
-            defaultValue={createdByUserId}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Todos los creadores</option>
-            {creators.map((creator) => (
-              <option key={creator.id} value={creator.id}>
-                {creator.name} · {creator.role}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="view"
-            defaultValue={view}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Abiertas y cerradas</option>
-            <option value="open">Solo abiertas</option>
-            <option value="closed">Solo cerradas</option>
-          </select>
-
-          <select
-            name="overdue"
-            defaultValue={overdue ? '1' : ''}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Vencidas y no vencidas</option>
-            <option value="1">Solo vencidas</option>
-          </select>
-
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2">
             <button
               type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
+              <Filter className="h-4 w-4" />
               Filtrar
             </button>
             <Link
               href="/incidents"
-              className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
+              className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/30"
             >
               Limpiar
             </Link>
           </div>
-        </form>
+        </div>
+      </form>
+
+      {/* Results */}
+      <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border/50 px-5 py-3">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {startItem}–{endItem} de {result.total} incidencias
+          </p>
+        </div>
 
         {result.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+          <div className="p-12 text-center text-sm text-muted-foreground">
             No se han encontrado incidencias con esos filtros.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse text-sm">
+            <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b transition-colors hover:bg-muted/50 bg-muted/20">
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Incidencia</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Comunidad</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Proveedor</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Prioridad</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Estado</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Vencimiento</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Ult. actividad</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground">Acciones</th>
+                <tr className="border-b border-border/30 text-left text-muted-foreground">
+                  <th className="px-5 py-3 font-medium">Incidencia</th>
+                  <th className="px-5 py-3 font-medium">Comunidad</th>
+                  <th className="px-5 py-3 font-medium">Proveedor</th>
+                  <th className="px-5 py-3 font-medium">Prioridad</th>
+                  <th className="px-5 py-3 font-medium">Estado</th>
+                  <th className="px-5 py-3 font-medium">Vencimiento</th>
+                  <th className="px-5 py-3 font-medium">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {result.items.map((incident) => {
                   const overdueItem = isOverdue(incident.dueAt, incident.status)
-
                   return (
-                    <tr key={incident.id} className="border-b transition-colors hover:bg-muted/50">
-                      <td className="p-4 align-middle">
+                    <tr
+                      key={incident.id}
+                      className="border-b border-border/20 transition-colors hover:bg-muted/10"
+                    >
+                      <td className="px-5 py-3">
                         <div className="font-medium">{incident.title}</div>
                         <div className="text-xs text-muted-foreground">
-                          Creada por {incident.createdBy.name}
-                          {incident.unit ? ` · Unidad ${incident.unit.reference}` : ''}
+                          {incident.createdBy.name}
+                          {incident.unit ? ` · ${incident.unit.reference}` : ''}
                         </div>
                       </td>
-                      <td className="p-4 align-middle">{incident.community.name}</td>
-                      <td className="p-4 align-middle">
+                      <td className="px-5 py-3">{incident.community.name}</td>
+                      <td className="px-5 py-3">
                         {incident.assignedProvider ? (
                           <div>
                             <div>{incident.assignedProvider.name}</div>
                             <div className="text-xs text-muted-foreground">
-                              {incident.assignedProvider.category || 'Sin categoria'}
+                              {incident.assignedProvider.category || ''}
                             </div>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">Sin asignar</span>
                         )}
                       </td>
-                      <td className="p-4 align-middle">
-                        <span
-                          className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${badgeClasses(incident.priority)}`}
-                        >
-                          {incident.priority}
-                        </span>
+                      <td className="px-5 py-3">
+                        <PriorityBadge priority={incident.priority} />
                       </td>
-                      <td className="p-4 align-middle">
-                        <span
-                          className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${badgeClasses(incident.status)}`}
-                        >
-                          {incident.status}
-                        </span>
+                      <td className="px-5 py-3">
+                        <StatusBadge status={incident.status} />
                       </td>
-                      <td className="p-4 align-middle">
+                      <td className="px-5 py-3">
                         <div>{formatDate(incident.dueAt)}</div>
                         {overdueItem ? (
-                          <div className="text-xs font-medium text-red-600">
-                            Vencida
-                          </div>
+                          <div className="text-xs font-semibold text-red-400">Vencida</div>
                         ) : null}
                       </td>
-                      <td className="p-4 align-middle">
-                        {formatDate(incident.updatedAt)}
-                      </td>
-                      <td className="p-4 align-middle">
+                      <td className="px-5 py-3">
                         <Link
                           href={`/incidents/${incident.id}`}
-                          className="font-medium text-primary underline-offset-4 hover:underline"
+                          className="text-sm font-medium text-primary hover:underline underline-offset-4"
                         >
                           Ver detalle
                         </Link>
@@ -367,40 +295,54 @@ export default async function IncidentsPage({
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <div className="text-sm text-muted-foreground">
-            Pagina {result.page} de {result.totalPages}
-          </div>
-
-          <div className="flex gap-2">
+        {/* Pagination */}
+        <div className="flex items-center justify-between border-t border-border/50 px-5 py-3">
+          <p className="text-sm text-muted-foreground">
+            Página {result.page} de {result.totalPages}
+          </p>
+          <div className="flex items-center gap-1">
             {result.hasPreviousPage ? (
               <Link
                 href={buildHref(result.page - 1)}
-                className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-sm transition-colors hover:bg-muted/30"
               >
-                Anterior
+                ‹
               </Link>
             ) : (
-              <span className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium text-muted-foreground">
-                Anterior
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm text-muted-foreground">
+                ‹
               </span>
             )}
+
+            {pageNumbers.map((pn) => (
+              <Link
+                key={pn}
+                href={buildHref(pn)}
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                  pn === result.page
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-border hover:bg-muted/30'
+                }`}
+              >
+                {pn}
+              </Link>
+            ))}
 
             {result.hasNextPage ? (
               <Link
                 href={buildHref(result.page + 1)}
-                className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-sm transition-colors hover:bg-muted/30"
               >
-                Siguiente
+                ›
               </Link>
             ) : (
-              <span className="inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium text-muted-foreground">
-                Siguiente
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm text-muted-foreground">
+                ›
               </span>
             )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
