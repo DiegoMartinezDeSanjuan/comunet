@@ -26,34 +26,28 @@ function rateLimitResponse(retryAfterMs: number) {
 }
 
 export async function proxy(request: NextRequest) {
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
   const isDev = process.env.NODE_ENV === 'development'
-  const scriptSrc = isDev 
-    ? `'self' 'nonce-${nonce}' 'unsafe-inline' 'unsafe-eval'` 
-    : `'self' 'nonce-${nonce}' 'strict-dynamic'`
 
-  const cspHeader = `
-    default-src 'self';
-    script-src ${scriptSrc};
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: blob: https:;
-    connect-src 'self';
-    frame-ancestors 'self';
-    base-uri 'self';
-    form-action 'self';
-  `
-  const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, ' ').trim()
+  const cspHeader = [
+    `default-src 'self'`,
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+    `font-src 'self' https://fonts.gstatic.com`,
+    `img-src 'self' data: blob: https:`,
+    `connect-src 'self'`,
+    `frame-ancestors 'self'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+  ].join('; ')
 
   const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-nonce', nonce)
-  requestHeaders.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
+  requestHeaders.set('Content-Security-Policy', cspHeader)
 
   const { pathname } = request.nextUrl
   const ip = getClientIp(request)
 
   const setCsp = (res: NextResponse) => {
-    res.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
+    res.headers.set('Content-Security-Policy', cspHeader)
     return res
   }
 

@@ -100,12 +100,20 @@ export default async function CommunityUnitsPage({
                     </td>
                     <td className="p-4 align-middle text-right">
                       {['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role) && (
-                        <Link 
-                          href={`/communities/${community.id}/units/${u.id}/edit`}
-                          className="text-primary hover:underline"
-                        >
-                          Editar
-                        </Link>
+                        <div className="flex items-center justify-end gap-3">
+                          <Link 
+                            href={`/communities/${community.id}/units/${u.id}/ownership`}
+                            className="text-muted-foreground hover:text-primary transition-colors hover:underline"
+                          >
+                            Titularidad
+                          </Link>
+                          <Link 
+                            href={`/communities/${community.id}/units/${u.id}/edit`}
+                            className="text-primary hover:underline"
+                          >
+                            Editar
+                          </Link>
+                        </div>
                       )}
                     </td>
                   </tr>

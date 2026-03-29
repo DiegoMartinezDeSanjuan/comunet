@@ -28,7 +28,12 @@ function getAuthSecret(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
-const SECRET = getAuthSecret()
+// Lazy: SECRET se evalúa en runtime, no durante el build de Docker
+let _secret: Uint8Array | null = null
+function getSecret(): Uint8Array {
+  if (!_secret) _secret = getAuthSecret()
+  return _secret
+}
 const COOKIE_NAME = 'comunet-session'
 const EXPIRATION = '7d'
 
@@ -45,7 +50,7 @@ export async function createSession(session: Session): Promise<void> {
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime(EXPIRATION)
     .setIssuedAt()
-    .sign(SECRET)
+    .sign(getSecret())
 
   const cookieStore = await cookies()
   cookieStore.set(COOKIE_NAME, token, {
@@ -63,7 +68,7 @@ export async function getCurrentSession(): Promise<Session | null> {
     const token = cookieStore.get(COOKIE_NAME)?.value
     if (!token) return null
 
-    const { payload } = await jwtVerify(token, SECRET)
+    const { payload } = await jwtVerify(token, getSecret())
     return {
       userId: payload.userId as string,
       officeId: payload.officeId as string,

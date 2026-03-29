@@ -288,6 +288,7 @@ model Owner {
   email      String?
   phone      String?
   address    String?
+  iban       String?
   notes      String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

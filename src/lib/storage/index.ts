@@ -249,9 +249,23 @@ class S3StorageAdapter implements StorageAdapter {
     downloadName?: string,
     mimeType?: string
   ): Promise<string | null> {
-    const { GetObjectCommand } = await import('@aws-sdk/client-s3')
+    const { GetObjectCommand, S3Client } = await import('@aws-sdk/client-s3')
     const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner')
-    const client = await this.getClient()
+    
+    // Creamos un cliente específico solo para firmar, asegurando que el AWS SDK utilice el
+    // hostname final (S3_PUBLIC_URL) al generar la firma criptográfica HMAC. Si se forma con 'minio:9000'
+    // y luego se reemplaza con 'localhost:9000', el servidor de almacenamiento rechaza la firma al no coincidir su validación.
+    const publicEndpoint = process.env.S3_PUBLIC_URL || 'http://localhost:9000'
+    const signingClient = new S3Client({
+      region: this.region,
+      endpoint: publicEndpoint,
+      forcePathStyle: true,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      }
+    })
+
     const key = this.getKey(storagePath)
 
     const commandInput: { Bucket: string; Key: string; ResponseContentDisposition?: string; ResponseContentType?: string } = {
@@ -267,7 +281,7 @@ class S3StorageAdapter implements StorageAdapter {
     }
 
     const url = await getSignedUrl(
-      client,
+      signingClient,
       new GetObjectCommand(commandInput),
       { expiresIn: expiresInSeconds },
     )
