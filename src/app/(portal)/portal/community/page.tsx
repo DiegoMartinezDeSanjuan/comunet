@@ -11,6 +11,7 @@ const ROLE_LABELS: Record<string, string> = {
   VICE_PRESIDENT: 'Vicepresidente',
   SECRETARY: 'Secretario',
   VOCAL: 'Vocal',
+  OTHER: 'Otro',
 }
 
 export default async function Page() {

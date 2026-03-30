@@ -349,9 +349,7 @@ export function requirePermission(
     'owners.read': BACKOFFICE_READ_ROLES,
     'owners.manage': BACKOFFICE_MANAGE_ROLES,
 
-    'finance.read': FINANCE_READ_ROLES,
     'finances.read': FINANCE_READ_ROLES,
-    'finance.manage': FINANCE_MANAGE_ROLES,
     'finances.manage': FINANCE_MANAGE_ROLES,
 
     'incidents.read': BACKOFFICE_READ_ROLES,

@@ -24,7 +24,6 @@ enum UserRole {
 enum UserStatus {
   ACTIVE
   INACTIVE
-  SUSPENDED
 }
 
 enum UnitType {
@@ -33,6 +32,20 @@ enum UnitType {
   GARAGE
   STORAGE
   OTHER
+}
+
+enum BoardRole {
+  PRESIDENT
+  VICE_PRESIDENT
+  SECRETARY
+  VOCAL
+  OTHER
+}
+
+enum CalculationBase {
+  COEFFICIENT
+  QUOTA_PERCENT
+  FIXED
 }
 
 enum BudgetStatus {
@@ -254,6 +267,7 @@ model Unit {
   id          String   @id @default(cuid())
   communityId String
   buildingId  String?
+  tenantId    String?
   reference   String
   type        UnitType @default(APARTMENT)
   floor       String?
@@ -267,6 +281,7 @@ model Unit {
 
   community   Community    @relation(fields: [communityId], references: [id])
   building    Building?    @relation(fields: [buildingId], references: [id])
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
   ownerships  Ownership[]
   receipts    Receipt[]
   debts       Debt[]
@@ -277,6 +292,7 @@ model Unit {
   @@unique([communityId, reference])
   @@index([communityId])
   @@index([buildingId])
+  @@index([tenantId])
   @@map("units")
 }
 
@@ -321,6 +337,7 @@ model Tenant {
   archivedAt DateTime?
 
   office Office @relation(fields: [officeId], references: [id])
+  units  Unit[]
 
   @@index([officeId])
   @@map("tenants")
@@ -348,7 +365,7 @@ model BoardPosition {
   id          String    @id @default(cuid())
   communityId String
   ownerId     String
-  role        String    // PRESIDENT, VICE_PRESIDENT, SECRETARY, TREASURER, MEMBER
+  role        BoardRole
   startDate   DateTime  @default(now())
   endDate     DateTime?
 
@@ -421,7 +438,7 @@ model FeeRule {
   name            String
   frequency       FeeFrequency @default(MONTHLY)
   startDate       DateTime     @default(now())
-  calculationBase String?      // 'COEFFICIENT', 'QUOTA_PERCENT', 'FIXED'
+  calculationBase CalculationBase @default(FIXED)
   fixedAmount     Float?
   notes           String?
   active          Boolean      @default(true)

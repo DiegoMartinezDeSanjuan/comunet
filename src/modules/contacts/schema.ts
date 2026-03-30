@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BoardRole } from '@prisma/client'
 
 export const ownerSchema = z.object({
   fullName: z.string().min(1, 'El nombre completo es obligatorio'),
@@ -33,8 +34,9 @@ export type OwnershipInput = z.infer<typeof ownershipSchema>
 export const boardPositionSchema = z.object({
   communityId: z.string().min(1),
   ownerId: z.string().min(1),
-  role: z.string(),
+  role: z.nativeEnum(BoardRole),
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
 })
 export type BoardPositionInput = z.infer<typeof boardPositionSchema>
+

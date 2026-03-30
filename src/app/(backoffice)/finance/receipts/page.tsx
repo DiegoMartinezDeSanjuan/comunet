@@ -5,6 +5,7 @@ import {
   type ReceiptFilters,
 } from '@/modules/finances/server/receipt-repository'
 import { ReceiptStatusBadge } from '@/components/ui/badge'
+import { getEffectiveReceiptStatus } from '@/lib/receipt-status'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Download, DollarSign, FileText, Plus, Receipt, AlertTriangle } from 'lucide-react'
 
@@ -70,7 +71,7 @@ export default async function ReceiptsPage({
   const endItem = result.total === 0 ? 0 : Math.min(result.page * result.pageSize, result.total)
 
   const paidAmount = receipts.reduce((sum, r) => sum + Number(r.paidAmount), 0)
-  const overdueCount = receipts.filter(r => r.status === 'OVERDUE').length
+  const overdueCount = receipts.filter(r => getEffectiveReceiptStatus(r.status, r.dueDate) === 'OVERDUE').length
 
   const buildPageHref = (targetPage: number) => {
     const query = new URLSearchParams()
@@ -213,7 +214,7 @@ export default async function ReceiptsPage({
                       {Number(receipt.paidAmount).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                     </td>
                     <td className="p-4 align-middle text-center">
-                      <ReceiptStatusBadge status={receipt.status} />
+                      <ReceiptStatusBadge status={getEffectiveReceiptStatus(receipt.status, receipt.dueDate)} />
                     </td>
                     <td className="p-4 align-middle text-right">
                       <Link

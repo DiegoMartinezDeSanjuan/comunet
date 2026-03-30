@@ -29,11 +29,12 @@ export async function computeFinanceKPIs(communityId: string) {
     _sum: { principal: true, surcharge: true }
   })
 
-  // 4. Overdue Receipts count
+  // 4. Overdue Receipts count (computed: ISSUED + dueDate passed)
   const overdueCount = await prisma.receipt.count({
     where: {
       communityId,
-      status: 'OVERDUE'
+      status: 'ISSUED',
+      dueDate: { lt: new Date() },
     }
   })
 
@@ -78,11 +79,12 @@ export async function computeOfficeFinanceKPIs(officeId: string) {
     _sum: { principal: true, surcharge: true }
   })
 
-  // 4. Overdue Receipts count
+  // 4. Overdue Receipts count (computed: ISSUED + dueDate passed)
   const overdueCount = await prisma.receipt.count({
     where: {
       community: { officeId },
-      status: 'OVERDUE'
+      status: 'ISSUED',
+      dueDate: { lt: new Date() },
     }
   })
 

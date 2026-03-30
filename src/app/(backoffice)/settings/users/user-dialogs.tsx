@@ -296,7 +296,6 @@ export function EditUserDialog({ user, currentUserId }: { user: EditUserProps, c
               <select {...form.register('status')} className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending || isSelf}>
                 <option value="ACTIVE">Activo</option>
                 <option value="INACTIVE">Inactivo</option>
-                <option value="SUSPENDED">Suspendido</option>
               </select>
             </div>
             <div className="space-y-2">

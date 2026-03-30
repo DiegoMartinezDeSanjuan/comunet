@@ -2,6 +2,7 @@ import 'server-only'
 import * as repo from './contact-repository'
 import { ownerSchema, tenantSchema, ownershipSchema, boardPositionSchema, type OwnerInput, type TenantInput, type OwnershipInput, type BoardPositionInput } from '../schema'
 import { logAudit } from '@/modules/audit/server/services'
+import { prisma } from '@/lib/db'
 
 // --- Owners ---
 export async function getOwners(officeId: string, search?: string) {
@@ -93,6 +94,24 @@ export async function createBoardPositionService(officeId: string, userId: strin
     startDate: valid.startDate ? new Date(valid.startDate) : undefined,
     endDate: valid.endDate ? new Date(valid.endDate) : undefined,
   })
+
+  // Auto-assign PRESIDENT user role when board position is PRESIDENT
+  if (valid.role === 'PRESIDENT') {
+    const linkedUser = await prisma.user.findFirst({
+      where: { linkedOwnerId: valid.ownerId, officeId },
+    })
+    if (linkedUser && linkedUser.role !== 'PRESIDENT') {
+      await prisma.user.update({
+        where: { id: linkedUser.id },
+        data: { role: 'PRESIDENT' },
+      })
+      logAudit({
+        officeId, userId, entityType: 'User', entityId: linkedUser.id,
+        action: 'STATUS_CHANGE',
+        meta: { reason: 'Auto-assigned PRESIDENT role from board position', previousRole: linkedUser.role },
+      })
+    }
+  }
   
   logAudit({
     officeId, userId, entityType: 'BoardPosition', entityId: position.id,
@@ -101,3 +120,4 @@ export async function createBoardPositionService(officeId: string, userId: strin
   
   return position
 }
+

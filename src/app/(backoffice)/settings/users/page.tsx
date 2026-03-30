@@ -40,7 +40,6 @@ function statusBadge(status: UserStatus) {
   switch (status) {
     case 'ACTIVE': return <span className="text-green-600 font-medium">Activo</span>
     case 'INACTIVE': return <span className="text-muted-foreground font-medium">Inactivo</span>
-    case 'SUSPENDED': return <span className="text-red-600 font-medium">Suspendido</span>
   }
 }
 
@@ -74,7 +73,7 @@ export default async function UsersPage({
 
   // Basic filters array
   const roles: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT', 'PRESIDENT', 'OWNER', 'PROVIDER', 'VIEWER']
-  const statuses: UserStatus[] = ['ACTIVE', 'INACTIVE', 'SUSPENDED']
+  const statuses: UserStatus[] = ['ACTIVE', 'INACTIVE']
 
   return (
     <div className="space-y-6">
