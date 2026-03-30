@@ -33,6 +33,9 @@ cp .env.example .env
 
 # Arrancar el stack completo (Postgres, MinIO, Next.js, PgBouncer)
 docker compose -f docker-compose.production.yml up -d --build
+
+# Detener el stack completo de producción
+docker compose -f docker-compose.production.yml down
 ```
 
 #### 3. Configuración de Cloudflare Tunnels (Routing Externo)
