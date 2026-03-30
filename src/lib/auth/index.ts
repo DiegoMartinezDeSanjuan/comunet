@@ -4,6 +4,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
+import { getCache } from '@/lib/cache/config'
 
 export interface Session {
   userId: string
@@ -36,6 +37,22 @@ function getSecret(): Uint8Array {
 }
 const COOKIE_NAME = 'comunet-session'
 const EXPIRATION = '7d'
+const EXPIRATION_SECONDS = 60 * 60 * 24 * 7 // 7 days in seconds
+
+// ─── JWT Blocklist Key Convention ─────────────────────────
+// Key: jwt:bl:{jti} — TTL: remaining seconds until token expiry
+
+function blocklistKey(jti: string): string {
+  return `jwt:bl:${jti}`
+}
+
+/**
+ * Generate a unique JWT ID (jti) for token revocation.
+ * Uses crypto.randomUUID which is available in Node.js 19+ and Edge runtimes.
+ */
+function generateJti(): string {
+  return crypto.randomUUID()
+}
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12)
@@ -46,10 +63,13 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export async function createSession(session: Session): Promise<void> {
+  const jti = generateJti()
+
   const token = await new SignJWT({ ...session })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime(EXPIRATION)
     .setIssuedAt()
+    .setJti(jti)
     .sign(getSecret())
 
   const cookieStore = await cookies()
@@ -58,7 +78,7 @@ export async function createSession(session: Session): Promise<void> {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: EXPIRATION_SECONDS,
   })
 }
 
@@ -69,6 +89,13 @@ export async function getCurrentSession(): Promise<Session | null> {
     if (!token) return null
 
     const { payload } = await jwtVerify(token, getSecret())
+
+    // Check if token has been revoked via blocklist
+    if (payload.jti) {
+      const isRevoked = await isTokenRevoked(payload.jti)
+      if (isRevoked) return null
+    }
+
     return {
       userId: payload.userId as string,
       officeId: payload.officeId as string,
@@ -100,8 +127,47 @@ export async function requireRole(...roles: UserRole[]): Promise<Session> {
 }
 
 export async function destroySession(): Promise<void> {
+  try {
+    // Revoke the JWT so it can't be reused even if the cookie is stolen
+    const cookieStore = await cookies()
+    const token = cookieStore.get(COOKIE_NAME)?.value
+    if (token) {
+      const { payload } = await jwtVerify(token, getSecret())
+      if (payload.jti && payload.exp) {
+        const remainingSec = Math.max(0, payload.exp - Math.floor(Date.now() / 1000))
+        if (remainingSec > 0) {
+          await revokeToken(payload.jti, remainingSec)
+        }
+      }
+    }
+  } catch {
+    // If token is already invalid/expired, just proceed with cookie deletion
+  }
+
   const cookieStore = await cookies()
   cookieStore.delete(COOKIE_NAME)
+}
+
+// ─── Token Blocklist Helpers ──────────────────────────────
+
+async function revokeToken(jti: string, ttlSec: number): Promise<void> {
+  try {
+    await getCache().kv.set(blocklistKey(jti), true, ttlSec)
+  } catch (err) {
+    // Log but don't crash — graceful degradation
+    console.error('[auth] Failed to revoke token in cache:', err)
+  }
+}
+
+async function isTokenRevoked(jti: string): Promise<boolean> {
+  try {
+    const revoked = await getCache().kv.get<boolean>(blocklistKey(jti))
+    return revoked === true
+  } catch (err) {
+    // If cache is down, allow the request (fail open) but log it
+    console.error('[auth] Failed to check token blocklist:', err)
+    return false
+  }
 }
 
 export async function authenticate(email: string, password: string): Promise<Session | null> {

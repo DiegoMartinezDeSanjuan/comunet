@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { requirePermission } from '@/lib/permissions'
-import { exportLimiter } from '@/lib/rate-limit'
+import { exportLimiter } from '@/lib/cache/rate-limit'
 
 export const dynamic = 'force-dynamic'
 

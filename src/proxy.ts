@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-import { loginLimiter, apiLimiter } from '@/lib/rate-limit'
+import { loginLimiter, apiLimiter } from '@/lib/cache/rate-limit'
 
 const PUBLIC_PATHS = ['/login', '/api/health']
 

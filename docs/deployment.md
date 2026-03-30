@@ -126,15 +126,17 @@ Para Vercel, considerar:
 | `AUTH_SECRET` | ✅ | JWT signing secret, min 32 chars |
 | `NEXT_PUBLIC_APP_URL` | ✅ | URL pública de la app |
 | `NODE_ENV` | ✅ | Debe ser `production` |
+| `CACHE_DRIVER` | ⬜ | `memory` (defecto), `upstash` o `redis` |
+| `REDIS_URL` | si redis | URL de Redis/Valkey local (ej: `redis://redis:6379`) |
+| `UPSTASH_REDIS_REST_URL` | si upstash | URL de Upstash Redis (HTTP/REST) |
+| `UPSTASH_REDIS_REST_TOKEN` | si upstash | Token de Upstash Redis |
 | `STORAGE_ADAPTER` | ✅ | `local` o `s3` |
 | `S3_BUCKET` | si s3 | Nombre del bucket |
 | `S3_REGION` | si s3 | Región AWS/compatible |
 | `S3_ENDPOINT` | si MinIO | URL del endpoint |
-| `UPSTASH_REDIS_REST_URL` | ⬜ | URL de Upstash Redis (rate limiting distribuido) |
-| `UPSTASH_REDIS_REST_TOKEN` | ⬜ | Token de Upstash Redis |
 | `APP_VERSION` | ⬜ | Versión para health endpoint |
 | `RESEND_API_KEY` | ✅ | API Key de Resend para correos transaccionales |
-| `RESEND_FROM` | ✅ | Remitente verificado en Resend (ej: COMUNET <noreply@dominio>) |
+| `RESEND_FROM` | ✅ | Remitente verificado en Resend (ej: COMUNET \<noreply@dominio\>) |
 
 ---
 

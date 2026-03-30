@@ -2,7 +2,7 @@
 
 import { authenticate, createSession, getPostLoginRedirect } from '@/lib/auth'
 import { logAudit } from '@/modules/audit/server/services'
-import { loginLimiter } from '@/lib/rate-limit'
+import { loginLimiter } from '@/lib/cache/rate-limit'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 

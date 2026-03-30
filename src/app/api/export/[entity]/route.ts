@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 
 import { requireAuth, isBackofficeRole } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { exportLimiter } from '@/lib/rate-limit'
+import { exportLimiter } from '@/lib/cache/rate-limit'
 
 // Limit chunk size and max rows for memory safety
 const CHUNK_SIZE = 1000
