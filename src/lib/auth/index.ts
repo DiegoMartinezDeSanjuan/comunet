@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
-import { getCache } from '@/lib/cache/config'
+import { getCache, cacheKey } from '@/lib/cache/config'
 
 export interface Session {
   userId: string
@@ -43,7 +43,7 @@ const EXPIRATION_SECONDS = 60 * 60 * 24 * 7 // 7 days in seconds
 // Key: jwt:bl:{jti} — TTL: remaining seconds until token expiry
 
 function blocklistKey(jti: string): string {
-  return `jwt:bl:${jti}`
+  return cacheKey(`jwt:bl:${jti}`)
 }
 
 /**

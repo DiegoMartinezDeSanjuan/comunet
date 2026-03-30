@@ -1,11 +1,12 @@
 /**
  * In-memory cache driver.
  *
- * Suitable for:
- *  - Development
- *  - Single-instance Docker Compose deployments
+ * ⚠  DEV / TEST ONLY — NOT for production.
  *
- * NOT suitable for multi-instance / serverless because state is per-process.
+ * This driver stores all data in process memory. A restart will
+ * erase the JWT blocklist, allowing revoked tokens to pass.
+ *
+ * For production use CACHE_DRIVER=redis with a Valkey/Redis container.
  */
 
 import type { CacheContract, RateLimitResult, RateLimitStore, KeyValueStore } from '../types'

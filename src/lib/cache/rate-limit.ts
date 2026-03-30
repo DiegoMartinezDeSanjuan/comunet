@@ -4,13 +4,13 @@
  * These are drop-in replacements for the old `src/lib/rate-limit.ts`.
  * Import from '@/lib/cache/rate-limit' instead.
  *
- * Key convention:
- *   rl:login:{ip}       → Login attempts
- *   rl:api:{ip}         → General API requests
- *   rl:export:{userId}  → Heavy export operations
+ * Key convention (after namespace):
+ *   comunet:{env}:v1:rl:login:{ip}       → Login attempts
+ *   comunet:{env}:v1:rl:api:{ip}         → General API requests
+ *   comunet:{env}:v1:rl:export:{userId}  → Heavy export operations
  */
 
-import { getCache } from './config'
+import { getCache, cacheKey } from './config'
 import type { RateLimitResult } from './types'
 
 interface RateLimiter {
@@ -20,7 +20,7 @@ interface RateLimiter {
 function createLimiter(prefix: string, limit: number, windowMs: number): RateLimiter {
   return {
     async check(key: string): Promise<RateLimitResult> {
-      return getCache().rateLimit.consume(`${prefix}:${key}`, limit, windowMs)
+      return getCache().rateLimit.consume(cacheKey(`${prefix}:${key}`), limit, windowMs)
     },
   }
 }

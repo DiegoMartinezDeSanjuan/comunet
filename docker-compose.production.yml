@@ -6,6 +6,7 @@
 # This stack includes:
 # - PostgreSQL 16 with tuned settings
 # - PgBouncer connection pooler
+# - Valkey (Redis-compatible) for cache, rate limiting & JWT blocklist
 # - MinIO S3-compatible storage (optional, can be replaced with AWS S3)
 
 services:
@@ -23,6 +24,7 @@ services:
       - NODE_ENV=production
     depends_on:
       - pgbouncer
+      - valkey
       - minio
 
   postgres:
@@ -84,6 +86,24 @@ services:
       postgres:
         condition: service_healthy
 
+  # Valkey — Redis-compatible cache with AOF persistence
+  # Used for: rate limiting, JWT blocklist, session revocation
+  # Set CACHE_DRIVER=redis and REDIS_URL=redis://valkey:6379 in .env
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: comunet-valkey
+    restart: unless-stopped
+    command: ["valkey-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - comunet_valkey:/data
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   # Optional: S3-compatible storage for documents
   # Remove this if using AWS S3 or Cloudflare R2
   minio:
@@ -123,4 +143,5 @@ services:
 
 volumes:
   comunet_pgdata:
+  comunet_valkey:
   comunet_minio:
