@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { isBackofficeRole } from '@/lib/auth'
+import { sendIncidentAssignedEmail } from '@/lib/email'
 import {
     createNotificationRecord,
     createManyNotificationRecords,
@@ -139,6 +140,20 @@ export async function notifyIncidentAssigned(
         title: 'Incidencia asignada',
         body: `La incidencia ${input.incidentTitle} ha sido asignada a ${input.providerName}.`,
     })
+
+    // Enviar correos electrónicos
+    await Promise.allSettled(
+        recipients.map(async (recipient) => {
+            if (recipient.email) {
+                await sendIncidentAssignedEmail({
+                    to: recipient.email,
+                    ownerName: recipient.name || 'Usuario',
+                    incidentTitle: input.incidentTitle,
+                    providerName: input.providerName,
+                })
+            }
+        })
+    )
 }
 
 export async function notifyIncidentResolved(

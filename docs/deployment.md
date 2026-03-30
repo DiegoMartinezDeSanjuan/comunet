@@ -130,6 +130,8 @@ Para Vercel, considerar:
 | `UPSTASH_REDIS_REST_URL` | ⬜ | URL de Upstash Redis (rate limiting distribuido) |
 | `UPSTASH_REDIS_REST_TOKEN` | ⬜ | Token de Upstash Redis |
 | `APP_VERSION` | ⬜ | Versión para health endpoint |
+| `RESEND_API_KEY` | ✅ | API Key de Resend para correos transaccionales |
+| `RESEND_FROM` | ✅ | Remitente verificado en Resend (ej: COMUNET <noreply@dominio>) |
 
 ---
 

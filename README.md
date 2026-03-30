@@ -15,6 +15,7 @@ Plataforma integral de administración de fincas desarrollada con Next.js 16, Po
 | Tests | Vitest (unit) + Playwright (e2e) + k6 (load) |
 | Rate Limiting | Upstash Redis (prod) / In-memory (dev) |
 | Storage | Local (dev) / S3-compatible (prod) |
+| Emails | Resend (prod) / Mock Logger (dev) |
 | Runtime | Node.js 22+ |
 
 ## 🚀 Inicio Rápido
@@ -207,7 +208,7 @@ Documentación técnica completa en la carpeta `docs/`:
 ## ⚠️ Limitaciones MVP
 
 - **Sin firma digital**: Actas y documentos no soportan firma electrónica.
-- **Sin notificaciones reales**: Email y push son mock; solo se generan registros IN_APP.
+- **Sin notificaciones push**: Solo se generan registros IN_APP y correos transaccionales (vía Resend).
 - **Sin multi-tenancy real**: Un único despacho (Office) por instancia.
 - **Sin i18n**: Interfaz únicamente en castellano.
 - **Sin SSO/OAuth**: Autenticación por email+contraseña solamente.
