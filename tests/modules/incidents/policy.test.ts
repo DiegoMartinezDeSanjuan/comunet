@@ -16,15 +16,15 @@ import {
 
 describe('incidents slice 2.3 - policy', () => {
   it('applies the backoffice permission policy for incidents and providers', () => {
-    expect(canReadIncidentByRole('ACCOUNTANT')).toBe(true)
-    expect(canReadIncidentByRole('VIEWER')).toBe(true)
-    expect(canManageIncidentByRole('MANAGER')).toBe(true)
-    expect(canManageIncidentByRole('ACCOUNTANT')).toBe(false)
-    expect(canAssignProviderByRole('MANAGER')).toBe(true)
-    expect(canAssignProviderByRole('VIEWER')).toBe(false)
-    expect(canReadProviderByRole('VIEWER')).toBe(true)
-    expect(canManageProviderByRole('MANAGER')).toBe(true)
-    expect(canManageProviderByRole('ACCOUNTANT')).toBe(false)
+    expect(canReadIncidentByRole('OFFICE_ADMIN')).toBe(true)
+    expect(canReadIncidentByRole('OWNER')).toBe(false)
+    expect(canManageIncidentByRole('OFFICE_ADMIN')).toBe(true)
+    expect(canManageIncidentByRole('OWNER')).toBe(false)
+    expect(canAssignProviderByRole('OFFICE_ADMIN')).toBe(true)
+    expect(canAssignProviderByRole('PROVIDER')).toBe(false)
+    expect(canReadProviderByRole('SUPERADMIN')).toBe(true)
+    expect(canManageProviderByRole('OFFICE_ADMIN')).toBe(true)
+    expect(canManageProviderByRole('OWNER')).toBe(false)
   })
 
   it('accepts only the incident status transitions defined by the domain service', () => {

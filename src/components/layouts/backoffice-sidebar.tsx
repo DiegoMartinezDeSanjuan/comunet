@@ -30,12 +30,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Comunidades', href: '/communities', icon: Building2 },
   { label: 'Propietarios', href: '/owners', icon: Users },
   { label: 'Inquilinos', href: '/tenants', icon: UserCheck },
-  { label: 'Finanzas', href: '/finance/receipts', icon: Wallet, roles: ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'] },
+  { label: 'Finanzas', href: '/finance/receipts', icon: Wallet, roles: ['SUPERADMIN', 'OFFICE_ADMIN'] },
   { label: 'Incidencias', href: '/incidents', icon: AlertTriangle },
   { label: 'Reuniones', href: '/meetings', icon: Calendar },
   { label: 'Documentos', href: '/documents', icon: FileText },
   { label: 'Proveedores', href: '/providers', icon: Truck },
-  { label: 'Reportes', href: '/reports', icon: BarChart3, roles: ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'] },
+  { label: 'Reportes', href: '/reports', icon: BarChart3, roles: ['SUPERADMIN', 'OFFICE_ADMIN'] },
   { label: 'Configuración', href: '/settings', icon: Settings, roles: ['SUPERADMIN', 'OFFICE_ADMIN'] },
 ]
 

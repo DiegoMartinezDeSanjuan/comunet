@@ -13,12 +13,9 @@ datasource db {
 enum UserRole {
   SUPERADMIN
   OFFICE_ADMIN
-  MANAGER
-  ACCOUNTANT
   PRESIDENT
   OWNER
   PROVIDER
-  VIEWER
 }
 
 enum UserStatus {

@@ -38,7 +38,7 @@ export default async function CommunityUnitsPage({
           </div>
         </div>
         
-        {['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role) && (
+        {['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role) && (
           <div className="flex gap-2">
             <Link 
               href={`/communities/${community.id}/units/new-building`} 
@@ -99,7 +99,7 @@ export default async function CommunityUnitsPage({
                       )}
                     </td>
                     <td className="p-4 align-middle text-right">
-                      {['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role) && (
+                      {['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role) && (
                         <div className="flex items-center justify-end gap-3">
                           <Link 
                             href={`/communities/${community.id}/units/${u.id}/ownership`}

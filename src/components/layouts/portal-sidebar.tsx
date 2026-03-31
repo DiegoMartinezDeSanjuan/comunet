@@ -35,9 +35,6 @@ const NAV_ITEMS: PortalNavItemDefinition[] = [
 const ROLE_SUBTITLE: Record<UserRole, string> = {
   SUPERADMIN: 'Administración',
   OFFICE_ADMIN: 'Administración',
-  MANAGER: 'Administración',
-  ACCOUNTANT: 'Administración',
-  VIEWER: 'Administración',
   OWNER: 'Portal propietario',
   PRESIDENT: 'Portal presidencia',
   PROVIDER: 'Portal proveedor',

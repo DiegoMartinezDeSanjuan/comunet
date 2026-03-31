@@ -49,7 +49,7 @@ describe('Users Actions Server', () => {
     await expect(createUser({
       name: 'Test Nuevo',
       email: 'test@example.com',
-      role: 'VIEWER',
+      role: 'OFFICE_ADMIN',
       status: 'ACTIVE',
     })).rejects.toThrow('El email ya está en uso en el sistema')
   })
@@ -58,13 +58,13 @@ describe('Users Actions Server', () => {
     mockPrisma.user.findFirst.mockResolvedValueOnce(null)
     mockPrisma.user.create.mockResolvedValueOnce({
       id: 'new-user',
-      role: 'MANAGER',
+      role: 'OFFICE_ADMIN',
     })
 
     const result = await createUser({
       name: 'Gestor Test',
       email: 'gestor@example.com',
-      role: 'MANAGER',
+      role: 'OFFICE_ADMIN',
       status: 'ACTIVE',
     })
 
@@ -73,7 +73,7 @@ describe('Users Actions Server', () => {
     expect(mockPrisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: 'gestor@example.com',
-        role: 'MANAGER',
+        role: 'OFFICE_ADMIN',
       })
     }))
   })

@@ -46,7 +46,7 @@ export function CreateUserDialog() {
     defaultValues: {
       name: '',
       email: '',
-      role: 'VIEWER',
+      role: 'OFFICE_ADMIN',
       status: 'ACTIVE',
       linkedOwnerId: '',
       linkedProviderId: '',
@@ -134,12 +134,9 @@ export function CreateUserDialog() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Rol</label>
               <select {...form.register('role')} className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending}>
-                <option value="VIEWER">Invitado (Viewer)</option>
-                <option value="ACCOUNTANT">Contable (Accountant)</option>
-                <option value="MANAGER">Gestor (Manager)</option>
                 <option value="OFFICE_ADMIN">Administrador (Office Admin)</option>
                 <option value="SUPERADMIN">Super Admin</option>
-                <option value="OWNER">Propietario / Inquilino</option>
+                <option value="OWNER">Propietario</option>
                 <option value="PRESIDENT">Presidente</option>
                 <option value="PROVIDER">Proveedor</option>
               </select>
@@ -281,12 +278,9 @@ export function EditUserDialog({ user, currentUserId }: { user: EditUserProps, c
             <div className="space-y-2">
               <label className="text-sm font-medium">Rol</label>
               <select {...form.register('role')} className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending}>
-                <option value="VIEWER">Invitado (Viewer)</option>
-                <option value="ACCOUNTANT">Contable (Accountant)</option>
-                <option value="MANAGER">Gestor (Manager)</option>
                 <option value="OFFICE_ADMIN">Administrador (Office Admin)</option>
                 <option value="SUPERADMIN">Super Admin</option>
-                <option value="OWNER">Propietario / Inquilino</option>
+                <option value="OWNER">Propietario</option>
                 <option value="PRESIDENT">Presidente</option>
                 <option value="PROVIDER">Proveedor</option>
               </select>

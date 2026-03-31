@@ -13,19 +13,19 @@ const settingsItems = [
     href: '/settings',
     icon: BuildingIcon,
     exact: true,
-    roles: ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+    roles: ['SUPERADMIN', 'OFFICE_ADMIN'],
   },
   {
     title: 'Usuarios',
     href: '/settings/users',
     icon: UsersIcon,
-    roles: ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+    roles: ['SUPERADMIN', 'OFFICE_ADMIN'],
   },
   {
     title: 'Auditoría',
     href: '/settings/audit',
     icon: ShieldAlertIcon,
-    roles: ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'],
+    roles: ['SUPERADMIN', 'OFFICE_ADMIN'],
   },
 ]
 

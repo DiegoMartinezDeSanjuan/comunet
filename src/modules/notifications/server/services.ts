@@ -31,7 +31,6 @@ interface IncidentNotificationInput {
 const INCIDENT_NOTIFICATION_ROLES: UserRole[] = [
     'SUPERADMIN',
     'OFFICE_ADMIN',
-    'MANAGER',
 ]
 
 export async function createNotification(input: CreateNotificationInput) {

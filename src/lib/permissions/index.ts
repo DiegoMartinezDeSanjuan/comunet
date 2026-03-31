@@ -83,30 +83,21 @@ const getDocumentWithCommunity = createRequestCache(async (documentId: string) =
 const BACKOFFICE_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
-  'ACCOUNTANT',
-  'VIEWER',
 ]
 
 const BACKOFFICE_MANAGE_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
 ]
 
 const FINANCE_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
-  'ACCOUNTANT',
-  'VIEWER',
 ]
 
 const FINANCE_MANAGE_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
-  'ACCOUNTANT',
 ]
 
 function isBackofficeReadRole(role: UserRole) {
@@ -364,15 +355,15 @@ export function requirePermission(
     'documents.read': BACKOFFICE_READ_ROLES,
     'documents.manage': BACKOFFICE_MANAGE_ROLES,
 
-    'settings.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+    'settings.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
     'settings.manage': ['SUPERADMIN', 'OFFICE_ADMIN'],
 
-    'users.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'],
+    'users.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
     'users.manage': ['SUPERADMIN', 'OFFICE_ADMIN'],
 
-    'audit.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'],
+    'audit.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
     
-    'reports.read': ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT'],
+    'reports.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
   }
 
   const allowedRoles = permissionMap[permission]

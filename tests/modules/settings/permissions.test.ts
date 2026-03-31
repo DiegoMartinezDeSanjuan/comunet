@@ -29,27 +29,25 @@ describe('Permissions Engine', () => {
     expect(canReadAudit(session)).toBe(true)
   })
 
-  it('MANAGER can read reports, users, and audit but not manage settings', () => {
-    const session = createUserSession('MANAGER')
+  it('OFFICE_ADMIN has full backoffice settings permissions', () => {
+    const session = createUserSession('OFFICE_ADMIN')
     expect(canReadReports(session)).toBe(true)
     expect(canReadUsers(session)).toBe(true)
     expect(canReadAudit(session)).toBe(true)
-    
-    expect(canManageOfficeSettings(session)).toBe(false)
-    expect(canManageUsers(session)).toBe(false)
+    expect(canManageOfficeSettings(session)).toBe(true)
+    expect(canManageUsers(session)).toBe(true)
   })
 
-  it('ACCOUNTANT can read reports and audit but not settings or users', () => {
-    const session = createUserSession('ACCOUNTANT')
-    expect(canReadReports(session)).toBe(true)
-    expect(canReadAudit(session)).toBe(true)
-    
+  it('PRESIDENT (portal role) cannot access backoffice settings', () => {
+    const session = createUserSession('PRESIDENT')
+    expect(canReadReports(session)).toBe(false)
     expect(canReadUsers(session)).toBe(false)
-    expect(requirePermission(session, 'settings.read')).toBe(false)
+    expect(canManageUsers(session)).toBe(false)
+    expect(canReadAudit(session)).toBe(false)
   })
 
-  it('VIEWER cannot access operational tools in settings', () => {
-    const session = createUserSession('VIEWER')
+  it('PROVIDER (external role) cannot access backoffice settings', () => {
+    const session = createUserSession('PROVIDER')
     expect(canReadReports(session)).toBe(false)
     expect(canReadUsers(session)).toBe(false)
     expect(canManageUsers(session)).toBe(false)

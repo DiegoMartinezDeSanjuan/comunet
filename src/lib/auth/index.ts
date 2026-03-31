@@ -194,7 +194,7 @@ export async function authenticate(email: string, password: string): Promise<Ses
 }
 
 // Role hierarchy helpers
-const BACKOFFICE_ROLES: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER', 'ACCOUNTANT', 'VIEWER']
+const BACKOFFICE_ROLES: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN']
 const PORTAL_ROLES: UserRole[] = ['OWNER', 'PRESIDENT', 'PROVIDER']
 
 export function isBackofficeRole(role: UserRole): boolean {

@@ -15,9 +15,6 @@ vi.mock('@/lib/auth', () => ({
   isBackofficeRole: (role: string) => [
     'SUPERADMIN',
     'OFFICE_ADMIN',
-    'MANAGER',
-    'ACCOUNTANT',
-    'VIEWER',
   ].includes(role),
 }))
 
@@ -61,7 +58,7 @@ describe('notifications slice 2.3 - services', () => {
   it('notifies internal recipients except the actor when an incident is created', async () => {
     mockRepository.listActiveUsersByRoles.mockResolvedValueOnce([
       { id: 'actor-1', name: 'Actor', email: 'actor@example.com', role: 'OFFICE_ADMIN' },
-      { id: 'manager-1', name: 'Manager', email: 'manager@example.com', role: 'MANAGER' },
+      { id: 'admin-2', name: 'Admin2', email: 'admin2@example.com', role: 'OFFICE_ADMIN' },
       { id: 'super-1', name: 'Super', email: 'super@example.com', role: 'SUPERADMIN' },
     ])
 
@@ -77,7 +74,7 @@ describe('notifications slice 2.3 - services', () => {
     expect(mockRepository.createManyNotificationRecords).toHaveBeenCalledTimes(1)
     const batchArg = mockRepository.createManyNotificationRecords.mock.calls[0][0]
     expect(batchArg).toHaveLength(2)
-    expect(batchArg.map((n: { recipientUserId: string }) => n.recipientUserId)).toContain('manager-1')
+    expect(batchArg.map((n: { recipientUserId: string }) => n.recipientUserId)).toContain('admin-2')
     expect(batchArg.map((n: { recipientUserId: string }) => n.recipientUserId)).toContain('super-1')
     expect(batchArg.map((n: { recipientUserId: string }) => n.recipientUserId)).not.toContain('actor-1')
   })
@@ -85,7 +82,7 @@ describe('notifications slice 2.3 - services', () => {
   it('includes linked provider users when an incident is assigned', async () => {
     mockRepository.listActiveUsersByRoles.mockResolvedValueOnce([
       { id: 'actor-1', name: 'Actor', email: 'actor@example.com', role: 'OFFICE_ADMIN' },
-      { id: 'manager-1', name: 'Manager', email: 'manager@example.com', role: 'MANAGER' },
+      { id: 'admin-2', name: 'Admin2', email: 'admin2@example.com', role: 'OFFICE_ADMIN' },
     ])
     mockRepository.listLinkedUsersForProvider.mockResolvedValueOnce([
       { id: 'provider-user-1', name: 'Proveedor', email: 'proveedor@example.com', role: 'PROVIDER' },
@@ -111,7 +108,7 @@ describe('notifications slice 2.3 - services', () => {
   it('notifies creators and internal users when an incident is resolved', async () => {
     mockRepository.listActiveUsersByRoles.mockResolvedValueOnce([
       { id: 'actor-1', name: 'Actor', email: 'actor@example.com', role: 'OFFICE_ADMIN' },
-      { id: 'manager-1', name: 'Manager', email: 'manager@example.com', role: 'MANAGER' },
+      { id: 'admin-2', name: 'Admin2', email: 'admin2@example.com', role: 'OFFICE_ADMIN' },
     ])
 
     await notifyIncidentResolved({

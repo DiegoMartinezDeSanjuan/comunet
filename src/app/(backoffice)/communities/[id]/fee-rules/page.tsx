@@ -39,7 +39,7 @@ export default async function FeeRulesPage({
           </div>
         </div>
         
-        {['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT', 'MANAGER'].includes(session.role) && (
+        {['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role) && (
           <div className="flex gap-2">
             <Link 
               href={`/communities/${community.id}/fee-rules/new`} 

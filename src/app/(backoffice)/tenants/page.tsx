@@ -15,7 +15,7 @@ export default async function TenantsPage({
   const query = resolvedParams.q || ''
 
   const tenants = await getTenants(session.officeId, query)
-  const canManage = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role)
+  const canManage = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
 
   return (
     <div className="space-y-6">

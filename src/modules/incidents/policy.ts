@@ -7,29 +7,21 @@ import type {
 export const INCIDENT_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
-  'ACCOUNTANT',
-  'VIEWER',
 ]
 
 export const INCIDENT_MANAGE_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
 ]
 
 export const PROVIDER_READ_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
-  'ACCOUNTANT',
-  'VIEWER',
 ]
 
 export const PROVIDER_MANAGE_ROLES: UserRole[] = [
   'SUPERADMIN',
   'OFFICE_ADMIN',
-  'MANAGER',
 ]
 
 const CLOSED_STATUSES: IncidentStatus[] = ['RESOLVED', 'CLOSED']

@@ -17,7 +17,7 @@ export default async function CommunitiesPage({
   const communities = await getCommunities(session.officeId, query)
 
   const totalUnits = communities.reduce((sum, c) => sum + c._count.units, 0)
-  const canManage = ['SUPERADMIN', 'OFFICE_ADMIN', 'MANAGER'].includes(session.role)
+  const canManage = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
 
   return (
     <div className="space-y-6">

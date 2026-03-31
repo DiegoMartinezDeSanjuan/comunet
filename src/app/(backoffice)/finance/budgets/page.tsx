@@ -21,7 +21,7 @@ export default async function BudgetsPage() {
           </p>
         </div>
         
-        {['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT', 'MANAGER'].includes(session.role) && (
+        {['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role) && (
           <Link 
             href="/finance/budgets/new" 
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"

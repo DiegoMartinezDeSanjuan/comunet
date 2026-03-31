@@ -54,7 +54,7 @@ export default async function ReceiptDetailPage({
           </div>
         </div>
         
-        {isPayable && ['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT', 'MANAGER'].includes(session.role) && (
+        {isPayable && ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role) && (
           <div className="flex gap-2">
             <RegisterPaymentDialog receiptId={receipt.id} maxAmount={Number(receipt.amount) - Number(receipt.paidAmount)} />
           </div>

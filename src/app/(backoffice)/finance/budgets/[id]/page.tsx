@@ -52,7 +52,7 @@ export default async function BudgetDetailPage({
           </div>
         </div>
         
-        {isEditable && ['SUPERADMIN', 'OFFICE_ADMIN', 'ACCOUNTANT', 'MANAGER'].includes(session.role) && (
+        {isEditable && ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role) && (
           <div className="flex gap-2">
             <AddBudgetLineDialog budgetId={budget.id} />
           </div>
