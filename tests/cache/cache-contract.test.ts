@@ -6,23 +6,25 @@
  *
  * Driver selection:
  *   - memory:  always runs (no external deps)
- *   - redis:   runs when REDIS_URL is set (e.g. local Valkey container)
+ *   - redis:   runs when TEST_REDIS_URL is set (e.g. local Valkey container)
  *   - upstash: runs when UPSTASH_REDIS_REST_URL + TOKEN are set
  *
  * Run:
- *   pnpm test tests/cache            # memory only (CI-safe)
- *   REDIS_URL=redis://localhost:6379 pnpm test tests/cache   # memory + redis
+ *   pnpm test tests/cache                                       # memory only (CI-safe)
+ *   TEST_REDIS_URL=redis://localhost:6379 pnpm test tests/cache  # memory + redis
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { CacheContract } from '@/lib/cache/types'
 import { createMemoryDriver } from '@/lib/cache/drivers/memory'
+import { createRedisDriver } from '@/lib/cache/drivers/redis'
 
 // ─── Helpers ──────────────────────────────────────────────
 
 /**
  * Build the list of drivers to test.
- * Memory always runs; redis/upstash only if env vars are set.
+ * Memory always runs; redis only if env vars are set.
+ * Upstash is skipped here — it requires HTTP credentials and can't be tested locally.
  */
 function getTestDrivers(): Array<{ name: string; factory: () => CacheContract }> {
   const drivers: Array<{ name: string; factory: () => CacheContract }> = [
@@ -37,21 +39,8 @@ function getTestDrivers(): Array<{ name: string; factory: () => CacheContract }>
     drivers.push({
       name: 'redis',
       factory: () => {
-        // Set REDIS_URL for the driver factory
         process.env.REDIS_URL = process.env.TEST_REDIS_URL || process.env.REDIS_URL
-        const { createRedisDriver } = require('@/lib/cache/drivers/redis')
         return createRedisDriver()
-      },
-    })
-  }
-
-  // Upstash — only if credentials are present
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    drivers.push({
-      name: 'upstash',
-      factory: () => {
-        const { createUpstashDriver } = require('@/lib/cache/drivers/upstash')
-        return createUpstashDriver()
       },
     })
   }
