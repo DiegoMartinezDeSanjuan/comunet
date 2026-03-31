@@ -13,7 +13,7 @@ Plataforma integral de administración de fincas desarrollada con Next.js 16, Po
 | UI | shadcn/ui + Lucide Icons + Recharts (lazy) |
 | Estilos | Tailwind CSS 4 |
 | Tests | Vitest (unit) + Playwright (e2e) + k6 (load) |
-| Rate Limiting | Upstash Redis (prod) / In-memory (dev) |
+| Cache / Rate Limit | Valkey/Redis (prod) · Upstash (serverless) · Memory (dev) |
 | Storage | Local (dev) / S3-compatible (prod) |
 | Emails | Resend (prod) / Mock Logger (dev) |
 | Runtime | Node.js 22+ |
@@ -40,7 +40,7 @@ pnpm dev
 
 El servidor estará disponible en **http://localhost:3000**.
 
-> **Nota sobre Rate Limiting en desarrollo:** Las variables `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` en `.env` deben estar vacías o comentadas para desarrollo local. El sistema usará automáticamente un rate limiter in-memory (sliding window).
+> **Nota sobre Cache en desarrollo:** Por defecto, `CACHE_DRIVER` no está configurado y el sistema usa un driver in-memory. Para desarrollo local esto es suficiente. En producción se recomienda `CACHE_DRIVER=redis` con un contenedor Valkey (ver `docker-compose.production.yml`).
 
 ## 📋 Scripts Disponibles
 
@@ -125,14 +125,18 @@ src/
 │   ├── layouts/          # Sidebars, headers
 │   └── ui/               # shadcn/ui primitives + KPIs + badges + charts
 ├── lib/                  # Infraestructura y utilidades
-│   ├── auth/             # JWT + bcrypt
-│   ├── cache/            # request-cache (React cache wrapper)
+│   ├── auth/             # JWT + bcrypt + blocklist
+│   ├── cache/            # Cache contract layer
+│   │   ├── config.ts     # Factory + cacheKey namespace
+│   │   ├── types.ts      # CacheContract, RateLimitStore, KeyValueStore
+│   │   ├── rate-limit.ts # Pre-configured limiters (login, api, export)
+│   │   └── drivers/      # memory, upstash, redis (ioredis)
 │   ├── db/               # Prisma Client (singleton + pool config)
 │   ├── formatters/       # Formateo de moneda, fechas, etc.
 │   ├── permissions/      # RBAC centralizado (memoizado)
+│   ├── receipt-status.ts # Computed OVERDUE status (read-time)
 │   ├── storage/          # Local + S3 adapter (async)
-│   ├── utils/            # cn(), helpers genéricos
-│   └── rate-limit.ts     # Upstash Redis / in-memory fallback
+│   └── utils/            # cn(), helpers genéricos
 ├── modules/              # Módulos de dominio — dueños de lógica + UI de feature
 │   ├── communities/
 │   │   ├── server/       # actions.ts, repository.ts, service.ts
@@ -155,6 +159,10 @@ src/
 │                         # meetings, notifications, providers, units, users
 ├── proxy.ts              # CSP nonces, rate limiting, auth check, mock protection
 tests/
+├── cache/                # Cache contract tests (memory + redis)
+│   ├── cache-contract.test.ts  # Same suite against all drivers
+│   ├── cache-key.test.ts       # Namespace function tests
+│   └── receipt-status.test.ts  # Computed OVERDUE tests
 ├── e2e/                  # Playwright tests
 ├── load/                 # k6 load tests
 ├── mocks/                # server-only mock, etc.
@@ -176,6 +184,9 @@ tests/
 - **CSP dinámica** con nonces criptográficos inyectados via proxy
 - **Security headers**: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - **Rate limiting**: Login (5/min/IP), API (100/min/IP), Exports (5/min/usuario)
+- **JWT blocklist**: Token revocation via Valkey/Redis with TTL
+
+> **Nota técnica:** El algoritmo de rate limiting varía por driver: `memory` y `upstash` usan **sliding window**, mientras que `redis` (ioredis) usa **fixed window** con `INCR + PEXPIRE`. La diferencia es marginal para los umbrales configurados, pero conviene saberlo.
 - **Validación en 4 capas**: Proxy → Layout → Page/Action → Repository
 
 ### Rendimiento

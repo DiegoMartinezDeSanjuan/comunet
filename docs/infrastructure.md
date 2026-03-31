@@ -146,7 +146,7 @@ PostgreSQL (espera a que esté healthy antes de arrancar).
 | `appendonly yes` | Persistencia AOF | Escribe operaciones a disco → la blocklist sobrevive a reinicios |
 | `appendfsync everysec` | Cada segundo | Buen equilibrio entre rendimiento y durabilidad |
 | `maxmemory 128mb` | Límite de RAM | Suficiente para miles de tokens y contadores |
-| `maxmemory-policy allkeys-lru` | Evicción LRU | Si se llena, elimina las claves menos usadas |
+| `maxmemory-policy noeviction` | Sin expulsión | Si la memoria se llena, nuevas escrituras fallan pero las entradas existentes de blocklist se preservan. Crítico: `allkeys-lru` podría expulsar claves `jwt:bl:{jti}` y hacer que tokens revocados vuelvan a ser válidos |
 
 ### Configuración en `.env`
 ```env

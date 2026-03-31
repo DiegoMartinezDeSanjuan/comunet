@@ -98,7 +98,7 @@ ENV PORT=3000
 CMD ["node", "server.js"]
 ```
 
-> **Nota:** Para usar standalone output, añadir `output: 'standalone'` en `next.config.ts`.
+> **Nota:** El proyecto ya tiene `output: 'standalone'` configurado en `next.config.ts`. El Dockerfile actual en la raíz del proyecto es más completo que este ejemplo (incluye migraciones, healthcheck y entrypoint).
 
 ---
 

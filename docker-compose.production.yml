@@ -1,13 +1,17 @@
 # Production Docker Compose — COMUNET
 #
 # Usage:
-#   docker compose -f docker-compose.production.yml up -d
+#   docker compose -f docker-compose.production.yml up -d --build
 #
 # This stack includes:
-# - PostgreSQL 16 with tuned settings
+# - PostgreSQL 16 with tuned settings (32 GB RAM server)
 # - PgBouncer connection pooler
 # - Valkey (Redis-compatible) for cache, rate limiting & JWT blocklist
 # - MinIO S3-compatible storage (optional, can be replaced with AWS S3)
+#
+# IMPORTANT: All services except 'app' and 'minio' (S3 API) are internal-only.
+# PostgreSQL, PgBouncer, Valkey and MinIO Console are NOT exposed to the host.
+# Cloudflare Tunnel only routes to :3000 (app) and :9000 (minio API).
 
 services:
   app:
@@ -33,10 +37,9 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: comunet
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-comunet_prod_secret}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: comunet
-    ports:
-      - '5432:5432'
+    # No ports exposed to host — only accessible via Docker network
     volumes:
       - comunet_pgdata:/var/lib/postgresql/data
     command:
@@ -68,7 +71,7 @@ services:
     container_name: comunet-pgbouncer
     restart: unless-stopped
     environment:
-      DATABASE_URL: "postgres://comunet:${POSTGRES_PASSWORD:-comunet_prod_secret}@postgres:5432/comunet"
+      DATABASE_URL: "postgres://comunet:${POSTGRES_PASSWORD}@postgres:5432/comunet"
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 500
       DEFAULT_POOL_SIZE: 25
@@ -80,24 +83,25 @@ services:
       LOG_CONNECTIONS: 0
       LOG_DISCONNECTIONS: 0
       AUTH_TYPE: scram-sha-256
-    ports:
-      - '6432:5432'
+    # No ports exposed to host — only app connects via Docker network
     depends_on:
       postgres:
         condition: service_healthy
 
   # Valkey — Redis-compatible cache with AOF persistence
   # Used for: rate limiting, JWT blocklist, session revocation
-  # Set CACHE_DRIVER=redis and REDIS_URL=redis://valkey:6379 in .env
+  #
+  # Policy: noeviction — if memory fills, new writes fail but existing
+  # blocklist entries are preserved. This is critical for security:
+  # allkeys-lru could evict jwt:bl:{jti} keys, making revoked tokens valid again.
   valkey:
     image: valkey/valkey:8-alpine
     container_name: comunet-valkey
     restart: unless-stopped
-    command: ["valkey-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    command: ["valkey-server", "--appendonly", "yes", "--appendfsync", "everysec", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
     volumes:
       - comunet_valkey:/data
-    ports:
-      - '6379:6379'
+    # No ports exposed to host — only app connects via Docker network
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -111,13 +115,14 @@ services:
     container_name: comunet-minio
     restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-comunet-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-comunet-minio-secret}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - comunet_minio:/data
     ports:
+      # S3 API — exposed for Cloudflare Tunnel (s3.dominio.ext)
       - '9000:9000'
-      - '9001:9001'
+    # Console NOT exposed — access only via docker exec or SSH tunnel
     command: server /data --console-address ":9001"
 
   minio-init:
@@ -126,8 +131,8 @@ services:
     depends_on:
       - minio
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-comunet-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-comunet-minio-secret}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     entrypoint: >
       /bin/sh -c "
       sleep 5;
@@ -135,11 +140,6 @@ services:
       /usr/bin/mc mb myminio/comunet-documents || true;
       exit 0;
       "
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   comunet_pgdata:

@@ -13,6 +13,8 @@
 
 import type { CacheContract, CacheDriver } from './types'
 
+const VALID_DRIVERS: CacheDriver[] = ['memory', 'upstash', 'redis']
+
 let _instance: CacheContract | null = null
 
 /**
@@ -32,8 +34,28 @@ export function cacheKey(rawKey: string): string {
 export function getCache(): CacheContract {
   if (_instance) return _instance
 
-  const driver = (process.env.CACHE_DRIVER || 'memory') as CacheDriver
+  const raw = process.env.CACHE_DRIVER || 'memory'
   const isProd = process.env.NODE_ENV === 'production'
+
+  // ─── Strict validation ──────────────────────────────────
+  if (!VALID_DRIVERS.includes(raw as CacheDriver)) {
+    const msg =
+      `[cache] Invalid CACHE_DRIVER="${raw}". ` +
+      `Valid options: ${VALID_DRIVERS.join(', ')}.`
+
+    if (isProd) {
+      throw new Error(
+        `FATAL: ${msg} Refusing to start in production with an unknown driver. ` +
+        'This prevents silently falling back to in-memory cache.',
+      )
+    }
+
+    console.warn(`${msg} Falling back to "memory" for development.`)
+  }
+
+  const driver = VALID_DRIVERS.includes(raw as CacheDriver)
+    ? (raw as CacheDriver)
+    : 'memory'
 
   // ─── Production safety check ────────────────────────────
   if (isProd && driver === 'memory') {
@@ -52,7 +74,6 @@ export function getCache(): CacheContract {
 
   switch (driver) {
     case 'upstash': {
-      // Dynamic import to avoid loading @upstash/* when not needed
       const { createUpstashDriver } = require('./drivers/upstash')
       _instance = createUpstashDriver()
       break
@@ -62,8 +83,7 @@ export function getCache(): CacheContract {
       _instance = createRedisDriver()
       break
     }
-    case 'memory':
-    default: {
+    case 'memory': {
       const { createMemoryDriver } = require('./drivers/memory')
       _instance = createMemoryDriver()
       break
