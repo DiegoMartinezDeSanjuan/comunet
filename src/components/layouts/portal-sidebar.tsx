@@ -37,7 +37,7 @@ const ROLE_SUBTITLE: Record<UserRole, string> = {
   OFFICE_ADMIN: 'Administración',
   OWNER: 'Portal propietario',
   PRESIDENT: 'Portal presidencia',
-  PROVIDER: 'Portal proveedor',
+  PROVIDER: 'Portal industrial',
 }
 
 export function getPortalNavigationItems(role: UserRole) {

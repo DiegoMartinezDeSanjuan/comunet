@@ -53,16 +53,15 @@ requirePermission(session, permission): boolean       // Memoizado, sin queries 
 
 ## Roles
 
-| Rol | Acceso |
-|-----|--------|
-| SUPERADMIN | Global |
-| OFFICE_ADMIN | Administración completa del despacho |
-| MANAGER | Gestión operativa de comunidades |
-| ACCOUNTANT | Finanzas, recibos, pagos, presupuestos |
-| PRESIDENT | Vista extendida de su comunidad |
-| OWNER | Solo sus comunidades/unidades |
-| PROVIDER | Solo incidencias asignadas |
-| VIEWER | Solo lectura |
+| Rol (enum) | Nombre en UI | Acceso |
+|---|---|---|
+| `SUPERADMIN` | Superadmin | Global — acceso total a todas las funciones |
+| `OFFICE_ADMIN` | Administrador | Administración completa del despacho |
+| `PRESIDENT` | Presidente | Vista extendida de su comunidad |
+| `OWNER` | Propietario | Solo sus comunidades/unidades |
+| `PROVIDER` | Industrial | Solo incidencias asignadas |
+
+> **Nota**: Los roles `MANAGER`, `ACCOUNTANT` y `VIEWER` fueron eliminados en la simplificación de roles (abril 2026). Sus funciones fueron absorbidas por `OFFICE_ADMIN`.
 
 ## Helpers de Permisos (Memoizados)
 

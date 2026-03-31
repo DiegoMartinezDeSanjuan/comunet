@@ -70,8 +70,8 @@ Relación propietario-unidad con porcentaje y fechas.
 ### BoardPosition (Cargo de Junta)
 Cargo activo de un propietario en una comunidad (presidente, secretario, etc.).
 
-### Provider (Proveedor)
-Empresa o profesional externo.
+### Provider (Industrial / Proveedor)
+Empresa o profesional externo asignado a incidencias.
 
 ## Entidades Financieras
 
@@ -111,8 +111,8 @@ Registro de auditoría de acciones.
 
 | Enum | Valores |
 |------|---------|
-| UserRole | SUPERADMIN, OFFICE_ADMIN, MANAGER, ACCOUNTANT, PRESIDENT, OWNER, PROVIDER, VIEWER |
-| UserStatus | ACTIVE, INACTIVE, SUSPENDED |
+| UserRole | SUPERADMIN, OFFICE_ADMIN, PRESIDENT, OWNER, PROVIDER |
+| UserStatus | ACTIVE, INACTIVE |
 | UnitType | APARTMENT, COMMERCIAL, GARAGE, STORAGE, OTHER |
 | BudgetStatus | DRAFT, APPROVED, CLOSED |
 | FeeFrequency | MONTHLY, QUARTERLY, SEMIANNUAL, ANNUAL |

@@ -134,11 +134,11 @@ export function CreateUserDialog() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Rol</label>
               <select {...form.register('role')} className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending}>
-                <option value="OFFICE_ADMIN">Administrador (Office Admin)</option>
-                <option value="SUPERADMIN">Super Admin</option>
+                <option value="OFFICE_ADMIN">Administrador</option>
+                <option value="SUPERADMIN">Superadmin</option>
                 <option value="OWNER">Propietario</option>
                 <option value="PRESIDENT">Presidente</option>
-                <option value="PROVIDER">Proveedor</option>
+                <option value="PROVIDER">Industrial</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -278,11 +278,11 @@ export function EditUserDialog({ user, currentUserId }: { user: EditUserProps, c
             <div className="space-y-2">
               <label className="text-sm font-medium">Rol</label>
               <select {...form.register('role')} className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending}>
-                <option value="OFFICE_ADMIN">Administrador (Office Admin)</option>
-                <option value="SUPERADMIN">Super Admin</option>
+                <option value="OFFICE_ADMIN">Administrador</option>
+                <option value="SUPERADMIN">Superadmin</option>
                 <option value="OWNER">Propietario</option>
                 <option value="PRESIDENT">Presidente</option>
-                <option value="PROVIDER">Proveedor</option>
+                <option value="PROVIDER">Industrial</option>
               </select>
             </div>
             <div className="space-y-2">

@@ -53,9 +53,9 @@
 - Almacenamiento local en desarrollo, preparado para S3.
 
 ## Acceso por Rol
-- **OWNER**: solo ve comunidades/unidades donde tiene titularidad activa.
-- **PROVIDER**: solo ve incidencias donde `assignedProviderId = linkedProviderId`.
-- **PRESIDENT**: owner con cargo activo, ve información global resumida de su comunidad.
+- **OWNER (Propietario)**: solo ve comunidades/unidades donde tiene titularidad activa.
+- **PROVIDER (Industrial)**: solo ve incidencias donde `assignedProviderId = linkedProviderId`.
+- **PRESIDENT (Presidente)**: owner con cargo activo, ve información global resumida de su comunidad.
 - Todo listado y detalle comprueba alcance antes de devolver datos.
 
 ## Auditoría

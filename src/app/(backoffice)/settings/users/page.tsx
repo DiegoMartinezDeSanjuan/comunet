@@ -24,11 +24,11 @@ function parsePositiveInt(value: string, fallback: number): number {
 
 function roleBadge(role: UserRole) {
   switch (role) {
-    case 'SUPERADMIN': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-purple-50 text-purple-700 border-purple-200">Super Admin</span>
-    case 'OFFICE_ADMIN': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-blue-50 text-blue-700 border-blue-200">Office Admin</span>
+    case 'SUPERADMIN': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-purple-50 text-purple-700 border-purple-200">Superadmin</span>
+    case 'OFFICE_ADMIN': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-blue-50 text-blue-700 border-blue-200">Administrador</span>
     case 'PRESIDENT': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">Presidente</span>
     case 'OWNER': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-orange-50 text-orange-700 border-orange-200">Propietario</span>
-    case 'PROVIDER': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-cyan-50 text-cyan-700 border-cyan-200">Proveedor</span>
+    case 'PROVIDER': return <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-cyan-50 text-cyan-700 border-cyan-200">Industrial</span>
     default: return role
   }
 }

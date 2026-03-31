@@ -56,7 +56,7 @@ const ROLE_LABELS: Record<string, string> = {
   OFFICE_ADMIN: 'Administrador',
   PRESIDENT: 'Presidente',
   OWNER: 'Propietario',
-  PROVIDER: 'Proveedor',
+  PROVIDER: 'Industrial',
 }
 
 export function BackofficeHeader({ session }: BackofficeHeaderProps) {

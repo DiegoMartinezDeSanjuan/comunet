@@ -16,23 +16,20 @@ Los despachos de administración de fincas necesitan una herramienta moderna, in
 
 ## Usuarios Objetivo
 
-| Rol | Descripción |
-|-----|-------------|
-| **SUPERADMIN** | Acceso global al sistema |
-| **OFFICE_ADMIN** | Administración completa del despacho |
-| **MANAGER** | Gestión operativa de comunidades |
-| **ACCOUNTANT** | Finanzas, recibos, pagos, presupuestos |
-| **PRESIDENT** | Owner con cargo activo, vista extendida de su comunidad |
-| **OWNER** | Propietario, acceso limitado a sus datos |
-| **PROVIDER** | Proveedor, solo incidencias asignadas |
-| **VIEWER** | Solo lectura |
+| Rol | Nombre en UI | Descripción |
+|-----|---|-------------|
+| **SUPERADMIN** | Superadmin | Acceso global al sistema |
+| **OFFICE_ADMIN** | Administrador | Administración completa del despacho |
+| **PRESIDENT** | Presidente | Owner con cargo activo, vista extendida de su comunidad |
+| **OWNER** | Propietario | Acceso limitado a sus datos |
+| **PROVIDER** | Industrial | Solo incidencias asignadas |
 
 ## Portales
 
 1. **Backoffice**: Panel completo para el despacho/administrador.
 2. **Portal Propietario**: Consulta de recibos, documentos, incidencias y reuniones.
 3. **Portal Presidente**: Extensión del portal propietario con resumen financiero y global.
-4. **Portal Proveedor**: Gestión de incidencias asignadas.
+4. **Portal Industrial**: Gestión de incidencias asignadas.
 
 ## Alcance MVP
 

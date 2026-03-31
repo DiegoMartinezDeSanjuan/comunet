@@ -61,9 +61,15 @@ El servidor estará disponible en **http://localhost:3000**.
 
 Para entornos de desarrollo local, la base de datos se precarga mediante el script de *seed* (`pnpm seed`). Este script genera usuarios ficticios con contraseñas temporales para que puedas testear cada uno de los roles y la segregación de permisos.
 
-### Estructura de Roles Autogenerados:
-- **Despacho (Backoffice)**: `OFFICE_ADMIN`, `MANAGER`, `ACCOUNTANT`, `VIEWER`.
-- **Portal (Comunidades)**: `PRESIDENT`, `OWNER`, `TENANT`, `PROVIDER`.
+### Estructura de Roles:
+
+| Rol (enum) | Nombre en UI | Descripción |
+|---|---|---|
+| `SUPERADMIN` | Superadmin | Acceso global, gestión total |
+| `OFFICE_ADMIN` | Administrador | Administración completa del despacho |
+| `PRESIDENT` | Presidente | Vista extendida de su comunidad |
+| `OWNER` | Propietario | Solo sus comunidades/unidades |
+| `PROVIDER` | Industrial | Solo incidencias asignadas |
 
 > [!WARNING]
 > Nunca utilices contraseñas genéricas ni datos de prueba generados por el de `seed.ts` en tu base de datos de Producción. La base de datos de Producción debe iniciarse limpia y forzar el reseteo de la contraseña del Administrador raíz en el primer inicio de sesión.

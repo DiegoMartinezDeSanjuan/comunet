@@ -28,9 +28,8 @@ Además, el valor por defecto del comentario pasa a `INTERNAL`, que ya era el co
 
 ## Política de permisos aplicada
 
-- **SUPERADMIN / OFFICE_ADMIN / MANAGER**: lectura y gestión operativa de incidencias y proveedores.
-- **ACCOUNTANT / VIEWER**: lectura de incidencias y proveedores.
-- **OWNER / PRESIDENT / PROVIDER**: sin acceso al backoffice de incidencias/proveedores; sus accesos futuros quedan para slices posteriores de portal.
+- **SUPERADMIN / OFFICE_ADMIN (Administrador)**: lectura y gestión operativa de incidencias e industriales.
+- **OWNER (Propietario) / PRESIDENT (Presidente) / PROVIDER (Industrial)**: sin acceso al backoffice de incidencias/proveedores; accesos disponibles desde sus portales respectivos.
 
 ## Datos demo
 
