@@ -63,9 +63,12 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
     if (isValid) {
       await prisma.user.update({
         where: { id: userId! },
-        data: { mfaEnabled: true },
+        data: { 
+          mfaEnabled: true,
+          mfaFailedAttempts: 0,
+          mfaLockedUntil: null
+        },
       })
-
       // Auditoría
       await prisma.auditLog.create({
         data: {
