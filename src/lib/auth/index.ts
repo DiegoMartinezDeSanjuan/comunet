@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { UserRole } from '@prisma/client'
 import { getCache, cacheKey } from '@/lib/cache/config'
+import { redirect } from 'next/navigation'
 
 export interface Session {
   userId: string
@@ -113,7 +114,7 @@ export async function getCurrentSession(): Promise<Session | null> {
 export async function requireAuth(): Promise<Session> {
   const session = await getCurrentSession()
   if (!session) {
-    throw new Error('UNAUTHORIZED')
+    redirect('/login')
   }
   return session
 }
@@ -121,7 +122,7 @@ export async function requireAuth(): Promise<Session> {
 export async function requireRole(...roles: UserRole[]): Promise<Session> {
   const session = await requireAuth()
   if (!roles.includes(session.role)) {
-    throw new Error('FORBIDDEN')
+    redirect('/dashboard') // Or some unauthorized page
   }
   return session
 }

@@ -41,7 +41,8 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
 
   // Comprobar bloqueo temporal del usuario
   if (user.mfaLockedUntil && user.mfaLockedUntil > new Date()) {
-    redirect('/login/mfa/verify?error=account_locked')
+    // Si está bloqueado, mejor devolver al login principal para interrumpir todo intento
+    redirect('/login?error=account_locked')
   }
 
   async function verifyAction(formData: FormData) {
@@ -129,7 +130,7 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
       })
       
       if (shouldLock) {
-        redirect('/login/mfa/verify?error=account_locked')
+        redirect('/login?error=account_locked')
       } else {
         redirect('/login/mfa/verify?error=invalid_code')
       }

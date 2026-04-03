@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Building2, Mail, Lock, ChevronDown, ArrowRight } from 'lucide-react'
 
@@ -21,6 +21,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showDemo, setShowDemo] = useState(false)
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    if (searchParams.get('error') === 'account_locked') {
+      setError('Por seguridad, tu cuenta ha sido bloqueada debido a demasiados intentos fallidos. Inténtalo en 15 minutos o contacta con soporte.')
+    }
+  }, [])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
