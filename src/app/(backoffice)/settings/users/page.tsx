@@ -5,7 +5,7 @@ import { requireAuth } from '@/lib/auth'
 import { canManageUsers, canReadUsers } from '@/lib/permissions'
 import { listUsers } from '@/modules/users/server/queries'
 import { UserRole, UserStatus } from '@prisma/client'
-import { CreateUserDialog, EditUserDialog, ResetPasswordDialog } from './user-dialogs'
+import { CreateUserDialog, EditUserDialog, ResetPasswordDialog, ResetMfaDialog } from './user-dialogs'
 
 export const dynamic = 'force-dynamic'
 
@@ -148,6 +148,8 @@ export default async function UsersPage({
                     <td className="p-4 align-middle text-right flex justify-end gap-2">
                        {canManage && (
                          <>
+                          {/* @ts-ignore-next-line -- Prisma local type cache may complain about user.mfaEnabled */}
+                          <ResetMfaDialog userId={user.id} userName={user.name} hasMfa={!!(user as any).mfaEnabled} />
                           <ResetPasswordDialog userId={user.id} userName={user.name} />
                           <EditUserDialog user={user} currentUserId={session.userId} />
                          </>

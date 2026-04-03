@@ -1,10 +1,12 @@
-import { getMfaSessionUserId, clearMfaSession, createSession, authenticate } from '@/lib/auth'
+import { getMfaSessionUserId, clearMfaSession, createSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { generateMfaSecret, generateQrCodeDataUrl, verifyMfaToken } from '@/lib/auth/mfa'
+import { generateMfaSecret, generateQrCodeDataUrl, verifyMfaToken, encryptSecret, decryptSecret } from '@/lib/auth/mfa'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getPostLoginRedirect } from '@/lib/auth'
+import { mfaSetupLimiter } from '@/lib/cache/rate-limit'
+import { headers } from 'next/headers'
 
 export default async function MfaSetupPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams
@@ -17,20 +19,28 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
     where: { id: userId },
   })
 
+  // Rate Limiting on view and submit to prevent basic spam
+  const headerList = await headers()
+  const ip = headerList.get('x-forwarded-for') || '127.0.0.1'
+  const rlResult = await mfaSetupLimiter.check(`${userId}:${ip}`)
+  if (!rlResult.allowed) {
+    redirect('/login?error=too_many_requests')
+  }
+
   if (!user || user.mfaEnabled) {
     redirect('/login')
   }
 
-  // Generar MFA Secret para este usuario por primera vez (no guardado aún, se guardará tras verificar)
-  const secret = user.mfaSecret || generateMfaSecret()
+  // Generar MFA Secret para este usuario por primera vez (no guardado aún cifrado, se verificará luego)
+  let rawSecret = user.mfaSecret ? decryptSecret(user.mfaSecret) : generateMfaSecret()
   if (!user.mfaSecret) {
     await prisma.user.update({
       where: { id: userId },
-      data: { mfaSecret: secret },
+      data: { mfaSecret: encryptSecret(rawSecret) },
     })
   }
 
-  const qrCodeUrl = await generateQrCodeDataUrl(user.email, secret)
+  const qrCodeUrl = await generateQrCodeDataUrl(user.email, rawSecret)
 
   async function verifySetup(formData: FormData) {
     'use server'
@@ -40,12 +50,29 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
       redirect('/login/mfa/setup?error=missing_code')
     }
 
-    const isValid = verifyMfaToken(code, secret)
+    const rlVerifyResult = await mfaSetupLimiter.check(`verify:${userId}:${ip}`)
+    if (!rlVerifyResult.allowed) {
+      redirect('/login/mfa/setup?error=too_many_requests')
+    }
+
+    const isValid = verifyMfaToken(code, rawSecret)
 
     if (isValid) {
       await prisma.user.update({
         where: { id: userId! },
         data: { mfaEnabled: true },
+      })
+
+      // Auditoría
+      await prisma.auditLog.create({
+        data: {
+          action: 'MFA_ENABLE',
+          entityType: 'USER',
+          entityId: userId!,
+          metaJson: JSON.stringify({ note: 'User successfully configured MFA TOTP' }),
+          officeId: user!.officeId,
+          userId: userId!,
+        },
       })
       
       const updatedUser = await prisma.user.findUnique({ where: { id: userId! } })
@@ -83,7 +110,7 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
       </div>
 
       <div className="text-center text-sm font-mono bg-muted p-2 rounded">
-        {secret}
+        {rawSecret}
       </div>
 
       {error && (

@@ -160,6 +160,11 @@ enum AuditAction {
   STATUS_CHANGE
   LOGIN
   LOGOUT
+  MFA_ENABLE
+  MFA_VERIFY
+  MFA_VERIFY_FAIL
+  MFA_DISABLE
+  MFA_RESET
 }
 
 // ─── MODELS ─────────────────────────────────────────────

@@ -92,7 +92,7 @@ export async function getCurrentSession(): Promise<Session | null> {
 
     // Check if token has been revoked via blocklist
     if (payload.jti) {
-      const isRevoked = await isTokenRevoked(payload.jti)
+      const isRevoked = await isTokenRevoked(payload.jti, payload.userId as string, payload.iat)
       if (isRevoked) return null
     }
 
@@ -159,10 +159,29 @@ async function revokeToken(jti: string, ttlSec: number): Promise<void> {
   }
 }
 
-async function isTokenRevoked(jti: string): Promise<boolean> {
+export async function revokeAllUserTokens(userId: string): Promise<void> {
+  try {
+    // Any token issued before this timestamp will be considered revoked
+    const nowSecs = Math.floor(Date.now() / 1000)
+    await getCache().kv.set(cacheKey(`jwt:revoked_before:${userId}`), nowSecs, 60 * 60 * 24 * 7) // 7 days (max token TTL)
+  } catch (err) {
+    console.error('[auth] Failed to revoke all tokens for user:', err)
+  }
+}
+
+async function isTokenRevoked(jti: string, userId: string, iat: number | undefined): Promise<boolean> {
   try {
     const revoked = await getCache().kv.get<boolean>(blocklistKey(jti))
-    return revoked === true
+    if (revoked === true) return true
+
+    if (iat) {
+      const revokedBefore = await getCache().kv.get<number>(cacheKey(`jwt:revoked_before:${userId}`))
+      if (revokedBefore && iat <= revokedBefore) {
+        return true
+      }
+    }
+    
+    return false
   } catch (err) {
     // If cache is down, allow the request (fail open) but log it
     console.error('[auth] Failed to check token blocklist:', err)
@@ -270,4 +289,30 @@ export function getPostLoginRedirect(role: UserRole): string {
   if (isBackofficeRole(role)) return '/dashboard'
   if (role === 'PROVIDER') return '/portal/incidents'
   return '/portal' // OWNER, PRESIDENT
+}
+
+export async function resetUserMfa(userId: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user) throw new Error('User not found')
+
+  // 1. Revoke active JWTs for that user
+  await revokeAllUserTokens(userId)
+
+  // 2. Clear MFA
+  await prisma.user.update({
+    where: { id: userId },
+    data: { mfaEnabled: false, mfaSecret: null },
+  })
+
+  // 3. Audit log
+  await prisma.auditLog.create({
+    data: {
+      action: 'MFA_RESET',
+      entityType: 'USER',
+      entityId: userId,
+      metaJson: JSON.stringify({ note: 'MFA administratively reset' }),
+      officeId: user.officeId,
+      userId: userId, // Assuming the target user is recorded, or it could be the admin's ID if passed.
+    },
+  })
 }

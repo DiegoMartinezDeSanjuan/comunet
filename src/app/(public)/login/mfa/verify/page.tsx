@@ -1,9 +1,11 @@
 import { getMfaSessionUserId, clearMfaSession, createSession } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { verifyMfaToken } from '@/lib/auth/mfa'
+import { verifyMfaToken, decryptSecret } from '@/lib/auth/mfa'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getPostLoginRedirect } from '@/lib/auth'
+import { mfaVerifyLimiter } from '@/lib/cache/rate-limit'
+import { headers } from 'next/headers'
 
 export default async function MfaVerifyPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams
@@ -15,6 +17,14 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
   const user = await prisma.user.findUnique({
     where: { id: userId },
   })
+
+  // Rate Limiting on view and submit to prevent brute-force
+  const headerList = await headers()
+  const ip = headerList.get('x-forwarded-for') || '127.0.0.1'
+  const rlResult = await mfaVerifyLimiter.check(`${userId}:${ip}`)
+  if (!rlResult.allowed) {
+    redirect('/login?error=too_many_requests')
+  }
 
   // Si no existe, o si no tiene MFA activado y lo forzamos, deberia ir al login normal (o a setup)
   if (!user) {
@@ -33,9 +43,27 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
       redirect('/login/mfa/verify?error=missing_code')
     }
 
-    const isValid = verifyMfaToken(code, user!.mfaSecret!)
+    const rlVerifyResult = await mfaVerifyLimiter.check(`verify:${userId}:${ip}`)
+    if (!rlVerifyResult.allowed) {
+      redirect('/login/mfa/verify?error=too_many_requests')
+    }
+
+    const rawSecret = decryptSecret(user!.mfaSecret!)
+    const isValid = verifyMfaToken(code, rawSecret)
 
     if (isValid) {
+      // Auditoría éxito
+      await prisma.auditLog.create({
+        data: {
+          action: 'MFA_VERIFY',
+          entityType: 'USER',
+          entityId: userId!,
+          metaJson: JSON.stringify({ note: 'MFA verified successfully' }),
+          officeId: user!.officeId,
+          userId: userId!,
+        },
+      })
+
       await clearMfaSession()
       await createSession({
         userId: user!.id,
@@ -49,6 +77,18 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
 
       redirect(getPostLoginRedirect(user!.role))
     } else {
+      // Auditoría fallo
+      await prisma.auditLog.create({
+        data: {
+          action: 'MFA_VERIFY_FAIL',
+          entityType: 'USER',
+          entityId: userId!,
+          metaJson: JSON.stringify({ note: 'MFA verification failed' }),
+          officeId: user!.officeId,
+          userId: userId!,
+        },
+      })
+      
       redirect('/login/mfa/verify?error=invalid_code')
     }
   }

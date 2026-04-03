@@ -187,3 +187,29 @@ export async function resetUserPassword(userId: string) {
 
   return { temporaryPassword }
 }
+
+export async function adminResetMfa(userId: string) {
+  const session = await requireAuth()
+  if (!canManageUsers(session)) throw new Error('FORBIDDEN')
+
+  const user = await prisma.user.findFirst({
+    where: { id: userId, officeId: session.officeId },
+  })
+
+  if (!user) throw new Error('Usuario no encontrado')
+
+  const { resetUserMfa } = await import('@/lib/auth')
+  await resetUserMfa(userId)
+  
+  // Custom audit log on the domain (also resetUserMfa does an explicit DB audit log, but we can log using the structure too)
+  await logAudit({
+    officeId: session.officeId,
+    userId: session.userId,
+    entityType: 'USER',
+    entityId: user.id,
+    action: 'UPDATE',
+    meta: { note: 'MFA reseteada manualmente por administrador' },
+  })
+
+  revalidatePath('/settings/users')
+}

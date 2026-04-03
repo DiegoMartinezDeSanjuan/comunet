@@ -1,7 +1,15 @@
 // @ts-ignore
 import { authenticator } from 'otplib'
 import QRCode from 'qrcode'
+import { encrypt, decrypt } from '../utils/encryption'
 
+export function encryptSecret(secret: string): string {
+  return encrypt(secret)
+}
+
+export function decryptSecret(encrypted: string): string {
+  return decrypt(encrypted)
+}
 const APP_NAME = 'COMUNET'
 
 export function generateMfaSecret(): string {

@@ -33,3 +33,9 @@ export const apiLimiter = createLimiter('rl:api', 100, 60_000)
 
 /** Export endpoints: 5 per minute per user (heavy operations) */
 export const exportLimiter = createLimiter('rl:export', 5, 60_000)
+
+/** MFA Verification: 5 attempts per 5 minutes per IP/User */
+export const mfaVerifyLimiter = createLimiter('rl:mfa_verify', 5, 5 * 60_000)
+
+/** MFA Setup: 5 attempts per 5 minutes per IP/User */
+export const mfaSetupLimiter = createLimiter('rl:mfa_setup', 5, 5 * 60_000)
