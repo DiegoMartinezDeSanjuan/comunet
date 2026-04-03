@@ -112,6 +112,7 @@ export async function updateUser(userId: string, data: z.infer<typeof userFormSc
       status: parsed.status,
       linkedOwnerId: parsed.linkedOwnerId || null,
       linkedProviderId: parsed.linkedProviderId || null,
+      ...(parsed.status === 'ACTIVE' ? { failedAttempts: 0, lockoutCount: 0, lockedUntil: null } : {})
     },
   })
 

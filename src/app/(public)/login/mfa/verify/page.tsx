@@ -39,8 +39,7 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
     redirect('/login/mfa/setup')
   }
 
-  // Comprobar bloqueo temporal del usuario
-  if (user.mfaLockedUntil && user.mfaLockedUntil > new Date()) {
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
     // Si está bloqueado, mejor devolver al login principal para interrumpir todo intento
     redirect('/login?error=account_locked')
   }
@@ -65,7 +64,7 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
       // Resetear contadores de fallos al éxito
       await prisma.user.update({
         where: { id: userId! },
-        data: { mfaFailedAttempts: 0, mfaLockedUntil: null },
+        data: { failedAttempts: 0, lockoutCount: 0, lockedUntil: null },
       })
 
       // Auditoría éxito
@@ -100,25 +99,41 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
       redirect(getPostLoginRedirect(user!.role))
     } else {
       // Incrementar intentos y bloquear si procede
-      const newAttempts = user!.mfaFailedAttempts + 1
-      const shouldLock = newAttempts >= 5
+      const newAttempts = user!.failedAttempts + 1
+      let newLockoutCount = user!.lockoutCount
+      let newStatus = user!.status
+      let newLockedUntil = user!.lockedUntil
+
+      if (newAttempts % 5 === 0) {
+        newLockoutCount++
+        if (newLockoutCount >= 5) {
+          newStatus = 'BLOCKED'
+          newLockedUntil = null
+        } else {
+          newLockedUntil = new Date(Date.now() + 15 * 60 * 1000)
+        }
+      }
       
       await prisma.user.update({
         where: { id: userId! },
         data: { 
-          mfaFailedAttempts: newAttempts,
-          ...(shouldLock ? { mfaLockedUntil: new Date(Date.now() + 15 * 60 * 1000) } : {})
+          failedAttempts: newAttempts,
+          lockoutCount: newLockoutCount,
+          status: newStatus,
+          lockedUntil: newLockedUntil
         },
       })
 
       // Auditoría fallo
+      const shouldLock = newLockedUntil !== null || newStatus === 'BLOCKED'
+      
       await prisma.auditLog.create({
         data: {
           action: 'MFA_VERIFY_FAIL',
           entityType: 'USER',
           entityId: userId!,
           metaJson: JSON.stringify({ 
-            note: shouldLock ? 'MFA failed and account temporarily locked' : 'MFA verification failed',
+            note: shouldLock ? 'MFA failed and account temporarily or permanently locked' : 'MFA verification failed',
             ip, 
             userAgent, 
             method: 'totp', 

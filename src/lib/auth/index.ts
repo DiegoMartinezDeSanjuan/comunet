@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
-import { UserRole } from '@prisma/client'
+import { UserRole, UserStatus } from '@prisma/client'
 import { getCache, cacheKey } from '@/lib/cache/config'
 import { redirect } from 'next/navigation'
 
@@ -242,22 +242,77 @@ export async function authenticate(email: string, password: string): Promise<Aut
     include: { office: true },
   })
 
-  if (!user || user.status !== 'ACTIVE') return { type: 'error', message: 'Correo o contraseña incorrectos' }
+  if (!user || user.status === 'INACTIVE') return { type: 'error', message: 'Correo o contraseña incorrectos' }
+  if (user.status === 'BLOCKED') return { type: 'error', message: 'Usuario bloqueado permanentemente, contacte con un administrador' }
   if (!user.office || user.office.archivedAt) return { type: 'error', message: 'Correo o contraseña incorrectos' }
 
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    return { type: 'error', message: 'Cuenta bloqueada temporalmente. Por favor, inténtelo de nuevo más tarde.' }
+  }
+
   const valid = await verifyPassword(password, user.passwordHash)
-  if (!valid) return { type: 'error', message: 'Correo o contraseña incorrectos' }
+  if (!valid) {
+    const newFailedAttempts = user.failedAttempts + 1
+    let newLockoutCount = user.lockoutCount
+    let newStatus: UserStatus = user.status
+    let newLockedUntil = user.lockedUntil
+
+    if (newFailedAttempts % 5 === 0) {
+      newLockoutCount++
+      if (newLockoutCount >= 5) {
+        newStatus = 'BLOCKED'
+        newLockedUntil = null
+      } else {
+        newLockedUntil = new Date(Date.now() + 15 * 60 * 1000) // 15 min lock
+      }
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedAttempts: newFailedAttempts,
+        lockoutCount: newLockoutCount,
+        status: newStatus,
+        lockedUntil: newLockedUntil
+      }
+    })
+
+    if (newStatus === 'BLOCKED') {
+      return { type: 'error', message: 'Usuario bloqueado permanentemente, contacte con un administrador' }
+    } else if (newLockedUntil && newLockedUntil > new Date()) {
+      return { type: 'error', message: 'Cuenta bloqueada temporalmente debido a intentos fallidos. Por favor, espere 15 minutos.' }
+    }
+
+    return { type: 'error', message: 'Correo o contraseña incorrectos' }
+  }
 
   // Check MFA
   const isMandatoryRole = isBackofficeRole(user.role)
   const requiresMfa = user.mfaEnabled || isMandatoryRole
 
   if (requiresMfa) {
+    // We clear failedAttempts immediately upon correct password to align with "phases".
+    // MFA will track its own failures in the same unified fields.
+    if (user.failedAttempts > 0) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedAttempts: 0, lockedUntil: null }
+      })
+    }
+
     if (user.mfaEnabled && user.mfaSecret) {
       return { type: 'mfa_verify', userId: user.id, role: user.role }
     } else {
       return { type: 'mfa_setup', userId: user.id, role: user.role }
     }
+  }
+
+  // Success, fully authenticated without MFA required
+  if (user.failedAttempts > 0 || user.lockoutCount > 0 || user.lockedUntil) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedAttempts: 0, lockoutCount: 0, lockedUntil: null }
+    })
   }
 
   return {

@@ -65,8 +65,9 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
         where: { id: userId! },
         data: { 
           mfaEnabled: true,
-          mfaFailedAttempts: 0,
-          mfaLockedUntil: null
+          failedAttempts: 0,
+          lockedUntil: null,
+          lockoutCount: 0
         },
       })
       // Auditoría

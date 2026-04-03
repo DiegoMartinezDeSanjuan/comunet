@@ -148,8 +148,7 @@ export default async function UsersPage({
                     <td className="p-4 align-middle text-right flex justify-end gap-2">
                        {canManage && (
                          <>
-                          {/* @ts-ignore-next-line -- Prisma local type cache may complain about user.mfaEnabled */}
-                          <ResetMfaDialog userId={user.id} userName={user.name} hasMfa={!!(user as any).mfaEnabled} />
+                          <ResetMfaDialog userId={user.id} userName={user.name} hasMfa={!!user.mfaEnabled} />
                           <ResetPasswordDialog userId={user.id} userName={user.name} />
                           <EditUserDialog user={user} currentUserId={session.userId} />
                          </>
