@@ -18,9 +18,13 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
     where: { id: userId },
   })
 
-  // Rate Limiting on view and submit to prevent brute-force
   const headerList = await headers()
-  const ip = headerList.get('x-forwarded-for') || '127.0.0.1'
+  // Normalizar la IP: si hay un proxy, coger la primera IP de la cadena (la del cliente original)
+  const forwardedFor = headerList.get('x-forwarded-for')
+  const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (headerList.get('x-real-ip') || '127.0.0.1')
+  const userAgent = headerList.get('user-agent') || 'unknown'
+
+  // Rate Limiting on view and submit to prevent brute-force
   const rlResult = await mfaVerifyLimiter.check(`${userId}:${ip}`)
   if (!rlResult.allowed) {
     redirect('/login?error=too_many_requests')
@@ -33,6 +37,11 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
 
   if (!user.mfaEnabled || !user.mfaSecret) {
     redirect('/login/mfa/setup')
+  }
+
+  // Comprobar bloqueo temporal del usuario
+  if (user.mfaLockedUntil && user.mfaLockedUntil > new Date()) {
+    redirect('/login/mfa/verify?error=account_locked')
   }
 
   async function verifyAction(formData: FormData) {
@@ -52,13 +61,25 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
     const isValid = verifyMfaToken(code, rawSecret)
 
     if (isValid) {
+      // Resetear contadores de fallos al éxito
+      await prisma.user.update({
+        where: { id: userId! },
+        data: { mfaFailedAttempts: 0, mfaLockedUntil: null },
+      })
+
       // Auditoría éxito
       await prisma.auditLog.create({
         data: {
           action: 'MFA_VERIFY',
           entityType: 'USER',
           entityId: userId!,
-          metaJson: JSON.stringify({ note: 'MFA verified successfully' }),
+          metaJson: JSON.stringify({ 
+            note: 'MFA verified successfully', 
+            ip, 
+            userAgent, 
+            method: 'totp', 
+            success: true 
+          }),
           officeId: user!.officeId,
           userId: userId!,
         },
@@ -77,19 +98,41 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
 
       redirect(getPostLoginRedirect(user!.role))
     } else {
+      // Incrementar intentos y bloquear si procede
+      const newAttempts = user!.mfaFailedAttempts + 1
+      const shouldLock = newAttempts >= 5
+      
+      await prisma.user.update({
+        where: { id: userId! },
+        data: { 
+          mfaFailedAttempts: newAttempts,
+          ...(shouldLock ? { mfaLockedUntil: new Date(Date.now() + 15 * 60 * 1000) } : {})
+        },
+      })
+
       // Auditoría fallo
       await prisma.auditLog.create({
         data: {
           action: 'MFA_VERIFY_FAIL',
           entityType: 'USER',
           entityId: userId!,
-          metaJson: JSON.stringify({ note: 'MFA verification failed' }),
+          metaJson: JSON.stringify({ 
+            note: shouldLock ? 'MFA failed and account temporarily locked' : 'MFA verification failed',
+            ip, 
+            userAgent, 
+            method: 'totp', 
+            success: false 
+          }),
           officeId: user!.officeId,
           userId: userId!,
         },
       })
       
-      redirect('/login/mfa/verify?error=invalid_code')
+      if (shouldLock) {
+        redirect('/login/mfa/verify?error=account_locked')
+      } else {
+        redirect('/login/mfa/verify?error=invalid_code')
+      }
     }
   }
 
@@ -103,8 +146,11 @@ export default async function MfaVerifyPage({ searchParams }: { searchParams: Pr
       </div>
       
       {error && (
-        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200">
-          {error === 'invalid_code' ? 'Código incorrecto. Intenta de nuevo.' : 'El código es requerido.'}
+        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-200 mb-4">
+          {error === 'account_locked' && 'Cuenta temporalmente bloqueada. Por favor, espera 15 minutos o contacta con el administrador.'}
+          {error === 'too_many_requests' && 'Demasiados intentos. Por favor, espera un momento antes de volver a intentarlo.'}
+          {error === 'invalid_code' && 'Código no válido o expirado. Por favor, inténtelo de nuevo.'}
+          {error === 'missing_code' && 'El código es requerido.'}
         </div>
       )}
 

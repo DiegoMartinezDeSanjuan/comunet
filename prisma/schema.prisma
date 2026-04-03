@@ -208,6 +208,8 @@ model User {
 
   mfaEnabled       Boolean    @default(false)
   mfaSecret        String?
+  mfaFailedAttempts Int       @default(0)
+  mfaLockedUntil   DateTime?
 
   office           Office            @relation(fields: [officeId], references: [id])
   linkedOwner      Owner?            @relation(fields: [linkedOwnerId], references: [id])

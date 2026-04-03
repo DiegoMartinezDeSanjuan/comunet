@@ -410,11 +410,21 @@ export function ResetMfaDialog({ userId, userName, hasMfa }: { userId: string, u
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [adminPassword, setAdminPassword] = useState('')
 
   function handleResetMfa() {
+    if (!adminPassword.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Debes introducir tu contraseña para confirmar esta acción.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     startTransition(async () => {
       try {
-        await adminResetMfa(userId)
+        await adminResetMfa(userId, adminPassword)
         toast({
           title: 'MFA Reseteado',
           description: `Se ha reseteado el MFA de ${userName}. Deberá volver a configurarlo en su próximo inicio de sesión.`,
@@ -426,6 +436,8 @@ export function ResetMfaDialog({ userId, userName, hasMfa }: { userId: string, u
           description: error instanceof Error ? error.message : 'Error desconocido',
           variant: 'destructive',
         })
+      } finally {
+        setAdminPassword('')
       }
     })
   }
@@ -455,11 +467,21 @@ export function ResetMfaDialog({ userId, userName, hasMfa }: { userId: string, u
               Esta acción invalidará todas las sesiones activas de este usuario. En su próximo inicio de sesión se le obligará a configurar su MFA nuevamente.
             </div>
           </div>
+          <div className="space-y-2 pt-2">
+            <label className="text-sm font-medium">Por seguridad, confirma tu contraseña:</label>
+            <Input 
+              type="password" 
+              placeholder="Tu contraseña de administrador" 
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              disabled={isPending}
+            />
+          </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" disabled={isPending}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setAdminPassword('')} disabled={isPending}>Cancelar</Button>
             </DialogClose>
-            <Button variant="destructive" onClick={handleResetMfa} disabled={isPending}>
+            <Button variant="destructive" onClick={handleResetMfa} disabled={isPending || !adminPassword.trim()}>
               {isPending ? 'Reseteando...' : 'Resetear MFA'}
             </Button>
           </DialogFooter>

@@ -21,7 +21,10 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
 
   // Rate Limiting on view and submit to prevent basic spam
   const headerList = await headers()
-  const ip = headerList.get('x-forwarded-for') || '127.0.0.1'
+  const forwardedFor = headerList.get('x-forwarded-for')
+  const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (headerList.get('x-real-ip') || '127.0.0.1')
+  const userAgent = headerList.get('user-agent') || 'unknown'
+  
   const rlResult = await mfaSetupLimiter.check(`${userId}:${ip}`)
   if (!rlResult.allowed) {
     redirect('/login?error=too_many_requests')
@@ -33,7 +36,7 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
 
   // Generar MFA Secret para este usuario por primera vez (no guardado aún cifrado, se verificará luego)
   let rawSecret = user.mfaSecret ? decryptSecret(user.mfaSecret) : generateMfaSecret()
-  if (!user.mfaSecret) {
+  if (user.mfaEnabled === false && user.mfaSecret === null) {
     await prisma.user.update({
       where: { id: userId },
       data: { mfaSecret: encryptSecret(rawSecret) },
@@ -69,7 +72,13 @@ export default async function MfaSetupPage({ searchParams }: { searchParams: Pro
           action: 'MFA_ENABLE',
           entityType: 'USER',
           entityId: userId!,
-          metaJson: JSON.stringify({ note: 'User successfully configured MFA TOTP' }),
+          metaJson: JSON.stringify({ 
+            note: 'User successfully configured MFA TOTP',
+            ip,
+            userAgent,
+            method: 'totp',
+            success: true
+          }),
           officeId: user!.officeId,
           userId: userId!,
         },

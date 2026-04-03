@@ -188,9 +188,17 @@ export async function resetUserPassword(userId: string) {
   return { temporaryPassword }
 }
 
-export async function adminResetMfa(userId: string) {
+export async function adminResetMfa(userId: string, adminPassword?: string) {
   const session = await requireAuth()
   if (!canManageUsers(session)) throw new Error('FORBIDDEN')
+
+  if (!adminPassword) throw new Error('Se requiere contraseña de administrador')
+  const admin = await prisma.user.findUnique({ where: { id: session.userId } })
+  if (!admin) throw new Error('Administrador no encontrado')
+
+  const { verifyPassword, resetUserMfa } = await import('@/lib/auth')
+  const isValid = await verifyPassword(adminPassword, admin.passwordHash)
+  if (!isValid) throw new Error('Contraseña de administrador incorrecta')
 
   const user = await prisma.user.findFirst({
     where: { id: userId, officeId: session.officeId },
@@ -198,7 +206,7 @@ export async function adminResetMfa(userId: string) {
 
   if (!user) throw new Error('Usuario no encontrado')
 
-  const { resetUserMfa } = await import('@/lib/auth')
+
   await resetUserMfa(userId)
   
   // Custom audit log on the domain (also resetUserMfa does an explicit DB audit log, but we can log using the structure too)
