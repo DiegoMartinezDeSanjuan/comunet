@@ -170,26 +170,87 @@ async function isTokenRevoked(jti: string): Promise<boolean> {
   }
 }
 
-export async function authenticate(email: string, password: string): Promise<Session | null> {
+// ─── MFA Pending Session Helpers ──────────────────────────
+
+const MFA_COOKIE_NAME = 'comunet-mfa-session'
+
+export async function createMfaSession(userId: string): Promise<void> {
+  const token = await new SignJWT({ userId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('15m')
+    .setIssuedAt()
+    .sign(getSecret())
+
+  const cookieStore = await cookies()
+  cookieStore.set(MFA_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 15 * 60, // 15 minutes
+  })
+}
+
+export async function getMfaSessionUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get(MFA_COOKIE_NAME)?.value
+    if (!token) return null
+
+    const { payload } = await jwtVerify(token, getSecret())
+    return payload.userId as string
+  } catch {
+    return null
+  }
+}
+
+export async function clearMfaSession(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.delete(MFA_COOKIE_NAME)
+}
+
+
+export type AuthResult = 
+  | { type: 'success'; session: Session }
+  | { type: 'mfa_verify'; userId: string; role: UserRole }
+  | { type: 'mfa_setup'; userId: string; role: UserRole }
+  | { type: 'error'; message: string }
+
+export async function authenticate(email: string, password: string): Promise<AuthResult> {
   const user = await prisma.user.findUnique({
     where: { email, archivedAt: null },
     include: { office: true },
   })
 
-  if (!user || user.status !== 'ACTIVE') return null
-  if (!user.office || user.office.archivedAt) return null
+  if (!user || user.status !== 'ACTIVE') return { type: 'error', message: 'Correo o contraseña incorrectos' }
+  if (!user.office || user.office.archivedAt) return { type: 'error', message: 'Correo o contraseña incorrectos' }
 
   const valid = await verifyPassword(password, user.passwordHash)
-  if (!valid) return null
+  if (!valid) return { type: 'error', message: 'Correo o contraseña incorrectos' }
+
+  // Check MFA
+  const isMandatoryRole = isBackofficeRole(user.role)
+  const requiresMfa = user.mfaEnabled || isMandatoryRole
+
+  if (requiresMfa) {
+    if (user.mfaEnabled && user.mfaSecret) {
+      return { type: 'mfa_verify', userId: user.id, role: user.role }
+    } else {
+      return { type: 'mfa_setup', userId: user.id, role: user.role }
+    }
+  }
 
   return {
-    userId: user.id,
-    officeId: user.officeId,
-    role: user.role,
-    name: user.name,
-    email: user.email,
-    linkedOwnerId: user.linkedOwnerId,
-    linkedProviderId: user.linkedProviderId,
+    type: 'success',
+    session: {
+      userId: user.id,
+      officeId: user.officeId,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      linkedOwnerId: user.linkedOwnerId,
+      linkedProviderId: user.linkedProviderId,
+    }
   }
 }
 
@@ -207,6 +268,6 @@ export function isPortalRole(role: UserRole): boolean {
 
 export function getPostLoginRedirect(role: UserRole): string {
   if (isBackofficeRole(role)) return '/dashboard'
-  if (role === 'PROVIDER') return '/portal'
+  if (role === 'PROVIDER') return '/portal/incidents'
   return '/portal' // OWNER, PRESIDENT
 }

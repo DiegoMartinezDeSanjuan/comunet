@@ -1,6 +1,6 @@
 'use server'
 
-import { authenticate, createSession, getPostLoginRedirect } from '@/lib/auth'
+import { authenticate, createSession, createMfaSession, getPostLoginRedirect } from '@/lib/auth'
 import { logAudit } from '@/modules/audit/server/services'
 import { loginLimiter } from '@/lib/cache/rate-limit'
 import { headers } from 'next/headers'
@@ -32,21 +32,33 @@ export async function loginAction(formData: FormData): Promise<{ error?: string;
     return { error: parsed.error.issues[0].message }
   }
 
-  const session = await authenticate(parsed.data.email, parsed.data.password)
-  if (!session) {
-    return { error: 'Correo o contraseña incorrectos' }
+  const authResult = await authenticate(parsed.data.email, parsed.data.password)
+
+  if (authResult.type === 'error') {
+    return { error: authResult.message }
   }
 
-  await createSession(session)
+  if (authResult.type === 'mfa_setup') {
+    await createMfaSession(authResult.userId)
+    return { redirect: '/login/mfa/setup' }
+  }
+
+  if (authResult.type === 'mfa_verify') {
+    await createMfaSession(authResult.userId)
+    return { redirect: '/login/mfa/verify' }
+  }
+
+  // Success
+  await createSession(authResult.session)
 
   await logAudit({
-    officeId: session.officeId,
-    userId: session.userId,
+    officeId: authResult.session.officeId,
+    userId: authResult.session.userId,
     entityType: 'User',
-    entityId: session.userId,
+    entityId: authResult.session.userId,
     action: 'LOGIN',
-    meta: { email: session.email },
+    meta: { email: authResult.session.email },
   })
 
-  return { redirect: getPostLoginRedirect(session.role) }
+  return { redirect: getPostLoginRedirect(authResult.session.role) }
 }

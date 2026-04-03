@@ -201,6 +201,9 @@ model User {
   updatedAt        DateTime   @updatedAt
   archivedAt       DateTime?
 
+  mfaEnabled       Boolean    @default(false)
+  mfaSecret        String?
+
   office           Office            @relation(fields: [officeId], references: [id])
   linkedOwner      Owner?            @relation(fields: [linkedOwnerId], references: [id])
   linkedProvider   Provider?         @relation(fields: [linkedProviderId], references: [id])
