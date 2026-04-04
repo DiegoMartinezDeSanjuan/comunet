@@ -38,6 +38,12 @@ docker compose -f docker-compose.production.yml up -d --build
 docker compose -f docker-compose.production.yml down
 ```
 
+#### 2.1 Acceso Seguro Externo a la Base de Datos
+En producción, el puerto `5432` solo está exportado a `127.0.0.1`. **No expongas nunca el puerto global (`0.0.0.0:5432`)**.
+Si necesitas conectarte desde tu PC con un cliente como DBeaver o PgAdmin, utiliza una conexión con **Túnel SSH**:
+1. Conecta el cliente por SSH a la IP o dominio de tu servidor.
+2. Como Host de Base de datos pon `127.0.0.1` y puerto `5432`. El tráfico irá seguro desde tu PC hasta tu VPS cifrado por SSH y luego localmente al contenedor Docker.
+
 #### 3. Configuración de Cloudflare Tunnels (Routing Externo)
 En el panel de Zero Trust de Cloudflare, configurar los "Public Hostnames":
 

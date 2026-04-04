@@ -21,17 +21,28 @@ requirePermission(session, permission): boolean       // Memoizado, sin queries 
 
 | Endpoint | Límite | Ventana |
 |----------|--------|---------|
-| Login | 5 intentos | 1 minuto / IP |
+| Login / MFA | Bloqueo temporal tras 5 intentos fallidos | 1 minuto / IP (y penalizaciones en DB) |
 | API general | 100 requests | 1 minuto / IP |
 | Exports | 5 requests | 1 minuto / usuario |
 
 ### Implementación
 
-- **Producción**: Upstash Redis (`@upstash/ratelimit`) — distribuido, funciona con multi-instance
+- **Producción**: Valkey/Redis (`CACHE_DRIVER=redis`) — distribuido, funciona con multi-instance
 - **Desarrollo**: Sliding window in-memory — sin dependencias externas
-- El sistema detecta automáticamente `UPSTASH_REDIS_REST_URL`:
-  - Si está configurado → usa Redis
-  - Si está vacío/comentado → usa fallback in-memory
+- El sistema utiliza la caché para throttling rápido, pero la **fuente de verdad de bloqueos de seguridad reside en la base de datos** (campos `failedAttempts`, `lockoutCount`, `lockedUntil`).
+
+## Bloqueos de Cuenta (Brute-Force Protection)
+
+El sistema incluye una protección estricta a nivel de Base de Datos contra ataques de fuerza bruta en cuentas específicas:
+
+1. **Bloqueo Temporal (15 mins)**: 
+   - Se activa si un usuario (por contraseña errónea o código MFA incorrecto) alcanza un total acumulado de **5 `failedAttempts`**.
+   - Durante este bloqueo, `lockedUntil` marca en la DB la hora exacta de liberación.
+2. **Bloqueo Permanente (Status `BLOCKED`)**: 
+   - Cada vez que salta el bloqueo temporal, el sistema incrementa el campo **`lockoutCount`**.
+   - Si un usuario sufre 5 bloqueos temporales (`lockoutCount` llega a 5), se le expulsa definitivamente del sistema y el campo `status` pasa a `BLOCKED`.
+3. **Liberación Administrativa**:
+   - Para recuperar una cuenta permanentemente bloqueada, un usuario Superadmin o Administrador debe cambiar explícitamente su estado a `ACTIVE` desde el Backoffice / Panel de control. Al hacerlo, el sistema resetea transparentemente a cero todos sus contadores de penalización.
 
 ## Content Security Policy (CSP)
 
