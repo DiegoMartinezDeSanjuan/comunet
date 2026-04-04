@@ -1,0 +1,68 @@
+﻿­ƒöä Running database migrations...
+docker : Ô¿» Error [PrismaClientUnknownRequestError]: 
+En línea: 1 Carácter: 1
++ docker logs comunet-app 2>&1 | Out-File -FilePath app_logs.txt 
+-Encod ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Ô¿» Error [Pris...R 
+   equestError]: :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Invalid `prisma.user.findUnique()` invocation:
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "comunet", schema "public" at "postgres:5432"
+
+4 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+Ô£à Migrations complete.
+­ƒ¬ú Initializing MinIO bucket 'comunet-documents'...
+Ôä╣´©Å  mc not found ÔÇö bucket must be created manually via MinIO console (:9001)
+­ƒÜÇ Starting Next.js server...
+Ôû▓ Next.js 16.2.1
+- Local:         http://localhost:3000
+- Network:       http://0.0.0.0:3000
+Ô£ô Ready in 0ms
+[cache] Initialized with driver: redis
+[cache:redis] Connected to Redis
+prisma:error 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(PostgresError { code: "08P01", message: "server login has been failing, cached error: connect failed (server_login_retry)", severity: "FATAL", detail: None, column: None, hint: None }), transient: false })
+
+
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: 
+QueryError(PostgresError { code: "08P01", message: "server login 
+has been failing, cached error: connect failed 
+(server_login_retry)", severity: "FATAL", detail: None, column: 
+None, hint: None }), transient: false })
+    at async aS 
+(.next/server/chunks/ssr/_0fgw4u-._.js:588:142632)
+    at async j (.next/server/chunks/ssr/[root-of-the-server]__113
+tqxe._.js:2:1263) {
+  clientVersion: '6.19.2',
+  digest: '2102756187'
+}
+prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+[cache] Initialized with driver: redis
+[cache:redis] Connected to Redis
+­ƒöä Running database migrations...
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "comunet", schema "public" at "postgres:5432"
+
+4 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+Ô£à Migrations complete.
+­ƒ¬ú Initializing MinIO bucket 'comunet-documents'...
+Ôä╣´©Å  mc not found ÔÇö bucket must be created manually via MinIO console (:9001)
+­ƒÜÇ Starting Next.js server...
+Ôû▓ Next.js 16.2.1
+- Local:         http://localhost:3000
+- Network:       http://0.0.0.0:3000
+Ô£ô Ready in 0ms
