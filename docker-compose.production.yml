@@ -39,7 +39,8 @@ services:
       POSTGRES_USER: comunet
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: comunet
-    # No ports exposed to host — only accessible via Docker network
+    ports:
+      - '127.0.0.1:5432:5432'
     volumes:
       - comunet_pgdata:/var/lib/postgresql/data
     command:

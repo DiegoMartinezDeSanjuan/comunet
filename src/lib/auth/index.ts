@@ -76,7 +76,7 @@ export async function createSession(session: Session): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' && process.env.DISABLE_SECURE_COOKIES !== 'true',
     sameSite: 'lax',
     path: '/',
     maxAge: EXPIRATION_SECONDS,
@@ -204,7 +204,7 @@ export async function createMfaSession(userId: string): Promise<void> {
   const cookieStore = await cookies()
   cookieStore.set(MFA_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' && process.env.DISABLE_SECURE_COOKIES !== 'true',
     sameSite: 'lax',
     path: '/',
     maxAge: 15 * 60, // 15 minutes
