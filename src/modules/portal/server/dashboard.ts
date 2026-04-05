@@ -1,10 +1,11 @@
 import 'server-only'
 
-import type { Session } from '@/lib/auth'
+import { requireAuth, type Session } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 import { listPortalDocuments, listPortalMeetings } from './content'
 import { getPortalAccessScope, isPortalOwnerPresidentRole } from './policy'
+import { getProviderDashboardData } from './provider'
 import { getUniqueValues, toNumber } from './utils'
 
 function attachReceiptNumbers<T extends { amount: unknown; paidAmount: unknown }>(receipt: T) {
@@ -19,7 +20,24 @@ function attachReceiptNumbers<T extends { amount: unknown; paidAmount: unknown }
   }
 }
 
-export async function getPortalDashboardData(session: Session) {
+export async function getPortalDashboardPageQuery() {
+  const session = await requireAuth()
+
+  if (session.role === 'PROVIDER') {
+    const dashboard = await getProviderDashboardData()
+    return { type: 'PROVIDER' as const, providerDashboard: dashboard, portalDashboard: null, session }
+  } else {
+    // We already fetch session inside getPortalDashboardData, but it's simpler to just let it call requireAuth again or we can separate them.
+    // Actually, calling getPortalDashboardData() directly requires it to fetch requireAuth.
+    // That's fine, requireAuth is cached per request.
+    const dashboard = await getPortalDashboardData()
+    return { type: 'OWNER' as const, portalDashboard: dashboard, providerDashboard: null, session }
+  }
+}
+
+export async function getPortalDashboardData() {
+  const session = await requireAuth()
+
   if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
     return {
       scope: null,
@@ -29,6 +47,7 @@ export async function getPortalDashboardData(session: Session) {
       ownedCommunitySummaries: [],
       presidentCommunitySummaries: [],
       upcomingMeetings: [],
+      session,
     }
   }
 
@@ -56,6 +75,7 @@ export async function getPortalDashboardData(session: Session) {
       ownedCommunitySummaries: [],
       presidentCommunitySummaries: [],
       upcomingMeetings: [],
+      session,
     }
   }
 
@@ -268,5 +288,6 @@ export async function getPortalDashboardData(session: Session) {
       .filter((meeting) => meeting.scheduledAt >= now)
       .sort((left, right) => left.scheduledAt.getTime() - right.scheduledAt.getTime())
       .slice(0, 4),
+    session,
   }
 }

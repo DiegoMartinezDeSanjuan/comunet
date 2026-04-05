@@ -7,9 +7,8 @@ import {
   PortalEmptyState,
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
-import { requireAuth } from '@/lib/auth'
 import { formatDateTime } from '@/lib/formatters'
-import { listPortalMeetings } from '@/modules/portal/server/content'
+import { getPortalMeetingsPageQuery } from '@/modules/portal/server/content'
 
 function getMeetingStatusTone(status: string): 'neutral' | 'success' | 'warning' | 'danger' | 'info' {
   if (status === 'SCHEDULED') return 'info'
@@ -18,13 +17,12 @@ function getMeetingStatusTone(status: string): 'neutral' | 'success' | 'warning'
 }
 
 export default async function PortalMeetingsPage() {
-  const session = await requireAuth()
+  const { session, meetings } = await getPortalMeetingsPageQuery(24)
 
   if (session.role === 'PROVIDER') {
     redirect('/portal')
   }
 
-  const meetings = await listPortalMeetings(session, 24)
   const now = new Date()
   const upcomingCount = meetings.filter((meeting) => meeting.scheduledAt >= now).length
   const withMinutesCount = meetings.filter((meeting) => meeting.minutes.length > 0).length

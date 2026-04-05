@@ -6,9 +6,8 @@ import {
   PortalEmptyState,
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
-import { requireAuth } from '@/lib/auth'
 import { formatDate } from '@/lib/formatters'
-import { listPortalDocuments } from '@/modules/portal/server/content'
+import { getPortalDocumentsPageQuery } from '@/modules/portal/server/content'
 
 const DOCUMENT_VISIBILITY_LABELS: Record<string, string> = {
   OWNERS: 'Propietarios',
@@ -16,13 +15,11 @@ const DOCUMENT_VISIBILITY_LABELS: Record<string, string> = {
 }
 
 export default async function PortalDocumentsPage() {
-  const session = await requireAuth()
+  const { session, documents } = await getPortalDocumentsPageQuery(24)
 
   if (session.role === 'PROVIDER') {
     redirect('/portal')
   }
-
-  const documents = await listPortalDocuments(session, 24)
 
   return (
     <div className="space-y-6">

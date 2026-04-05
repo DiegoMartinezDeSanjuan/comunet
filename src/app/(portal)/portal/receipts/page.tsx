@@ -9,9 +9,8 @@ import {
   RECEIPT_STATUS_LABELS,
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
-import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { listPortalReceipts } from '@/modules/portal/server/receipts'
+import { getPortalReceiptsPageQuery } from '@/modules/portal/server/receipts'
 
 interface PortalReceiptsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -22,19 +21,17 @@ function getSingleParam(value: string | string[] | undefined) {
 }
 
 export default async function PortalReceiptsPage({ searchParams }: PortalReceiptsPageProps) {
-  const session = await requireAuth()
-
-  if (session.role === 'PROVIDER') {
-    redirect('/portal')
-  }
-
   const params = await searchParams
-  const data = await listPortalReceipts(session, {
+  const data = await getPortalReceiptsPageQuery({
     communityId: getSingleParam(params.communityId),
     unitId: getSingleParam(params.unitId),
     status: getSingleParam(params.status),
     period: getSingleParam(params.period),
   })
+
+  if (data.session.role === 'PROVIDER') {
+    redirect('/portal')
+  }
 
   return (
     <div className="space-y-6">

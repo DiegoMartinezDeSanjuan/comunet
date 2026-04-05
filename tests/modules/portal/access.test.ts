@@ -31,7 +31,12 @@ import {
   canReadPortalReceipt,
   isActivePresidentForCommunity,
 } from '@/modules/portal/server/policy'
-import { getPortalIncidentDetail } from '@/modules/portal/server/incidents'
+import { getPortalIncidentDetailData as getPortalIncidentDetail } from '@/modules/portal/server/incidents'
+import { requireAuth } from '@/lib/auth'
+
+vi.mock('@/lib/auth', () => ({
+  requireAuth: vi.fn(),
+}))
 
 const ownerSession: Session = {
   userId: 'user-owner',
@@ -181,14 +186,16 @@ describe('portal slice 2.4 - access policy', () => {
       ],
     })
     mockPrisma.ownership.findFirst.mockResolvedValueOnce({ id: 'ownership-1' })
+    vi.mocked(requireAuth).mockResolvedValueOnce(ownerSession)
 
-    const detail = await getPortalIncidentDetail(ownerSession, 'incident-1')
+    const detail = await getPortalIncidentDetail('incident-1')
 
-    expect(detail?.comments.map((comment) => comment.body)).toEqual([
+    const comments = detail?.comments || []
+    expect(comments.map((comment: any) => comment.body)).toEqual([
       'Comentario compartido visible',
       'Comentario público heredado',
     ])
-    expect(detail?.comments.every((comment) => comment.visibility === 'SHARED')).toBe(true)
+    expect(comments.every((comment: any) => comment.visibility === 'SHARED')).toBe(true)
   })
 
   it('validates the active president role per community', async () => {

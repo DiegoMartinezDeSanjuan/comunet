@@ -2,7 +2,7 @@ import 'server-only'
 
 import type { Prisma, ReceiptStatus } from '@prisma/client'
 
-import type { Session } from '@/lib/auth'
+import { requireAuth, type Session } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
 import {
@@ -67,6 +67,12 @@ function attachReceiptTotals<T extends { amount: unknown; paidAmount: unknown }>
     paidAmountValue,
     pendingBalance: Math.max(0, amountValue - paidAmountValue),
   }
+}
+
+export async function getPortalReceiptsPageQuery(filters: PortalReceiptFilters = {}) {
+  const session = await requireAuth()
+  const data = await listPortalReceipts(session, filters)
+  return { ...data, session }
 }
 
 export async function listPortalReceipts(
@@ -174,6 +180,12 @@ export async function listPortalReceipts(
       overdueCount: normalizedItems.filter((receipt) => receipt.status === 'OVERDUE').length,
     },
   }
+}
+
+export async function getPortalReceiptDetailPageQuery(receiptId: string) {
+  const session = await requireAuth()
+  const receipt = await getPortalReceiptDetail(session, receiptId)
+  return { receipt, session }
 }
 
 export async function getPortalReceiptDetail(session: Session, receiptId: string) {

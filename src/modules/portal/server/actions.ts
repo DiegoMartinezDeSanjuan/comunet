@@ -90,7 +90,7 @@ export async function createPortalIncidentAction(formData: FormData) {
   let createdIncidentId: string
 
   try {
-    const incident = await createPortalIncident(session, {
+    const incident = await createPortalIncident({
       communityId: parsed.data.communityId,
       unitId: parsed.data.unitId ? parsed.data.unitId : null,
       title: parsed.data.title,
@@ -133,7 +133,7 @@ export async function addPortalIncidentCommentAction(formData: FormData) {
   }
 
   try {
-    await addPortalIncidentSharedComment(session, parsed.data)
+    await addPortalIncidentSharedComment(parsed.data)
   } catch (error) {
     redirect(
       `/portal/incidents/${parsed.data.incidentId}?error=${encodeURIComponent(getErrorMessage(error))}`,
@@ -177,7 +177,7 @@ export async function addProviderCommentAction(formData: FormData) {
   }
 
   try {
-    await addProviderIncidentComment(session, parsed.data.incidentId, parsed.data.body)
+    await addProviderIncidentComment(parsed.data.incidentId, parsed.data.body)
   } catch (error) {
     redirect(
       `/portal/incidents/${parsed.data.incidentId}?error=${encodeURIComponent(getErrorMessage(error))}`,
@@ -207,7 +207,7 @@ export async function changeProviderStatusAction(formData: FormData) {
   }
 
   try {
-    await changeProviderIncidentStatus(session, parsed.data.incidentId, parsed.data.status)
+    await changeProviderIncidentStatus(parsed.data.incidentId, parsed.data.status)
   } catch (error) {
     redirect(
       `/portal/incidents/${parsed.data.incidentId}?error=${encodeURIComponent(getErrorMessage(error))}`,

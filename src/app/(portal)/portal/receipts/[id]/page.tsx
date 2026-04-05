@@ -8,9 +8,8 @@ import {
   RECEIPT_STATUS_LABELS,
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
-import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/formatters'
-import { getPortalReceiptDetail } from '@/modules/portal/server/receipts'
+import { getPortalReceiptDetailPageQuery } from '@/modules/portal/server/receipts'
 import { toNumber } from '@/modules/portal/server/utils'
 
 interface PortalReceiptDetailPageProps {
@@ -18,14 +17,12 @@ interface PortalReceiptDetailPageProps {
 }
 
 export default async function PortalReceiptDetailPage({ params }: PortalReceiptDetailPageProps) {
-  const session = await requireAuth()
+  const { id } = await params
+  const { receipt, session } = await getPortalReceiptDetailPageQuery(id)
 
   if (session.role === 'PROVIDER') {
     redirect('/portal')
   }
-
-  const { id } = await params
-  const receipt = await getPortalReceiptDetail(session, id)
 
   if (!receipt) {
     notFound()

@@ -8,15 +8,14 @@ import {
   getIncidentPriorityTone,
   getIncidentStatusTone,
 } from '@/modules/portal/components/ui'
-import { requireAuth } from '@/lib/auth'
+
 import { formatDate, formatDateTime } from '@/lib/formatters'
 import {
   addPortalIncidentCommentAction,
   addProviderCommentAction,
   changeProviderStatusAction,
 } from '@/modules/portal/server/actions'
-import { getPortalIncidentDetail } from '@/modules/portal/server/incidents'
-import { getProviderIncidentDetail } from '@/modules/portal/server/provider'
+import { getPortalIncidentDetailPageQuery } from '@/modules/portal/server/incidents'
 
 interface PortalIncidentDetailPageProps {
   params: Promise<{ id: string }>
@@ -31,8 +30,9 @@ export default async function PortalIncidentDetailPage({
   params,
   searchParams,
 }: PortalIncidentDetailPageProps) {
-  const session = await requireAuth()
   const [{ id }, rawSearchParams] = await Promise.all([params, searchParams])
+
+  const { type, providerData, portalData } = await getPortalIncidentDetailPageQuery(id)
 
   const error = getSingleParam(rawSearchParams.error)
   const created = getSingleParam(rawSearchParams.created)
@@ -40,8 +40,8 @@ export default async function PortalIncidentDetailPage({
   const statusChanged = getSingleParam(rawSearchParams.status_changed)
 
   // ─── Provider Detail ───────────────────────────────────
-  if (session.role === 'PROVIDER') {
-    const incident = await getProviderIncidentDetail(session, id)
+  if (type === 'PROVIDER') {
+    const incident = providerData
     if (!incident) notFound()
 
     return (
@@ -208,7 +208,7 @@ export default async function PortalIncidentDetailPage({
   }
 
   // ─── Owner / President Detail ──────────────────────────
-  const incident = await getPortalIncidentDetail(session, id)
+  const incident = portalData
   if (!incident) notFound()
 
   return (

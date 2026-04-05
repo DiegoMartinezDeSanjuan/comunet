@@ -2,7 +2,7 @@ import 'server-only'
 
 import type { IncidentPriority, IncidentStatus, Prisma } from '@prisma/client'
 
-import type { Session } from '@/lib/auth'
+import { requireAuth, type Session } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import {
   addIncidentComment,
@@ -17,6 +17,7 @@ import {
   getPortalAccessScope,
   isPortalOwnerPresidentRole,
 } from './policy'
+import { listProviderIncidents, getProviderIncidentDetail } from './provider'
 
 export interface PortalIncidentFilters {
   communityId?: string
@@ -80,7 +81,9 @@ function normalizePortalIncidentFilters(
   }
 }
 
-export async function listPortalIncidentComposerOptions(session: Session) {
+export async function listPortalIncidentComposerOptions() {
+  const session = await requireAuth()
+
   if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
     return {
       units: [],
@@ -112,13 +115,28 @@ export async function listPortalIncidentComposerOptions(session: Session) {
     communities: Array.from(communitiesMap.values()).sort((left, right) =>
       left.name.localeCompare(right.name, 'es'),
     ),
+    session,
   }
 }
 
-export async function listPortalIncidents(
-  session: Session,
+export async function getPortalIncidentsPageQuery(filters: PortalIncidentFilters = {}) {
+  const session = await requireAuth()
+
+  if (session.role === 'PROVIDER') {
+    const data = await listProviderIncidents(filters)
+    return { type: 'PROVIDER' as const, providerData: data, portalData: null, session }
+  } else {
+    // getPortalIncidentsData already contains requireAuth() when we refactor it below
+    const data = await listPortalIncidentsData(filters)
+    return { type: 'OWNER' as const, portalData: data, providerData: null, session }
+  }
+}
+
+export async function listPortalIncidentsData(
   filters: PortalIncidentFilters = {},
 ) {
+  const session = await requireAuth()
+
   if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
     return {
       items: [],
@@ -128,11 +146,13 @@ export async function listPortalIncidents(
         communities: [],
       },
       appliedFilters: normalizePortalIncidentFilters(filters),
+      session,
     }
   }
 
   const scope = await getPortalAccessScope(session)
-  const composerOptions = await listPortalIncidentComposerOptions(session)
+  // Calling the refactored function which doesn't take session anymore
+  const composerOptions = await listPortalIncidentComposerOptions()
   const appliedFilters = normalizePortalIncidentFilters(filters)
   const scopeConditions: Prisma.IncidentWhereInput[] = []
 
@@ -150,6 +170,7 @@ export async function listPortalIncidents(
       scope,
       composerOptions,
       appliedFilters,
+      session,
     }
   }
 
@@ -230,10 +251,25 @@ export async function listPortalIncidents(
     scope,
     composerOptions,
     appliedFilters,
+    session,
   }
 }
 
-export async function getPortalIncidentDetail(session: Session, incidentId: string) {
+export async function getPortalIncidentDetailPageQuery(incidentId: string) {
+  const session = await requireAuth()
+
+  if (session.role === 'PROVIDER') {
+    const data = await getProviderIncidentDetail(incidentId)
+    return { type: 'PROVIDER' as const, providerData: data, portalData: null, session }
+  } else {
+    const data = await getPortalIncidentDetailData(incidentId)
+    return { type: 'OWNER' as const, portalData: data, providerData: null, session }
+  }
+}
+
+export async function getPortalIncidentDetailData(incidentId: string) {
+  const session = await requireAuth()
+
   const incident = await prisma.incident.findFirst({
     where: { id: incidentId },
     include: {
@@ -294,13 +330,14 @@ export async function getPortalIncidentDetail(session: Session, incidentId: stri
   return {
     ...incident,
     comments: filterPortalVisibleComments(incident.comments),
+    session,
   }
 }
 
 export async function createPortalIncident(
-  session: Session,
   input: CreatePortalIncidentInput,
 ) {
+  const session = await requireAuth()
   if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
     throw new Error('FORBIDDEN')
   }
@@ -326,9 +363,9 @@ export async function createPortalIncident(
 }
 
 export async function addPortalIncidentSharedComment(
-  session: Session,
   input: { incidentId: string; body: string },
 ) {
+  const session = await requireAuth()
   const allowed = await canReadPortalIncident(session, input.incidentId)
 
   if (!allowed) {

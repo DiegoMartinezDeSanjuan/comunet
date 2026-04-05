@@ -19,16 +19,14 @@ import {
   RECEIPT_STATUS_LABELS,
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
-import { requireAuth } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { getPortalDashboardData } from '@/modules/portal/server/dashboard'
-import { getProviderDashboardData } from '@/modules/portal/server/provider'
+import { getPortalDashboardPageQuery } from '@/modules/portal/server/dashboard'
 
 export default async function PortalDashboardPage() {
-  const session = await requireAuth()
+  const { type, portalDashboard, providerDashboard, session } = await getPortalDashboardPageQuery()
 
-  if (session.role === 'PROVIDER') {
-    const dashboard = await getProviderDashboardData(session)
+  if (type === 'PROVIDER') {
+    const dashboard = providerDashboard!
 
     return (
       <div className="space-y-6">
@@ -112,7 +110,7 @@ export default async function PortalDashboardPage() {
     )
   }
 
-  const dashboard = await getPortalDashboardData(session)
+  const dashboard = portalDashboard!
 
   if (!dashboard.scope || (!dashboard.scope.ownedCommunityIds.length && !dashboard.scope.presidentCommunityIds.length)) {
     return (

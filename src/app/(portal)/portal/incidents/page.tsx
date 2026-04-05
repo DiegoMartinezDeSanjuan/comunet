@@ -11,11 +11,9 @@ import {
   getIncidentStatusTone,
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
-import { requireAuth } from '@/lib/auth'
 import { formatDate } from '@/lib/formatters'
 import { createPortalIncidentAction } from '@/modules/portal/server/actions'
-import { listPortalIncidents } from '@/modules/portal/server/incidents'
-import { listProviderIncidents } from '@/modules/portal/server/provider'
+import { getPortalIncidentsPageQuery } from '@/modules/portal/server/incidents'
 import { PortalIncidentCreateForm } from './portal-incident-create-form'
 
 interface PortalIncidentsPageProps {
@@ -27,18 +25,19 @@ function getSingleParam(value: string | string[] | undefined) {
 }
 
 export default async function PortalIncidentsPage({ searchParams }: PortalIncidentsPageProps) {
-  const session = await requireAuth()
   const params = await searchParams
   const error = getSingleParam(params.error)
 
+  const { type, providerData, portalData } = await getPortalIncidentsPageQuery({
+    communityId: getSingleParam(params.communityId),
+    status: getSingleParam(params.status),
+    priority: getSingleParam(params.priority),
+    search: getSingleParam(params.search),
+  })
+
   // ─── Provider branch ───────────────────────────────────
-  if (session.role === 'PROVIDER') {
-    const data = await listProviderIncidents(session, {
-      communityId: getSingleParam(params.communityId),
-      status: getSingleParam(params.status),
-      priority: getSingleParam(params.priority),
-      search: getSingleParam(params.search),
-    })
+  if (type === 'PROVIDER') {
+    const data = providerData!
 
     const openCount = data.items.filter((i) => !['RESOLVED', 'CLOSED'].includes(i.status)).length
     const resolvedCount = data.items.filter((i) => ['RESOLVED', 'CLOSED'].includes(i.status)).length
@@ -169,12 +168,7 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
   }
 
   // ─── Owner / President branch ──────────────────────────
-  const data = await listPortalIncidents(session, {
-    communityId: getSingleParam(params.communityId),
-    status: getSingleParam(params.status),
-    priority: getSingleParam(params.priority),
-    search: getSingleParam(params.search),
-  })
+  const data = portalData!
 
   const openCount = data.items.filter((incident) => !['RESOLVED', 'CLOSED'].includes(incident.status)).length
   const urgentCount = data.items.filter((incident) => incident.priority === 'URGENT').length

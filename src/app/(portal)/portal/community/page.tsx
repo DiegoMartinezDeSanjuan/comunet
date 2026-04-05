@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getPortalCommunitySummary } from '@/modules/portal/server/content'
+import { getPortalCommunitySummaryPageQuery } from '@/modules/portal/server/content'
 import Link from 'next/link'
 import { KPICard } from '@/components/ui/kpi-card'
 import { AlertTriangle, Receipt } from 'lucide-react'
@@ -15,8 +14,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 export default async function Page() {
-  const session = await requireAuth()
-  const summary = await getPortalCommunitySummary(session)
+  const { summary } = await getPortalCommunitySummaryPageQuery()
 
   if (!summary) {
     return (

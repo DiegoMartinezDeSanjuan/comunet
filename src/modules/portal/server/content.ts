@@ -6,6 +6,14 @@ import { prisma } from '@/lib/db'
 import { getPortalAccessScope, isPortalOwnerPresidentRole } from './policy'
 import { getUniqueValues } from './utils'
 
+import { requireAuth } from '@/lib/auth'
+
+export async function getPortalMeetingsPageQuery(limit = 12) {
+  const session = await requireAuth()
+  const meetings = await listPortalMeetings(session, limit)
+  return { meetings, session }
+}
+
 export async function listPortalMeetings(session: Session, limit = 12) {
   if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
     return []
@@ -46,6 +54,12 @@ export async function listPortalMeetings(session: Session, limit = 12) {
   })
 }
 
+export async function getPortalDocumentsPageQuery(limit = 12) {
+  const session = await requireAuth()
+  const documents = await listPortalDocuments(session, limit)
+  return { documents, session }
+}
+
 export async function listPortalDocuments(session: Session, limit = 12) {
   if (!isPortalOwnerPresidentRole(session.role) || !session.linkedOwnerId) {
     return []
@@ -84,6 +98,12 @@ export async function listPortalDocuments(session: Session, limit = 12) {
     orderBy: [{ createdAt: 'desc' }],
     take: limit,
   })
+}
+
+export async function getPortalCommunitySummaryPageQuery() {
+  const session = await requireAuth()
+  const summary = await getPortalCommunitySummary(session)
+  return { summary, session }
 }
 
 export async function getPortalCommunitySummary(session: Session) {

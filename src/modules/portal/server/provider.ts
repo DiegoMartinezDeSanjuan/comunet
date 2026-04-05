@@ -2,7 +2,7 @@ import 'server-only'
 
 import type { IncidentPriority, IncidentStatus, Prisma } from '@prisma/client'
 
-import type { Session } from '@/lib/auth'
+import { requireAuth, type Session } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { logAudit } from '@/modules/audit/server/services'
 import { addIncidentComment } from '@/modules/incidents/server/services'
@@ -41,7 +41,8 @@ function assertProviderSession(session: Session): asserts session is Session & {
 
 // ─── Provider Dashboard ──────────────────────────────────
 
-export async function getProviderDashboardData(session: Session) {
+export async function getProviderDashboardData() {
+  const session = await requireAuth()
   assertProviderSession(session)
 
   const where: Prisma.IncidentWhereInput = {
@@ -71,6 +72,7 @@ export async function getProviderDashboardData(session: Session) {
       resolvedCount,
     },
     recentIncidents,
+    session,
   }
 }
 
@@ -89,9 +91,9 @@ const ALLOWED_STATUSES = new Set<IncidentStatus>([
 const ALLOWED_PRIORITIES = new Set<IncidentPriority>(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])
 
 export async function listProviderIncidents(
-  session: Session,
   filters: ProviderIncidentFilters = {},
 ) {
+  const session = await requireAuth()
   assertProviderSession(session)
 
   const andConditions: Prisma.IncidentWhereInput[] = [
@@ -151,12 +153,14 @@ export async function listProviderIncidents(
       priority: filters.priority,
       search: filters.search?.trim(),
     },
+    session,
   }
 }
 
 // ─── Provider Incident Detail ────────────────────────────
 
-export async function getProviderIncidentDetail(session: Session, incidentId: string) {
+export async function getProviderIncidentDetail(incidentId: string) {
+  const session = await requireAuth()
   assertProviderSession(session)
 
   const incident = await prisma.incident.findFirst({
@@ -184,16 +188,17 @@ export async function getProviderIncidentDetail(session: Session, incidentId: st
     ...incident,
     comments: filterPortalVisibleComments(incident.comments),
     allowedTransitions: getProviderAllowedTransitions(incident.status),
+    session,
   }
 }
 
 // ─── Provider Status Change ──────────────────────────────
 
 export async function changeProviderIncidentStatus(
-  session: Session,
   incidentId: string,
   newStatus: IncidentStatus,
 ) {
+  const session = await requireAuth()
   assertProviderSession(session)
 
   const incident = await prisma.incident.findFirst({
@@ -243,10 +248,10 @@ export async function changeProviderIncidentStatus(
 // ─── Provider Comment ────────────────────────────────────
 
 export async function addProviderIncidentComment(
-  session: Session,
   incidentId: string,
   body: string,
 ) {
+  const session = await requireAuth()
   assertProviderSession(session)
 
   const incident = await prisma.incident.findFirst({
