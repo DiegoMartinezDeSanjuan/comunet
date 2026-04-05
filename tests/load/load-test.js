@@ -72,5 +72,31 @@ export default function (data) {
     'GET /communities is 200': (r) => r.status === 200,
   });
 
+  sleep(Math.random() * 2 + 1);
+
+  // 3. Test Health API
+  let healthRes = http.get(`${BASE_URL}/api/health`);
+  check(healthRes, {
+    'GET /api/health is 200': (r) => r.status === 200,
+  });
+
+  // 4. Test Incidents list
+  let incidentsRes = http.get(`${BASE_URL}/incidents`, authHeaders);
+  check(incidentsRes, {
+    'GET /incidents is 200': (r) => r.status === 200,
+  });
+
+  // 5. Test Finance Receipts
+  let financeRes = http.get(`${BASE_URL}/finance/receipts`, authHeaders);
+  check(financeRes, {
+    'GET /finance/receipts is 200': (r) => r.status === 200,
+  });
+
+  // 6. Test Providers list
+  let providersRes = http.get(`${BASE_URL}/providers`, authHeaders);
+  check(providersRes, {
+    'GET /providers is 200': (r) => r.status === 200,
+  });
+
   sleep(Math.random() * 3 + 1); // Random sleep between 1-4s to simulate think time
 }

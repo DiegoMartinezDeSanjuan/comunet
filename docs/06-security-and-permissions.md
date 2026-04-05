@@ -28,7 +28,7 @@ requirePermission(session, permission): boolean       // Memoizado, sin queries 
 
 ### Implementación
 
-- **Producción**: Valkey/Redis vía `ioredis` (`CACHE_DRIVER=redis`) — distribuido, funciona con multi-instance. Driver `upstash` disponible como alternativa.
+- **Producción**: Valkey/Redis vía `ioredis` (`CACHE_DRIVER=redis`) — distribuido, comparte estado entre instancias; HA/operación multi-instancia sigue pendiente. Driver `upstash` disponible como legado.
 - **Desarrollo**: Sliding window in-memory — sin dependencias externas.
 - **Producción con memory**: **Fatal por defecto**. `CACHE_DRIVER=memory` lanza un error fatal en producción para evitar que un reinicio borre la blocklist JWT y los rate limits. Válvula de escape: `ALLOW_INSECURE_MEMORY_CACHE=true` solo para pruebas controladas.
 - El sistema utiliza la caché para throttling rápido, pero la **fuente de verdad de bloqueos de seguridad reside en la base de datos** (campos `failedAttempts`, `lockoutCount`, `lockedUntil`).

@@ -163,7 +163,7 @@ src/
 │   │   └── server/       # actions, queries
 │   └── ...               # audit, auth, contacts, documents, finances,
 │                         # meetings, notifications, providers, units, users
-├── proxy.ts              # CSP nonces, rate limiting, auth check, mock protection
+├── proxy.ts              # CSP estática, rate limiting, auth check, mock protection
 tests/
 ├── cache/                # Cache contract tests (memory + redis)
 │   ├── cache-contract.test.ts  # Same suite against all drivers
@@ -187,7 +187,7 @@ tests/
 ## 🔒 Seguridad y Rendimiento
 
 ### Seguridad
-- **CSP dinámica** con nonces criptográficos inyectados via proxy
+- **CSP estática** con 'unsafe-inline'; nonces planificados en PR aparte
 - **Security headers**: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - **Rate limiting**: Login (5/min/IP), API (100/min/IP), Exports (5/min/usuario)
 - **JWT blocklist**: Token revocation via Valkey/Redis with TTL

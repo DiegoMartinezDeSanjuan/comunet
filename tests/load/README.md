@@ -4,7 +4,7 @@ The goal is to validate that the application and its infrastructure can support 
 
 Requirements:
 - Install [k6](https://k6.io/docs/get-started/installation/) locally.
-- For 500 CCU, use `Redis`-based Rate Limiting (set `UPSTASH_REDIS_REST_URL`).
+- For 500 CCU, use `Redis`-based Rate Limiting (set `CACHE_DRIVER=redis` and `REDIS_URL` to your Valkey/Redis instance).
 
 ## Execution
 
