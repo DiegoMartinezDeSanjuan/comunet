@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect, notFound } from 'next/navigation'
-import { getTenantDetails } from '@/modules/contacts/server/contact-service'
+import { getTenantEditDataQuery } from '@/modules/contacts/server/queries'
 import { TenantForm } from '../../new/tenant-form'
 
 export default async function EditTenantPage({
@@ -11,12 +9,17 @@ export default async function EditTenantPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'owners.manage')) redirect('/dashboard')
-
   const { id } = await params
-  const tenant = await getTenantDetails(id, session.officeId)
 
+  let result
+  try {
+    result = await getTenantEditDataQuery(id)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
+  }
+
+  const { tenant } = result
   if (!tenant) notFound()
 
   return (

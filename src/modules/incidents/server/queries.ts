@@ -31,7 +31,9 @@ export async function listIncidentsQuery(
 ) {
     const session = await requireIncidentsReadAccess()
 
-    return findIncidentPageByOffice(session.officeId, filters, pagination)
+    const result = await findIncidentPageByOffice(session.officeId, filters, pagination)
+
+    return { ...result, session }
 }
 
 export async function getIncidentDetailQuery(incidentId: string) {
@@ -102,5 +104,5 @@ export async function getIncidentDetailWithOptionsQuery(incidentId: string) {
         listProviderOptionsForOffice(session.officeId),
     ])
 
-    return { incident, timeline, providerOptions }
+    return { incident, timeline, providerOptions, session }
 }

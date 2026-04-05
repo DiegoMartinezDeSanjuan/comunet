@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getTenants } from '@/modules/contacts/server/contact-service'
+import { listTenantsPageQuery } from '@/modules/contacts/server/queries'
 import { Search, Users, Plus, Mail, Phone, UserCircle } from 'lucide-react'
 import Link from 'next/link'
 
@@ -10,11 +9,10 @@ export default async function TenantsPage({
 }: {
   searchParams: Promise<{ q?: string }>
 }) {
-  const session = await requireAuth()
   const resolvedParams = await searchParams
   const query = resolvedParams.q || ''
 
-  const tenants = await getTenants(session.officeId, query)
+  const { tenants, session } = await listTenantsPageQuery(query)
   const canManage = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
 
   return (

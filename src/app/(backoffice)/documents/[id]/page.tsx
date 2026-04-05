@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import { getDocumentDetailQuery } from '@/modules/documents/server/queries'
 import { DocumentDetailActions } from './document-detail-actions'
@@ -32,18 +31,14 @@ export default async function DocumentDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'documents.read')) {
-    throw new Error('FORBIDDEN')
-  }
-
   const { id } = await params
-  const document = await getDocumentDetailQuery(id)
+  const result = await getDocumentDetailQuery(id)
 
-  if (!document) {
+  if (!result.document) {
     notFound()
   }
 
+  const { document, session } = result
   const canManage = requirePermission(session, 'documents.manage')
 
   return (

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import { parseDocumentVisibility } from '@/modules/documents/schema'
 import {
@@ -60,11 +59,6 @@ export default async function DocumentsPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'documents.read')) {
-    throw new Error('FORBIDDEN')
-  }
-
   const params = await searchParams
   const q = getParam(params.q)
   const communityId = getParam(params.communityId)
@@ -90,6 +84,7 @@ export default async function DocumentsPage({
     listDocumentCategoriesQuery(),
   ])
 
+  const { session } = result
   const canManage = requirePermission(session, 'documents.manage')
   const startItem = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1
   const endItem = result.total === 0 ? 0 : Math.min(result.page * result.pageSize, result.total)

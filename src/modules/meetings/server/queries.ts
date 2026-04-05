@@ -23,12 +23,14 @@ export async function listMeetingsQuery(
   pagination: PaginationInput = {},
 ) {
   const session = await requireMeetingsReadAccess()
-  return listMeetingsPageByOffice(session.officeId, filters, pagination)
+  const result = await listMeetingsPageByOffice(session.officeId, filters, pagination)
+  return { ...result, session }
 }
 
 export async function getMeetingDetailQuery(meetingId: string) {
   const session = await requireMeetingsReadAccess()
-  return findMeetingByIdForOffice(meetingId, session.officeId)
+  const meeting = await findMeetingByIdForOffice(meetingId, session.officeId)
+  return { meeting, session }
 }
 
 export async function listMeetingCommunitiesQuery() {

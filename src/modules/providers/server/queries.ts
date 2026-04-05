@@ -26,13 +26,16 @@ export async function listProvidersQuery(
 ) {
     const session = await requireProvidersReadAccess()
 
-    return listProvidersPageByOffice(session.officeId, filters, pagination)
+    const result = await listProvidersPageByOffice(session.officeId, filters, pagination)
+
+    return { ...result, session }
 }
 
 export async function getProviderDetailQuery(providerId: string) {
     const session = await requireProvidersReadAccess()
 
-    return findProviderByIdForOffice(providerId, session.officeId)
+    const detail = await findProviderByIdForOffice(providerId, session.officeId)
+    return { detail, session }
 }
 
 /**

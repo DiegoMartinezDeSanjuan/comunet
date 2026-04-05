@@ -1,6 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunityDetails } from '@/modules/communities/server/service'
-import { getCommunityFeeRulesService } from '@/modules/finances/server/fee-rule-service'
+import { getCommunityFeeRulesPageQuery } from '@/modules/communities/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
@@ -13,13 +11,12 @@ export default async function FeeRulesPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
   
-  const community = await getCommunityDetails(id, session.officeId)
-  if (!community) notFound()
+  const result = await getCommunityFeeRulesPageQuery(id)
+  if (!result) notFound()
 
-  const rules = await getCommunityFeeRulesService(id)
+  const { community, rules, session } = result
 
   return (
     <div className="space-y-6">

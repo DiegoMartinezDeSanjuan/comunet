@@ -1,24 +1,27 @@
 export const dynamic = 'force-dynamic'
 
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect, notFound } from 'next/navigation'
 import { UnitForm } from '../../unit-form'
-import { getCommunityUnitsData } from '@/modules/units/server/unit-service'
+import { getCommunityEditUnitPageQuery } from '@/modules/communities/server/queries'
 
 export default async function EditUnitPage({
   params,
 }: {
   params: Promise<{ id: string; unitId: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'communities.manage')) redirect('/dashboard')
-
   const { id, unitId } = await params
-  const { buildings, units } = await getCommunityUnitsData(id)
-  
-  const unit = units.find(u => u.id === unitId)
-  if (!unit) notFound()
+
+  let result
+  try {
+    result = await getCommunityEditUnitPageQuery(id, unitId)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
+  }
+
+  if (!result) notFound()
+
+  const { buildings, unit } = result
 
   // Prepare initialData — only pick fields the form needs, convert Decimals
   const initialData = {

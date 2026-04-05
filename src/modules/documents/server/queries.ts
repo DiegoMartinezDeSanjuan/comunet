@@ -24,12 +24,14 @@ export async function listDocumentsQuery(
   pagination: PaginationInput = {},
 ) {
   const session = await requireDocumentsReadAccess()
-  return listDocumentsPageByOffice(session.officeId, filters, pagination)
+  const result = await listDocumentsPageByOffice(session.officeId, filters, pagination)
+  return { ...result, session }
 }
 
 export async function getDocumentDetailQuery(documentId: string) {
   const session = await requireDocumentsReadAccess()
-  return findDocumentByIdForOffice(documentId, session.officeId)
+  const document = await findDocumentByIdForOffice(documentId, session.officeId)
+  return { document, session }
 }
 
 export async function listDocumentCommunitiesQuery() {

@@ -9,13 +9,12 @@ import {
 } from 'lucide-react'
 import { Suspense } from 'react'
 
-import { requireAuth } from '@/lib/auth'
-import { canReadReports } from '@/lib/permissions'
 import { formatCurrency } from '@/lib/formatters'
 import {
   getDebtByCommunityReport,
   getIncidentsSummaryReport,
   getReportsDashboard,
+  getReportsPageQuery,
   getUpcomingMeetingsReport,
   getReceiptsStatusReport,
   getProviderPerformanceSummary,
@@ -39,11 +38,7 @@ function timeAgo(date: Date): string {
 }
 
 export default async function ReportsPage() {
-  const session = await requireAuth()
-
-  if (!canReadReports(session)) {
-    redirect('/dashboard')
-  }
+  const { session } = await getReportsPageQuery()
 
   // KPIs are fast — fetch before render
   const kpis = await getReportsDashboard(session.officeId)

@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getOwnerDetails } from '@/modules/contacts/server/contact-service'
+import { getOwnerDetailQuery } from '@/modules/contacts/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Edit, Home, Key, FileText } from 'lucide-react'
@@ -11,9 +10,8 @@ export default async function OwnerDetailsPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
-  const owner = await getOwnerDetails(id, session.officeId)
+  const { owner, session } = await getOwnerDetailQuery(id)
 
   if (!owner) notFound()
 

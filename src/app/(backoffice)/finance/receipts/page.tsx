@@ -1,5 +1,3 @@
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import {
   listReceiptsPageQuery,
   type ReceiptFilters,
@@ -48,7 +46,6 @@ export default async function ReceiptsPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const session = await requireAuth()
   const params = await searchParams
 
   const communityId = getSingleParam(params.communityId)
@@ -56,12 +53,13 @@ export default async function ReceiptsPage({
   const page = parsePositiveInt(getSingleParam(params.page), 1)
   const pageSize = 20
 
-  const canExportReceipts = requirePermission(session, 'finances.read')
-  const canGenerateReceipts = requirePermission(session, 'finances.manage')
-
   const filters: ReceiptFilters = { communityId, status }
 
   const result = await listReceiptsPageQuery(filters, { page, pageSize })
+
+  const { session } = result
+  const canExportReceipts = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
+  const canGenerateReceipts = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
 
   const receipts = result.items
   const startItem = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1

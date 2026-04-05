@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect, notFound } from 'next/navigation'
-import { getOwnerDetails } from '@/modules/contacts/server/contact-service'
+import { getOwnerEditDataQuery } from '@/modules/contacts/server/queries'
 import { OwnerForm } from '../../new/owner-form'
 
 export default async function EditOwnerPage({
@@ -11,12 +9,17 @@ export default async function EditOwnerPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'owners.manage')) redirect('/dashboard')
-
   const { id } = await params
-  const owner = await getOwnerDetails(id, session.officeId)
 
+  let result
+  try {
+    result = await getOwnerEditDataQuery(id)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
+  }
+
+  const { owner } = result
   if (!owner) notFound()
 
   return (

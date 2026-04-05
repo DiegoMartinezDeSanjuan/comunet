@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunities } from '@/modules/communities/server/service'
+import { listCommunitiesPageQuery } from '@/modules/communities/server/queries'
 import { Building2, Home, MapPin, Plus, Search, Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -10,11 +9,10 @@ export default async function CommunitiesPage({
 }: {
   searchParams: Promise<{ q?: string }>
 }) {
-  const session = await requireAuth()
   const resolvedParams = await searchParams
   const query = resolvedParams.q || ''
 
-  const communities = await getCommunities(session.officeId, query)
+  const { communities, session } = await listCommunitiesPageQuery(query)
 
   const totalUnits = communities.reduce((sum, c) => sum + c._count.units, 0)
   const canManage = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)

@@ -1,10 +1,7 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunityDetails } from '@/modules/communities/server/service'
-import { getOwners } from '@/modules/contacts/server/contact-service'
+import { getCommunityBoardPageQuery } from '@/modules/communities/server/queries'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Users } from 'lucide-react'
-import { requirePermission } from '@/lib/permissions'
 import { BoardPositionForm } from './board-form'
 
 export const dynamic = 'force-dynamic'
@@ -14,16 +11,19 @@ export default async function CommunityBoardPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'communities.manage')) redirect('/communities')
-
   const { id } = await params
-  const [community, allOwners] = await Promise.all([
-    getCommunityDetails(id, session.officeId),
-    getOwners(session.officeId)
-  ])
 
-  if (!community) notFound()
+  let result
+  try {
+    result = await getCommunityBoardPageQuery(id)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/communities')
+    throw e
+  }
+
+  if (!result) notFound()
+
+  const { community, allOwners } = result
 
   return (
     <div className="space-y-6">

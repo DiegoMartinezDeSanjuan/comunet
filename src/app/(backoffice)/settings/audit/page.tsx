@@ -1,10 +1,7 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import type { AuditAction } from '@prisma/client'
 
-import { requireAuth } from '@/lib/auth'
-import { canReadAudit } from '@/lib/permissions'
-import { listAuditLogs, getAuditEntityTypes } from '@/modules/audit/server/queries'
+import { getAuditPageQuery, listAuditLogs, getAuditEntityTypes } from '@/modules/audit/server/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,11 +36,7 @@ export default async function AuditPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const session = await requireAuth()
-
-  if (!canReadAudit(session)) {
-    redirect('/settings')
-  }
+  const { session } = await getAuditPageQuery()
 
   const params = await searchParams
   const action = getParam(params.action) as AuditAction | ''

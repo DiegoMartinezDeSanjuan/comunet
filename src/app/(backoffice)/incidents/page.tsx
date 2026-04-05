@@ -3,7 +3,6 @@ import { Search, Filter } from 'lucide-react'
 
 import { listIncidentsQuery, getIncidentFilterOptionsQuery } from '@/modules/incidents/server/queries'
 import { requirePermission } from '@/lib/permissions'
-import { requireAuth } from '@/lib/auth'
 import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
 
 import { IncidentCreateDialog } from '@/modules/incidents/components/incident-create-dialog'
@@ -49,7 +48,6 @@ export default async function IncidentsPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const session = await requireAuth()
   const params = await searchParams
 
   const q = getParam(params.q)
@@ -86,6 +84,7 @@ export default async function IncidentsPage({
   ])
 
   const { communities, providers } = filterOptions
+  const { session } = result
 
   const canManage = requirePermission(session, 'incidents.manage')
 

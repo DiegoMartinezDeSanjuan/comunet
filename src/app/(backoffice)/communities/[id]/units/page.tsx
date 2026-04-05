@@ -1,6 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunityDetails } from '@/modules/communities/server/service'
-import { getCommunityUnitsData } from '@/modules/units/server/unit-service'
+import { getCommunityUnitsPageQuery } from '@/modules/communities/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Home, Plus } from 'lucide-react'
@@ -12,13 +10,12 @@ export default async function CommunityUnitsPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
   
-  const community = await getCommunityDetails(id, session.officeId)
-  if (!community) notFound()
+  const result = await getCommunityUnitsPageQuery(id)
+  if (!result) notFound()
 
-  const { buildings, units } = await getCommunityUnitsData(id)
+  const { community, buildings, units, session } = result
 
   return (
     <div className="space-y-6">

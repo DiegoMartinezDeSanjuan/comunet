@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getBudgetDetailsService } from '@/modules/finances/server/budget-service'
+import { getBudgetDetailQuery } from '@/modules/finances/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -13,13 +12,14 @@ export default async function BudgetDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
   
-  const budget = await getBudgetDetailsService(id)
-  if (!budget || budget.community.officeId !== session.officeId) {
+  const result = await getBudgetDetailQuery(id)
+  if (!result) {
     notFound()
   }
+
+  const { budget, session } = result
 
   const isEditable = budget.status === 'DRAFT'
 

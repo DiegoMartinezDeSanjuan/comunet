@@ -1,6 +1,20 @@
 import 'server-only'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
+import { canReadReports } from '@/lib/permissions'
+
+/**
+ * Reports page auth aggregator — resolves auth + canReadReports.
+ * Returns session.officeId for streaming sub-sections to use.
+ */
+export async function getReportsPageQuery() {
+  const session = await requireAuth()
+  if (!canReadReports(session)) {
+    throw new Error('FORBIDDEN')
+  }
+  return { session }
+}
 
 export async function getReportsDashboard(officeId: string) {
   const [communitiesCount, incidentsCount, pendingDebtResult] = await Promise.all([

@@ -1,19 +1,22 @@
 export const dynamic = 'force-dynamic'
 
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import { BuildingForm } from './building-form'
+import { requireCommunityManageQuery } from '@/modules/communities/server/queries'
 
 export default async function NewBuildingPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'communities.manage')) redirect('/dashboard')
-
   const { id } = await params
+
+  try {
+    await requireCommunityManageQuery()
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

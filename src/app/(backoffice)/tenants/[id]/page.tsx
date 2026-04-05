@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getTenantDetails } from '@/modules/contacts/server/contact-service'
+import { getTenantDetailQuery } from '@/modules/contacts/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Edit, Home, Key, FileText } from 'lucide-react'
@@ -11,9 +10,8 @@ export default async function TenantDetailsPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
-  const tenant = await getTenantDetails(id, session.officeId)
+  const { tenant, session } = await getTenantDetailQuery(id)
 
   if (!tenant) notFound()
 

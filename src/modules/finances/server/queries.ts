@@ -12,7 +12,7 @@ import {
     findReceiptById,
     type ReceiptFilters,
 } from './receipt-repository'
-import { findBudgetsByOffice } from './budget-repository'
+import { findBudgetsByOffice, findBudgetById } from './budget-repository'
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -94,7 +94,9 @@ export async function listReceiptsPageQuery(
 ) {
     const session = await requireFinancesReadAccess()
 
-    return findReceiptsPageByOffice(session.officeId, filters, pagination)
+    const result = await findReceiptsPageByOffice(session.officeId, filters, pagination)
+
+    return { ...result, session }
 }
 
 /**
@@ -122,5 +124,21 @@ export async function listBudgetsQuery() {
     const budgets = await findBudgetsByOffice(session.officeId)
 
     return { budgets, session }
+}
+
+/**
+ * Budget detail page — resolves auth + verifies the budget belongs
+ * to the user's office.
+ */
+export async function getBudgetDetailQuery(budgetId: string) {
+    const session = await requireFinancesReadAccess()
+
+    const budget = await findBudgetById(budgetId)
+
+    if (!budget || budget.community.officeId !== session.officeId) {
+        return null
+    }
+
+    return { budget, session }
 }
 

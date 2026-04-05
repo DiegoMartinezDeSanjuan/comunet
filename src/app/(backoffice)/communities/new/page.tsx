@@ -1,14 +1,15 @@
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import { CommunityForm } from './community-form'
+import { requireCommunityManageQuery } from '@/modules/communities/server/queries'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewCommunityPage() {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'communities.manage')) {
-    redirect('/dashboard')
+  try {
+    await requireCommunityManageQuery()
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
   }
 
   return (

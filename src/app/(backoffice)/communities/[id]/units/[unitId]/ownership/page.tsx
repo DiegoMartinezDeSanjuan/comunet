@@ -1,10 +1,7 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunityUnitsData } from '@/modules/units/server/unit-service'
-import { getOwners } from '@/modules/contacts/server/contact-service'
+import { getCommunityUnitOwnershipPageQuery } from '@/modules/communities/server/queries'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, User, Key } from 'lucide-react'
-import { requirePermission } from '@/lib/permissions'
 import { OwnershipForm } from './ownership-form'
 
 export const dynamic = 'force-dynamic'
@@ -14,17 +11,19 @@ export default async function UnitOwnershipPage({
 }: {
   params: Promise<{ id: string, unitId: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'communities.manage')) redirect('/communities')
-
   const { id, unitId } = await params
-  const [{ units }, allOwners] = await Promise.all([
-    getCommunityUnitsData(id),
-    getOwners(session.officeId)
-  ])
 
-  const unit = units.find((u: any) => u.id === unitId)
-  if (!unit) notFound()
+  let result
+  try {
+    result = await getCommunityUnitOwnershipPageQuery(id, unitId)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/communities')
+    throw e
+  }
+
+  if (!result) notFound()
+
+  const { unit, allOwners } = result
 
   return (
     <div className="space-y-6">

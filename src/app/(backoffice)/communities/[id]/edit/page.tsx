@@ -1,27 +1,29 @@
 export const dynamic = 'force-dynamic'
 
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect, notFound } from 'next/navigation'
 import { CommunityForm } from '../../new/community-form'
-import { getCommunityDetails } from '@/modules/communities/server/service'
+import { getCommunityEditDataQuery } from '@/modules/communities/server/queries'
 
 export default async function EditCommunityPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'communities.manage')) {
-    redirect(`/communities`)
+  const { id } = await params
+
+  let result
+  try {
+    result = await getCommunityEditDataQuery(id)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/communities')
+    throw e
   }
 
-  const { id } = await params
-  const community = await getCommunityDetails(id, session.officeId)
-
-  if (!community) {
+  if (!result) {
     notFound()
   }
+
+  const { community } = result
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

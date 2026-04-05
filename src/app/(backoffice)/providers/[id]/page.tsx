@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import { getProviderDetailQuery } from '@/modules/providers/server/queries'
 
@@ -36,10 +35,9 @@ function formatIncidentBadge(status: string): string {
 }
 
 export default async function ProviderDetailPage({ params }: PageProps) {
-  const session = await requireAuth()
   const { id } = await params
 
-  const detail = await getProviderDetailQuery(id)
+  const { detail, session } = await getProviderDetailQuery(id)
 
   if (!detail) {
     notFound()

@@ -1,6 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunityDetails } from '@/modules/communities/server/service'
-import { requirePermission } from '@/lib/permissions'
+import { getCommunityNewFeeRulePageQuery } from '@/modules/communities/server/queries'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -13,15 +11,19 @@ export default async function NewFeeRulePage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'finances.manage')) {
-    redirect('/dashboard')
-  }
-
   const { id } = await params
-  const community = await getCommunityDetails(id, session.officeId)
+
+  let result
+  try {
+    result = await getCommunityNewFeeRulePageQuery(id)
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
+  }
   
-  if (!community) notFound()
+  if (!result) notFound()
+
+  const { community } = result
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

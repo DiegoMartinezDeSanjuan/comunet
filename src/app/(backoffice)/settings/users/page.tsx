@@ -1,9 +1,6 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 
-import { requireAuth } from '@/lib/auth'
-import { canManageUsers, canReadUsers } from '@/lib/permissions'
-import { listUsers } from '@/modules/users/server/queries'
+import { getUsersPageQuery } from '@/modules/users/server/queries'
 import { UserRole, UserStatus } from '@prisma/client'
 import { CreateUserDialog, EditUserDialog, ResetPasswordDialog, ResetMfaDialog } from './user-dialogs'
 
@@ -45,28 +42,21 @@ export default async function UsersPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const session = await requireAuth()
-
-  if (!canReadUsers(session)) {
-    redirect('/settings')
-  }
-
-  const canManage = canManageUsers(session)
-
   const params = await searchParams
   const q = getParam(params.q)
   const role = getParam(params.role) as UserRole | ''
   const status = getParam(params.status) as UserStatus | ''
   const page = parsePositiveInt(getParam(params.page), 1)
 
-  const result = await listUsers({
-    officeId: session.officeId,
+  const result = await getUsersPageQuery({
     search: q || undefined,
     role: role || undefined,
     status: status || undefined,
     page,
     pageSize: 15,
   })
+
+  const { canManage, session } = result
 
   // Basic filters array
   const roles: UserRole[] = ['SUPERADMIN', 'OFFICE_ADMIN', 'PRESIDENT', 'OWNER', 'PROVIDER']

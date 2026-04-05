@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import { getMeetingDetailQuery } from '@/modules/meetings/server/queries'
 import { MeetingDetailActions } from './meeting-detail-actions'
@@ -36,18 +35,14 @@ export default async function MeetingDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'meetings.read')) {
-    throw new Error('FORBIDDEN')
-  }
-
   const { id } = await params
-  const meeting = await getMeetingDetailQuery(id)
+  const result = await getMeetingDetailQuery(id)
 
-  if (!meeting) {
+  if (!result.meeting) {
     notFound()
   }
 
+  const { meeting, session } = result
   const latestMinute = meeting.minutes[0] ?? null
   const canManage = requirePermission(session, 'meetings.manage')
 

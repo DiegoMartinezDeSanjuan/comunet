@@ -1,28 +1,17 @@
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Settings, Shield, Users, Wrench } from 'lucide-react'
 
-import { requireAuth } from '@/lib/auth'
-import { getOfficeProfile } from '@/modules/settings/server/queries'
-import { canManageOfficeSettings, canReadSettings } from '@/lib/permissions'
+import { getSettingsPageQuery } from '@/modules/settings/server/queries'
 import { SettingsProfileForm } from '@/modules/settings/components/settings-profile-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
-  const session = await requireAuth()
-
-  if (!canReadSettings(session)) {
-    redirect('/dashboard')
-  }
-
-  const office = await getOfficeProfile(session.officeId)
+  const { office, canEdit, session } = await getSettingsPageQuery()
 
   if (!office) {
     return <div>Despacho no encontrado</div>
   }
-
-  const canEdit = canManageOfficeSettings(session)
 
   return (
     <div className="space-y-6">

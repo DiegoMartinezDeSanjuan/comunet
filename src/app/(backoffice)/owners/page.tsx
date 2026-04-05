@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getOwners } from '@/modules/contacts/server/contact-service'
+import { listOwnersPageQuery } from '@/modules/contacts/server/queries'
 import { Search, UserCircle, Plus, Users, Mail, Phone } from 'lucide-react'
 import Link from 'next/link'
 
@@ -10,11 +9,10 @@ export default async function OwnersPage({
 }: {
   searchParams: Promise<{ q?: string }>
 }) {
-  const session = await requireAuth()
   const resolvedParams = await searchParams
   const query = resolvedParams.q || ''
 
-  const owners = await getOwners(session.officeId, query)
+  const { owners, session } = await listOwnersPageQuery(query)
   const canManage = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
 
   return (

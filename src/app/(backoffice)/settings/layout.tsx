@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { requireAuth } from '@/lib/auth'
-import { canReadSettings } from '@/lib/permissions'
+import { requireSettingsAccessQuery } from '@/modules/settings/server/queries'
 import { SettingsNav } from '@/modules/settings/components/settings-nav'
 
 export const dynamic = 'force-dynamic'
@@ -11,9 +10,11 @@ export default async function SettingsLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await requireAuth()
-
-  if (!canReadSettings(session)) {
+  let session
+  try {
+    const result = await requireSettingsAccessQuery()
+    session = result.session
+  } catch {
     redirect('/dashboard')
   }
 

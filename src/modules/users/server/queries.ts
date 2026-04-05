@@ -2,6 +2,22 @@ import 'server-only'
 
 import { prisma } from '@/lib/db'
 import type { UserStatus, UserRole } from '@prisma/client'
+import { requireAuth } from '@/lib/auth'
+import { canReadUsers, canManageUsers } from '@/lib/permissions'
+
+/**
+ * Users page auth aggregator — resolves auth + canReadUsers.
+ */
+export async function getUsersPageQuery(params: Omit<ListUsersParams, 'officeId'>) {
+  const session = await requireAuth()
+  if (!canReadUsers(session)) {
+    throw new Error('FORBIDDEN')
+  }
+  const canManage = canManageUsers(session)
+  const result = await listUsers({ ...params, officeId: session.officeId })
+  return { ...result, canManage, session }
+}
+
 
 export interface ListUsersParams {
   officeId: string

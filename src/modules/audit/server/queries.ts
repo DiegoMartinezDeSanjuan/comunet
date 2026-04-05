@@ -2,6 +2,20 @@ import 'server-only'
 
 import { prisma } from '@/lib/db'
 import type { AuditAction } from '@prisma/client'
+import { requireAuth } from '@/lib/auth'
+import { canReadAudit } from '@/lib/permissions'
+
+/**
+ * Audit page auth aggregator — resolves auth + canReadAudit.
+ */
+export async function getAuditPageQuery() {
+  const session = await requireAuth()
+  if (!canReadAudit(session)) {
+    throw new Error('FORBIDDEN')
+  }
+  return { session }
+}
+
 
 export interface ListAuditParams {
   officeId: string

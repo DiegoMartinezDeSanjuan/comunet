@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import {
   getIncidentDetailWithOptionsQuery,
@@ -86,10 +85,9 @@ function describeTimelineEntry(entry: TimelineEntry): string {
 }
 
 export default async function IncidentDetailPage({ params }: PageProps) {
-  const session = await requireAuth()
   const { id } = await params
 
-  const { incident, timeline, providerOptions } = await getIncidentDetailWithOptionsQuery(id)
+  const { incident, timeline, providerOptions, session } = await getIncidentDetailWithOptionsQuery(id)
 
   if (!incident) {
     notFound()

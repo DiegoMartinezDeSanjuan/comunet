@@ -1,13 +1,16 @@
 export const dynamic = 'force-dynamic'
 
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
 import { OwnerForm } from './owner-form'
+import { requireOwnersManageQuery } from '@/modules/contacts/server/queries'
 
 export default async function NewOwnerPage() {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'owners.manage')) redirect('/dashboard')
+  try {
+    await requireOwnersManageQuery()
+  } catch (e: any) {
+    if (e?.message === 'FORBIDDEN') redirect('/dashboard')
+    throw e
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

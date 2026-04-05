@@ -1,6 +1,4 @@
 import Link from 'next/link'
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { listProvidersQuery, getProviderCategoriesQuery } from '@/modules/providers/server/queries'
 import { ProviderCreateForm } from './provider-create-form'
 import { ChevronLeft, ChevronRight, Mail, Phone, Search, Wrench } from 'lucide-react'
@@ -39,7 +37,6 @@ export default async function ProvidersPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const session = await requireAuth()
   const params = await searchParams
 
   const q = getParam(params.q)
@@ -67,7 +64,8 @@ export default async function ProvidersPage({
     getProviderCategoriesQuery(),
   ])
 
-  const canManage = requirePermission(session, 'providers.manage')
+  const { session } = result
+  const canManage = ['SUPERADMIN', 'OFFICE_ADMIN'].includes(session.role)
   const startItem = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1
   const endItem = result.total === 0 ? 0 : Math.min(result.page * result.pageSize, result.total)
 
