@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { getReceiptGenerationFormDataQuery } from '@/modules/finances/server/queries'
 import { GenerateReceiptsForm } from './generate-receipts-form'
 import { ArrowLeft } from 'lucide-react'

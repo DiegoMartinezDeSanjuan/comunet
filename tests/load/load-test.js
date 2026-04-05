@@ -60,7 +60,7 @@ export default function (data) {
   
   check(dashboardRes, {
     'GET /dashboard is 200': (r) => r.status === 200,
-    'Dashboard loaded successfully': (r) => r.body && r.body.includes('Dashboard')
+    'Dashboard loaded successfully': (r) => r.body && r.body.includes('Panel de Control')
   });
 
   sleep(Math.random() * 2 + 1);

@@ -4,9 +4,10 @@
 
 Sistema custom con:
 - Hash de contraseña: bcrypt (cost 12)
-- Sesión: cookie HTTP-only firmada con HMAC-SHA256 (jose)
+- Sesión: JWT firmado con HS256 (biblioteca `jose`), almacenado en cookie HTTP-only
 - Expiración configurable (por defecto 7 días)
 - `AUTH_SECRET`: mínimo 32 caracteres (obligatorio en producción, fallback en desarrollo)
+- MFA: flujo TOTP implementado en `login/mfa/setup` y `login/mfa/verify`
 
 ### API de Auth
 
@@ -27,9 +28,11 @@ requirePermission(session, permission): boolean       // Memoizado, sin queries 
 
 ### Implementación
 
-- **Producción**: Valkey/Redis (`CACHE_DRIVER=redis`) — distribuido, funciona con multi-instance
-- **Desarrollo**: Sliding window in-memory — sin dependencias externas
+- **Producción**: Valkey/Redis vía `ioredis` (`CACHE_DRIVER=redis`) — distribuido, funciona con multi-instance. Driver `upstash` disponible como alternativa.
+- **Desarrollo**: Sliding window in-memory — sin dependencias externas.
+- **Producción con memory**: **Fatal por defecto**. `CACHE_DRIVER=memory` lanza un error fatal en producción para evitar que un reinicio borre la blocklist JWT y los rate limits. Válvula de escape: `ALLOW_INSECURE_MEMORY_CACHE=true` solo para pruebas controladas.
 - El sistema utiliza la caché para throttling rápido, pero la **fuente de verdad de bloqueos de seguridad reside en la base de datos** (campos `failedAttempts`, `lockoutCount`, `lockedUntil`).
+- **Despliegue multi-instancia/HA**: pendiente de fase 2; requiere Redis con alta disponibilidad y observabilidad (APM).
 
 ## Bloqueos de Cuenta (Brute-Force Protection)
 
@@ -46,10 +49,19 @@ El sistema incluye una protección estricta a nivel de Base de Datos contra ataq
 
 ## Content Security Policy (CSP)
 
-- **Nonces criptográficos** generados por request en el proxy
-- Inyectados como header `x-csp-nonce` → leídos por el layout raíz
-- Elimina la necesidad de `'unsafe-inline'` para scripts
-- En desarrollo: `'unsafe-eval'` habilitado para Turbopack HMR
+- **Estado actual**: CSP estática con `script-src 'self' 'unsafe-inline'` y `style-src 'self' 'unsafe-inline'`.
+- En desarrollo: `'unsafe-eval'` habilitado para Turbopack HMR.
+- **Nonces criptográficos**: planificados para un PR aparte. Next.js 16 soporta nonces vía proxy + `x-nonce`, pero requiere render dinámico global, lo que desactiva static optimization, ISR y el caching de CDN por defecto.
+
+> **Nota trade-off**: se mantiene `'unsafe-inline'` hasta que se implemente el PR de nonces para evitar un cambio de estrategia de renderizado en una consolidación de documentación.
+
+## Revocación de Tokens — Trade-off Fail-Open
+
+El check de revocación JWT (`isTokenRevoked`) opera en modo **fail-open**:
+- Si la caché (Redis) está caída, la función devuelve `false` (token no revocado) en vez de bloquear el acceso.
+- **Razón**: una caída de caché no debe convertirse en una caída total de autenticación.
+- **Mitigación**: la fuente de verdad para bloqueos permanentes está en la base de datos (`status: BLOCKED`), que sí es resiliente.
+- **Evolución**: cambiar a fail-closed cuando se disponga de Redis/Valkey con alta disponibilidad y observabilidad (APM, alertas).
 
 ## Security Headers
 
@@ -92,7 +104,7 @@ El sistema incluye una protección estricta a nivel de Base de Datos contra ataq
 
 ## Validación en Capas
 
-1. **Proxy**: Rate limiting + CSP nonce injection + security headers.
+1. **Proxy**: Rate limiting + CSP headers + security headers.
 2. **Layout**: Verifica sesión y carga contexto.
 3. **Page**: Verifica permisos específicos antes de renderizar.
 4. **Server Action**: Re-verifica sesión + permisos + validación de input (Zod).

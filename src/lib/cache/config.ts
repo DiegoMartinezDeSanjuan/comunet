@@ -59,15 +59,28 @@ export function getCache(): CacheContract {
 
   // ─── Production safety check ────────────────────────────
   if (isProd && driver === 'memory') {
+    const allowInsecure = process.env.ALLOW_INSECURE_MEMORY_CACHE === 'true'
+
+    if (!allowInsecure) {
+      throw new Error(
+        'FATAL: CACHE_DRIVER=memory is not allowed in production.\n\n' +
+        '  JWT blocklist, rate limits and token revocations are stored in\n' +
+        '  process memory. A restart will ERASE all revoked tokens and\n' +
+        '  rate-limit counters, weakening authentication security.\n\n' +
+        '  Set CACHE_DRIVER=redis with REDIS_URL for production use.\n\n' +
+        '  If you absolutely need memory cache for controlled testing,\n' +
+        '  set ALLOW_INSECURE_MEMORY_CACHE=true to bypass this check.',
+      )
+    }
+
     console.warn(
       '\n' +
       '╔══════════════════════════════════════════════════════════════╗\n' +
-      '║  ⚠  CACHE_DRIVER=memory in PRODUCTION                      ║\n' +
+      '║  ⚠  CACHE_DRIVER=memory + ALLOW_INSECURE_MEMORY_CACHE      ║\n' +
       '║                                                             ║\n' +
-      '║  JWT blocklist, rate limits and revocations are stored in   ║\n' +
-      '║  process memory. A restart will ERASE all revoked tokens.   ║\n' +
-      '║                                                             ║\n' +
-      '║  Set CACHE_DRIVER=redis with REDIS_URL for production use.  ║\n' +
+      '║  Running production with in-process memory cache.           ║\n' +
+      '║  JWT blocklist and rate limits will NOT survive restarts.    ║\n' +
+      '║  This mode is ONLY for controlled testing.                  ║\n' +
       '╚══════════════════════════════════════════════════════════════╝\n',
     )
   }

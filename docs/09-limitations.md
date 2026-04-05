@@ -1,9 +1,9 @@
 # COMUNET — Limitaciones del MVP
 
 ## Autenticación
-- Auth custom con cookies firmadas, no OAuth/OpenID.
+- Auth custom con JWT HS256 (firmado con `jose`), no OAuth/OpenID.
 - No hay recuperación de contraseña (preparable post-MVP).
-- No hay 2FA.
+- ~~No hay 2FA~~ → ✅ **Implementado**: flujo TOTP en `login/mfa/setup` y `login/mfa/verify`.
 - No hay registro público de usuarios, solo creación desde backoffice.
 
 ## Finanzas
@@ -20,7 +20,7 @@
 - Límite de tamaño gestionado por Next.js config.
 
 ## Comunicaciones
-- Email mockeado (registrado en logs/tabla, no enviado).
+- ~~Email mockeado~~ → ✅ **Implementado**: Resend como servicio transaccional cuando `RESEND_API_KEY` está configurada; mock fallback (logs + BD) sin API key.
 - No hay notificaciones push.
 - No hay SMS/WhatsApp.
 
@@ -39,20 +39,31 @@
 
 ## Infraestructura
 - ~~Sin connection pooling~~ → ✅ **Implementado**: PgBouncer configurado.
-- ~~Sin rate limiting~~ → ✅ **Implementado**: Upstash Redis / in-memory.
-- ~~Sin security headers~~ → ✅ **Implementado**: HSTS, CSP, etc.
+- ~~Sin rate limiting~~ → ✅ **Implementado**: Valkey/Redis vía ioredis (ruta activa); Upstash driver legado disponible; in-memory fatal en prod.
+- ~~Sin security headers~~ → ✅ **Implementado**: HSTS, CSP (estática, `unsafe-inline`), X-Frame-Options, etc.
 - ~~Sin health endpoint~~ → ✅ **Implementado**: `/api/health` (liveness + readiness).
+- CSP con nonces criptográficos planificada (PR aparte; requiere render dinámico global).
+- Revocación de tokens opera en fail-open (ver `docs/06-security-and-permissions.md`).
+- `CACHE_DRIVER=memory` es fatal en producción (escape: `ALLOW_INSECURE_MEMORY_CACHE=true`).
+- Despliegue multi-instancia/HA con Redis pendiente de fase 2.
 - No hay CI/CD configurado.
 - No hay monitorización ni alertas (APM pendiente).
+
+## Testing
+
+- E2E: 3 specs implementados de 12 definidos en `docs/07-testing.md`.
+- Load: 1 escenario k6 implementado de 5 definidos (login + dashboard + communities).
+- Ver `docs/07-testing.md` para la cobertura deseada y los gaps actuales.
 
 ## Cómo completar cada limitación pendiente
 
 Cada limitación tiene su interfaz/adapter preparado. Para completar:
 
-1. **Email real**: Implementar `EmailAdapter` con SMTP/SendGrid en `src/lib/notifications/`.
-2. **SEPA**: Implementar `SepaAdapter` en `src/lib/integrations/sepa/`.
-3. **Firma digital**: Implementar `SignatureAdapter` en `src/lib/integrations/signature/`.
-4. **AEAT**: Implementar `AeatAdapter` en `src/lib/integrations/fiscal/`.
-5. **Recuperación de contraseña**: Añadir flujo en `src/modules/auth/`.
-6. **CI/CD**: GitHub Actions con build → test → deploy.
-7. **APM**: OpenTelemetry + structured logging.
+1. **SEPA**: Implementar `SepaAdapter` en `src/lib/integrations/sepa/`.
+2. **Firma digital**: Implementar `SignatureAdapter` en `src/lib/integrations/signature/`.
+3. **AEAT**: Implementar `AeatAdapter` en `src/lib/integrations/fiscal/`.
+4. **Recuperación de contraseña**: Añadir flujo en `src/modules/auth/`.
+5. **CI/CD**: GitHub Actions con build → test → deploy.
+6. **APM**: OpenTelemetry + structured logging.
+7. **CSP nonces**: PR dedicado siguiendo patrón oficial de Next.js (proxy + x-nonce).
+8. **Fail-closed**: Activar cuando hay Redis HA + observabilidad.

@@ -15,12 +15,13 @@
 | Validación | Zod |
 | Formularios | React Hook Form |
 | Tablas | TanStack Table |
-| Rate Limiting | @upstash/ratelimit (Redis) + in-memory fallback |
+| Rate Limiting | Valkey/Redis (ioredis) + in-memory fallback |
+| Email | Resend (transaccional); mock fallback sin API key |
 | Storage | Local adapter (dev) + S3-compatible adapter (prod) |
 | Testing unitario | Vitest |
 | Testing E2E | Playwright |
 | Testing carga | k6 |
-| Autenticación | Custom (bcrypt + cookies HTTP-only firmadas con HMAC-SHA256) |
+| Autenticación | Custom (bcrypt + JWT HS256 en cookie HTTP-only, firmado con `jose`) |
 
 ## Arquitectura General
 
@@ -33,7 +34,7 @@ graph TB
         CC[Client Components]
     end
     subgraph "Next.js Server"
-        Proxy[Proxy / CSP nonces]
+        Proxy[Proxy / CSP estática]
         Pages[Pages/Layouts]
         SA[Server Actions]
         RH[Route Handlers]
@@ -116,8 +117,12 @@ graph TB
     /storage                   # Abstracción async (local + S3)
     /utils                     # Utilidades
     /validators                # Validadores comunes
-    rate-limit.ts              # Rate limiter (Upstash/in-memory)
-  /types                       # Tipos globales
+    /cache                     # Caché abstracta (memory/redis/upstash)
+      config.ts                # Factory singleton + namespace de keys
+      rate-limit.ts            # Rate limiter (sliding window)
+    /notifications             # Envío de email (Resend / mock)
+    /utils                     # Utilidades
+    /validators                # Validadores comunes
 ```
 
 ## Patrones Next.js
@@ -173,6 +178,8 @@ graph TB
 | Soft-delete con archivedAt | Preservar integridad referencial |
 | S3 adapter + local fallback | Funcional en dev sin deps externas; escalable en prod |
 | Vertical slices | Cada feature es independiente y completa |
-| Rate limiter dual | In-memory para dev/single-instance; Upstash para prod/multi-instance |
-| CSP con nonces | Elimina `unsafe-inline`, seguridad de producción real |
+| Rate limiter dual | In-memory para dev/single-instance; Valkey/Redis (ioredis) para prod — Upstash driver legado disponible; despliegue multi-instancia/HA pendiente |
+| CSP estática con `unsafe-inline` | Producción actual usa `script-src 'self' 'unsafe-inline'`; nonces criptográficos planificados para PR aparte (requiere render dinámico global) |
+| Email transaccional | Resend cuando `RESEND_API_KEY` configurada; mock fallback (logs + BD) sin key |
+| MFA | Flujo TOTP implementado en `login/mfa/setup` y `login/mfa/verify` |
 | Suspense streaming | Perceived performance: contenido crítico al instante |

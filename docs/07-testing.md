@@ -47,27 +47,33 @@ Ver `tests/load/README.md` para detalles de interpretación de resultados.
 
 ## E2E Tests Mínimos
 
-1. Login como admin
+> **Estado actual**: 3 de 12 specs implementados en `tests/e2e/`:
+> `incidents-smoke.spec.ts`, `login-rate-limit.spec.ts`, `portal.spec.ts`.
+
+1. ✅ Login como admin — `login-rate-limit.spec.ts`
 2. Crear comunidad
 3. Crear propietario
 4. Crear unidad y asociar propietario
 5. Crear presupuesto
 6. Generar recibos
 7. Registrar pago
-8. Crear incidencia
+8. ✅ Crear incidencia — `incidents-smoke.spec.ts`
 9. Asignar incidencia a proveedor
 10. Crear reunión y borrador de acta
-11. Login como owner → ver recibos y documentos
+11. ✅ Login como owner → ver recibos y documentos — `portal.spec.ts`
 12. Login como provider → ver incidencia asignada
 
 ## Load Tests (k6 Scenarios)
 
-| Scenario | VUs | Duración | Objetivo |
-|----------|-----|----------|----------|
-| Login Storm | 50 | 2 min | p95 < 500ms |
-| Portal Dashboard | 200 | 5 min | p95 < 300ms |
-| Backoffice CRUD | 100 | 5 min | p95 < 400ms, error < 0.1% |
-| Document Upload/Download | 50 | 5 min | upload p95 < 2s |
-| Export Under Load | 210 | 5 min | export < 5s |
+> **Estado actual**: 1 escenario implementado en `tests/load/load-test.js`:
+> login autenticado + dashboard + communities (500 VUs, 5 min sostenido).
+
+| Scenario | VUs | Duración | Objetivo | Estado |
+|----------|-----|----------|----------|--------|
+| Login Storm | 50 | 2 min | p95 < 500ms | Parcial (login en setup del script actual) |
+| Portal Dashboard | 200 | 5 min | p95 < 300ms | Pendiente |
+| Backoffice CRUD | 100 | 5 min | p95 < 400ms, error < 0.1% | Parcial (dashboard + communities) |
+| Document Upload/Download | 50 | 5 min | upload p95 < 2s | Pendiente |
+| Export Under Load | 210 | 5 min | export < 5s | Pendiente |
 
 Ver `docs/scalability-review.md` para SLOs detallados y plan de validación.
