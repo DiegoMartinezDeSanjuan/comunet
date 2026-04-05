@@ -3,7 +3,14 @@ import 'server-only'
 import type { IncidentPriority, IncidentStatus, Prisma } from '@prisma/client'
 
 import { requireAuth, type Session } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+
+import {
+  getProviderDashboardDb,
+  getProviderIncidentsListDb,
+  getProviderIncidentDetailDb,
+  getProviderIncidentAuthDb,
+  updateProviderIncidentStatusDb,
+} from './repository'
 import { logAudit } from '@/modules/audit/server/services'
 import { addIncidentComment } from '@/modules/incidents/server/services'
 import { filterPortalVisibleComments, isPortalProviderRole } from './policy'
@@ -50,20 +57,7 @@ export async function getProviderDashboardData() {
     community: { officeId: session.officeId },
   }
 
-  const [totalAssigned, inProgressCount, resolvedCount, recentIncidents] = await Promise.all([
-    prisma.incident.count({ where: { ...where, status: { notIn: ['CLOSED'] } } }),
-    prisma.incident.count({ where: { ...where, status: 'IN_PROGRESS' } }),
-    prisma.incident.count({ where: { ...where, status: { in: ['RESOLVED', 'CLOSED'] } } }),
-    prisma.incident.findMany({
-      where,
-      include: {
-        community: { select: { id: true, name: true } },
-        unit: { select: { id: true, reference: true } },
-      },
-      orderBy: [{ updatedAt: 'desc' }],
-      take: 8,
-    }),
-  ])
+  const [totalAssigned, inProgressCount, resolvedCount, recentIncidents] = await getProviderDashboardDb(where)
 
   return {
     kpis: {
@@ -122,24 +116,7 @@ export async function listProviderIncidents(
     })
   }
 
-  const items = await prisma.incident.findMany({
-    where: { AND: andConditions },
-    include: {
-      community: { select: { id: true, name: true } },
-      unit: { select: { id: true, reference: true } },
-      comments: { select: { id: true, visibility: true } },
-    },
-    orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
-    take: 50,
-  })
-
-  // Get unique community list for filter dropdown
-  const communityIds = [...new Set(items.map((i) => i.communityId))]
-  const communities = await prisma.community.findMany({
-    where: { id: { in: communityIds } },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' },
-  })
+  const { items, communities } = await getProviderIncidentsListDb(andConditions)
 
   return {
     items: items.map((incident) => ({
@@ -163,24 +140,7 @@ export async function getProviderIncidentDetail(incidentId: string) {
   const session = await requireAuth()
   assertProviderSession(session)
 
-  const incident = await prisma.incident.findFirst({
-    where: {
-      id: incidentId,
-      assignedProviderId: session.linkedProviderId,
-      community: { officeId: session.officeId },
-    },
-    include: {
-      community: { select: { id: true, name: true, address: true } },
-      unit: { select: { id: true, reference: true, floor: true, door: true } },
-      assignedProvider: { select: { id: true, name: true, category: true } },
-      comments: {
-        orderBy: { createdAt: 'asc' },
-        include: {
-          author: { select: { id: true, name: true } },
-        },
-      },
-    },
-  })
+  const incident = await getProviderIncidentDetailDb(incidentId, session.linkedProviderId, session.officeId)
 
   if (!incident) return null
 
@@ -201,13 +161,7 @@ export async function changeProviderIncidentStatus(
   const session = await requireAuth()
   assertProviderSession(session)
 
-  const incident = await prisma.incident.findFirst({
-    where: {
-      id: incidentId,
-      assignedProviderId: session.linkedProviderId,
-      community: { officeId: session.officeId },
-    },
-  })
+  const incident = await getProviderIncidentAuthDb(incidentId, session.linkedProviderId, session.officeId)
 
   if (!incident) {
     throw new Error('Incidencia no encontrada o fuera de tu alcance')
@@ -224,10 +178,7 @@ export async function changeProviderIncidentStatus(
         ? null
         : incident.resolvedAt
 
-  const updated = await prisma.incident.update({
-    where: { id: incidentId },
-    data: { status: newStatus, resolvedAt },
-  })
+  const updated = await updateProviderIncidentStatusDb(incidentId, newStatus, resolvedAt)
 
   logAudit({
     officeId: session.officeId,
@@ -254,13 +205,7 @@ export async function addProviderIncidentComment(
   const session = await requireAuth()
   assertProviderSession(session)
 
-  const incident = await prisma.incident.findFirst({
-    where: {
-      id: incidentId,
-      assignedProviderId: session.linkedProviderId,
-      community: { officeId: session.officeId },
-    },
-  })
+  const incident = await getProviderIncidentAuthDb(incidentId, session.linkedProviderId, session.officeId)
 
   if (!incident) {
     throw new Error('No puedes comentar una incidencia fuera de tu alcance')

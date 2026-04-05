@@ -1,7 +1,14 @@
 import 'server-only'
 
 import { requireAuth, type Session } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+
+import {
+  getDashboardOwnerDebts,
+  getDashboardLatestReceipts,
+  getDashboardOwnedIncidents,
+  getDashboardPresidentIncidents,
+  getDashboardPresidentDebts,
+} from './repository'
 
 import { listPortalDocuments, listPortalMeetings } from './content'
 import { getPortalAccessScope, isPortalOwnerPresidentRole } from './policy'
@@ -81,102 +88,13 @@ export async function getPortalDashboardData() {
 
   const [ownerDebts, latestReceipts, ownedActiveIncidents, meetings, documents, presidentOpenIncidents, presidentDebts] =
     await Promise.all([
-      scope.ownedCommunityIds.length > 0
-        ? prisma.debt.findMany({
-            where: {
-              ownerId: session.linkedOwnerId,
-              communityId: { in: scope.ownedCommunityIds },
-              status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-            },
-            select: {
-              communityId: true,
-              principal: true,
-              surcharge: true,
-            },
-          })
-        : Promise.resolve<Array<{ communityId: string; principal: unknown; surcharge: unknown }>>([]),
-      scope.ownedCommunityIds.length > 0
-        ? prisma.receipt.findMany({
-            where: {
-              ownerId: session.linkedOwnerId,
-              communityId: { in: scope.ownedCommunityIds },
-            },
-            include: {
-              community: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              unit: {
-                select: {
-                  id: true,
-                  reference: true,
-                },
-              },
-            },
-            orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
-            take: 6,
-          })
-        : Promise.resolve([]),
-      scope.ownedUnitIds.length > 0
-        ? prisma.incident.findMany({
-            where: {
-              unitId: { in: scope.ownedUnitIds },
-              status: { notIn: ['RESOLVED', 'CLOSED'] },
-              community: { officeId: session.officeId },
-            },
-            include: {
-              community: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              unit: {
-                select: {
-                  id: true,
-                  reference: true,
-                },
-              },
-              assignedProvider: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-            orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
-            take: 8,
-          })
-        : Promise.resolve([]),
+      getDashboardOwnerDebts(session.linkedOwnerId, scope.ownedCommunityIds),
+      getDashboardLatestReceipts(session.linkedOwnerId, scope.ownedCommunityIds),
+      getDashboardOwnedIncidents(session.officeId, scope.ownedUnitIds),
       listPortalMeetings(session, 12),
       listPortalDocuments(session, 50),
-      session.role === 'PRESIDENT' && scope.presidentCommunityIds.length > 0
-        ? prisma.incident.findMany({
-            where: {
-              communityId: { in: scope.presidentCommunityIds },
-              status: { notIn: ['RESOLVED', 'CLOSED'] },
-            },
-            select: {
-              communityId: true,
-              priority: true,
-            },
-          })
-        : Promise.resolve([]),
-      session.role === 'PRESIDENT' && scope.presidentCommunityIds.length > 0
-        ? prisma.debt.findMany({
-            where: {
-              communityId: { in: scope.presidentCommunityIds },
-              status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-            },
-            select: {
-              communityId: true,
-              principal: true,
-              surcharge: true,
-            },
-          })
-        : Promise.resolve([]),
+      session.role === 'PRESIDENT' ? getDashboardPresidentIncidents(scope.presidentCommunityIds) : Promise.resolve([]),
+      session.role === 'PRESIDENT' ? getDashboardPresidentDebts(scope.presidentCommunityIds) : Promise.resolve([]),
     ])
 
   const nextMeetingByCommunity = new Map<string, Date>()

@@ -3,7 +3,8 @@ import 'server-only'
 import type { Prisma, ReceiptStatus } from '@prisma/client'
 
 import { requireAuth, type Session } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+
+import { getPortalReceiptsDb, getPortalReceiptDetailDb } from './repository'
 
 import {
   canAccessPortalReceiptRecord,
@@ -133,40 +134,7 @@ export async function listPortalReceipts(
     where.periodEnd = { lte: monthRange.end }
   }
 
-  const items = await prisma.receipt.findMany({
-    where,
-    include: {
-      community: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      unit: {
-        select: {
-          id: true,
-          reference: true,
-        },
-      },
-      payments: {
-        select: {
-          id: true,
-          amount: true,
-          paymentDate: true,
-        },
-      },
-      debts: {
-        select: {
-          id: true,
-          principal: true,
-          surcharge: true,
-          status: true,
-        },
-      },
-    },
-    orderBy: [{ issueDate: 'desc' }, { createdAt: 'desc' }],
-    take: 50,
-  })
+  const items = await getPortalReceiptsDb(where)
 
   const normalizedItems = items.map((receipt) => attachReceiptTotals(receipt))
 
@@ -189,59 +157,7 @@ export async function getPortalReceiptDetailPageQuery(receiptId: string) {
 }
 
 export async function getPortalReceiptDetail(session: Session, receiptId: string) {
-  const receipt = await prisma.receipt.findFirst({
-    where: { id: receiptId },
-    include: {
-      community: {
-        select: {
-          id: true,
-          name: true,
-          officeId: true,
-        },
-      },
-      unit: {
-        select: {
-          id: true,
-          reference: true,
-          floor: true,
-          door: true,
-          building: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      owner: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-        },
-      },
-      payments: {
-        orderBy: { paymentDate: 'desc' },
-        select: {
-          id: true,
-          amount: true,
-          paymentDate: true,
-          method: true,
-          reference: true,
-          notes: true,
-        },
-      },
-      debts: {
-        select: {
-          id: true,
-          principal: true,
-          surcharge: true,
-          status: true,
-          createdAt: true,
-        },
-      },
-    },
-  })
+  const receipt = await getPortalReceiptDetailDb(receiptId)
 
   if (!receipt) {
     return null

@@ -3,7 +3,8 @@ import 'server-only'
 import type { IncidentPriority, IncidentStatus, Prisma } from '@prisma/client'
 
 import { requireAuth, type Session } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+
+import { getIncidentsData, getIncidentDetailData } from './repository'
 import {
   addIncidentComment,
   createIncident,
@@ -205,43 +206,7 @@ export async function listPortalIncidentsData(
     })
   }
 
-  const items = await prisma.incident.findMany({
-    where: { AND: andConditions },
-    include: {
-      community: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      unit: {
-        select: {
-          id: true,
-          reference: true,
-        },
-      },
-      createdBy: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      assignedProvider: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      comments: {
-        select: {
-          id: true,
-          visibility: true,
-        },
-      },
-    },
-    orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
-    take: 50,
-  })
+  const items = await getIncidentsData(andConditions)
 
   return {
     items: items.map((incident) => ({
@@ -270,52 +235,7 @@ export async function getPortalIncidentDetailPageQuery(incidentId: string) {
 export async function getPortalIncidentDetailData(incidentId: string) {
   const session = await requireAuth()
 
-  const incident = await prisma.incident.findFirst({
-    where: { id: incidentId },
-    include: {
-      community: {
-        select: {
-          id: true,
-          name: true,
-          officeId: true,
-        },
-      },
-      unit: {
-        select: {
-          id: true,
-          reference: true,
-          floor: true,
-          door: true,
-        },
-      },
-      createdBy: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
-      },
-      assignedProvider: {
-        select: {
-          id: true,
-          name: true,
-          category: true,
-        },
-      },
-      comments: {
-        orderBy: { createdAt: 'asc' },
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      },
-    },
-  })
+  const incident = await getIncidentDetailData(incidentId)
 
   if (!incident) {
     return null

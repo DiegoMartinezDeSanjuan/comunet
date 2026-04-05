@@ -1,8 +1,8 @@
 import 'server-only'
 
-import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
 import { canReadSettings, canManageOfficeSettings } from '@/lib/permissions'
+import { getOfficeProfile } from './repository'
 
 /**
  * Settings layout auth — resolves auth + canReadSettings.
@@ -28,19 +28,3 @@ export async function getSettingsPageQuery() {
   return { office, canEdit, session }
 }
 
-export async function getOfficeProfile(officeId: string) {
-  const office = await prisma.office.findUnique({
-    where: { id: officeId },
-    include: {
-      _count: {
-        select: {
-          communities: { where: { archivedAt: null } },
-          users: { where: { archivedAt: null } },
-          providers: { where: { archivedAt: null } },
-        },
-      },
-    },
-  })
-
-  return office
-}

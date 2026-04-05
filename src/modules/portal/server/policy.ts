@@ -3,7 +3,15 @@ import 'server-only'
 import type { UserRole } from '@prisma/client'
 
 import type { Session } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import {
+  getPortalOwnershipsDb,
+  getPortalPresidentPositionsDb,
+  getActiveOwnershipForUnitDb,
+  getActiveOwnershipForCommunityDb,
+  getActivePresidentPositionDb,
+  getReceiptAccessInfoDb,
+  getIncidentAccessInfoDb,
+} from './repository'
 
 export interface PortalCommunityScopeItem {
   id: string
@@ -123,58 +131,19 @@ export async function getPortalAccessScope(
     }
   }
 
-  const ownershipsPromise: Promise<OwnershipScopeRecord[]> = prisma.ownership.findMany({
-    where: {
-      ownerId: session.linkedOwnerId,
-      ...buildActiveDateRangeFilter(at),
-      unit: {
-        active: true,
-        community: {
-          officeId: session.officeId,
-          archivedAt: null,
-        },
-      },
-    },
-    select: {
-      unitId: true,
-      unit: {
-        select: {
-          id: true,
-          reference: true,
-          communityId: true,
-          community: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  })
+  const ownershipsPromise = getPortalOwnershipsDb(
+    session.linkedOwnerId,
+    buildActiveDateRangeFilter(at),
+    session.officeId,
+  ) as any
 
   const presidentPositionsPromise: Promise<PresidentPositionRecord[]> =
     session.role === 'PRESIDENT'
-      ? prisma.boardPosition.findMany({
-          where: {
-            ownerId: session.linkedOwnerId,
-            role: 'PRESIDENT',
-            ...buildActiveDateRangeFilter(at),
-            community: {
-              officeId: session.officeId,
-              archivedAt: null,
-            },
-          },
-          select: {
-            communityId: true,
-            community: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        })
+      ? (getPortalPresidentPositionsDb(
+          session.linkedOwnerId,
+          buildActiveDateRangeFilter(at),
+          session.officeId,
+        ) as any)
       : Promise.resolve<PresidentPositionRecord[]>([])
 
   const [ownerships, presidentPositions] = await Promise.all([
@@ -241,21 +210,12 @@ export async function hasActiveOwnershipForUnit(
     return false
   }
 
-  const ownership = await prisma.ownership.findFirst({
-    where: {
-      ownerId: session.linkedOwnerId,
-      unitId,
-      ...buildActiveDateRangeFilter(at),
-      unit: {
-        active: true,
-        community: {
-          officeId: session.officeId,
-          archivedAt: null,
-        },
-      },
-    },
-    select: { id: true },
-  })
+  const ownership = await getActiveOwnershipForUnitDb(
+    session.linkedOwnerId,
+    unitId,
+    buildActiveDateRangeFilter(at),
+    session.officeId,
+  )
 
   return Boolean(ownership)
 }
@@ -269,21 +229,12 @@ export async function hasActiveOwnershipForCommunity(
     return false
   }
 
-  const ownership = await prisma.ownership.findFirst({
-    where: {
-      ownerId: session.linkedOwnerId,
-      ...buildActiveDateRangeFilter(at),
-      unit: {
-        communityId,
-        active: true,
-        community: {
-          officeId: session.officeId,
-          archivedAt: null,
-        },
-      },
-    },
-    select: { id: true },
-  })
+  const ownership = await getActiveOwnershipForCommunityDb(
+    session.linkedOwnerId,
+    communityId,
+    buildActiveDateRangeFilter(at),
+    session.officeId,
+  )
 
   return Boolean(ownership)
 }
@@ -297,19 +248,12 @@ export async function isActivePresidentForCommunity(
     return false
   }
 
-  const position = await prisma.boardPosition.findFirst({
-    where: {
-      communityId,
-      ownerId: session.linkedOwnerId,
-      role: 'PRESIDENT',
-      ...buildActiveDateRangeFilter(at),
-      community: {
-        officeId: session.officeId,
-        archivedAt: null,
-      },
-    },
-    select: { id: true },
-  })
+  const position = await getActivePresidentPositionDb(
+    communityId,
+    session.linkedOwnerId,
+    buildActiveDateRangeFilter(at),
+    session.officeId,
+  )
 
   return Boolean(position)
 }
@@ -353,17 +297,7 @@ export async function canReadPortalReceipt(
   session: Session,
   receiptId: string,
 ): Promise<boolean> {
-  const receipt = await prisma.receipt.findFirst({
-    where: { id: receiptId },
-    select: {
-      ownerId: true,
-      community: {
-        select: {
-          officeId: true,
-        },
-      },
-    },
-  })
+  const receipt = await getReceiptAccessInfoDb(receiptId)
 
   if (!receipt) {
     return false
@@ -401,18 +335,7 @@ export async function canReadPortalIncident(
   incidentId: string,
   at = new Date(),
 ): Promise<boolean> {
-  const incident = await prisma.incident.findFirst({
-    where: { id: incidentId },
-    select: {
-      communityId: true,
-      unitId: true,
-      community: {
-        select: {
-          officeId: true,
-        },
-      },
-    },
-  })
+  const incident = await getIncidentAccessInfoDb(incidentId)
 
   if (!incident) {
     return false
