@@ -291,12 +291,12 @@ export async function authenticate(email: string, password: string): Promise<Aut
   const requiresMfa = user.mfaEnabled || isMandatoryRole
 
   if (requiresMfa) {
-    // We clear failedAttempts immediately upon correct password to align with "phases".
+    // We clear all lockout fields upon correct password to align with "phases".
     // MFA will track its own failures in the same unified fields.
-    if (user.failedAttempts > 0) {
+    if (user.failedAttempts > 0 || user.lockoutCount > 0 || user.lockedUntil) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { failedAttempts: 0, lockedUntil: null }
+        data: { failedAttempts: 0, lockoutCount: 0, lockedUntil: null }
       })
     }
 
