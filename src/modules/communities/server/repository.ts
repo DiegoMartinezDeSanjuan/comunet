@@ -69,3 +69,46 @@ export async function archiveCommunity(id: string, officeId: string) {
     data: { archivedAt: new Date() },
   })
 }
+
+/**
+ * Communities with their active units — used to populate filter dropdowns
+ * in pages like incidents list.
+ */
+export async function listCommunitiesWithUnitsForOffice(officeId: string) {
+  return prisma.community.findMany({
+    where: { officeId, archivedAt: null },
+    select: {
+      id: true,
+      name: true,
+      units: {
+        where: { active: true },
+        select: { id: true, reference: true },
+        orderBy: { reference: 'asc' },
+      },
+    },
+    orderBy: { name: 'asc' },
+  })
+}
+
+/**
+ * Minimal community list for form dropdowns (e.g. generate receipts, new budget).
+ * Returns only id + name by default.
+ */
+export async function listCommunityOptionsForOffice(officeId: string) {
+  return prisma.community.findMany({
+    where: { officeId },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  })
+}
+
+/**
+ * Community options including fiscalYear — used for budget creation form.
+ */
+export async function listCommunityBudgetOptionsForOffice(officeId: string) {
+  return prisma.community.findMany({
+    where: { officeId },
+    select: { id: true, name: true, fiscalYear: true },
+    orderBy: { name: 'asc' },
+  })
+}

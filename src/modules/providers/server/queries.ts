@@ -5,6 +5,7 @@ import { requirePermission } from '@/lib/permissions'
 import {
     findProviderByIdForOffice,
     listProvidersPageByOffice,
+    listProviderCategoriesForOffice,
     type PaginationInput,
     type ProviderListFilters,
 } from './repository'
@@ -32,4 +33,14 @@ export async function getProviderDetailQuery(providerId: string) {
     const session = await requireProvidersReadAccess()
 
     return findProviderByIdForOffice(providerId, session.officeId)
+}
+
+/**
+ * Returns distinct provider categories for the current office.
+ * Used for pill filter UI on the providers listing page.
+ */
+export async function getProviderCategoriesQuery() {
+    const session = await requireProvidersReadAccess()
+
+    return listProviderCategoriesForOffice(session.officeId)
 }

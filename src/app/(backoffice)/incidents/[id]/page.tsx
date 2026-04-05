@@ -2,11 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { requireAuth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
 import { requirePermission } from '@/lib/permissions'
 import {
-  getIncidentDetailQuery,
-  listIncidentTimelineQuery,
+  getIncidentDetailWithOptionsQuery,
 } from '@/modules/incidents/server/queries'
 
 import { IncidentDetailActions } from './incident-detail-actions'
@@ -41,7 +39,7 @@ function formatBadgeClasses(value: string): string {
   }
 }
 
-type TimelineEntry = Awaited<ReturnType<typeof listIncidentTimelineQuery>>[number]
+type TimelineEntry = Awaited<ReturnType<typeof getIncidentDetailWithOptionsQuery>>['timeline'][number]
 
 function describeTimelineEntry(entry: TimelineEntry): string {
   if (entry.kind === 'COMMENT') {
@@ -91,15 +89,7 @@ export default async function IncidentDetailPage({ params }: PageProps) {
   const session = await requireAuth()
   const { id } = await params
 
-  const [incident, timeline, providerOptions] = await Promise.all([
-    getIncidentDetailQuery(id),
-    listIncidentTimelineQuery(id),
-    prisma.provider.findMany({
-      where: { officeId: session.officeId, archivedAt: null },
-      select: { id: true, name: true, category: true },
-      orderBy: { name: 'asc' },
-    }),
-  ])
+  const { incident, timeline, providerOptions } = await getIncidentDetailWithOptionsQuery(id)
 
   if (!incident) {
     notFound()

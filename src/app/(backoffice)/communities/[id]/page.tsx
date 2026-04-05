@@ -1,6 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { getCommunityDetails } from '@/modules/communities/server/service'
-import { computeFinanceKPIs } from '@/modules/finances/server/kpi-service'
+import { getCommunityDetailPageDataQuery } from '@/modules/communities/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Building2, Info, FileText, ArrowLeft, Settings, Users } from 'lucide-react'
@@ -12,15 +10,14 @@ export default async function CommunityDetailsPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
-  const community = await getCommunityDetails(id, session.officeId)
+  const result = await getCommunityDetailPageDataQuery(id)
 
-  if (!community) {
+  if (!result) {
     notFound()
   }
 
-  const financeKPIs = await computeFinanceKPIs(community.id)
+  const { community, financeKPIs, session } = result
 
   return (
     <div className="space-y-6">

@@ -1,44 +1,13 @@
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { findFeeRulesByOffice } from '@/modules/finances/server/fee-rule-repository'
+import { getReceiptGenerationFormDataQuery } from '@/modules/finances/server/queries'
 import { GenerateReceiptsForm } from './generate-receipts-form'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-type FeeRuleOption = {
-  id: string
-  communityId: string
-  name: string
-  calculationBase: string | null
-  fixedAmount: number | null
-}
-
 export default async function GenerateReceiptsPage() {
-  const session = await requireAuth()
-
-  if (!requirePermission(session, 'finances.manage')) {
-    redirect('/dashboard')
-  }
-
-  const communities = await prisma.community.findMany({
-    where: { officeId: session.officeId },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' },
-  })
-
-  const feeRulesRaw = await findFeeRulesByOffice(session.officeId)
-
-  const feeRules: FeeRuleOption[] = feeRulesRaw.map((rule) => ({
-    id: rule.id,
-    communityId: rule.communityId,
-    name: rule.name,
-    calculationBase: rule.calculationBase,
-    fixedAmount: rule.fixedAmount == null ? null : Number(rule.fixedAmount),
-  }))
+  const { communities, feeRules } = await getReceiptGenerationFormDataQuery()
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

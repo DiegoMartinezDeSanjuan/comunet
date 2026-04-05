@@ -1,5 +1,4 @@
-import { requireAuth } from '@/lib/auth'
-import { findReceiptById } from '@/modules/finances/server/receipt-repository'
+import { getReceiptDetailQuery } from '@/modules/finances/server/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, User, Building2, Calendar, Euro } from 'lucide-react'
@@ -12,13 +11,14 @@ export default async function ReceiptDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const session = await requireAuth()
   const { id } = await params
   
-  const receipt = await findReceiptById(id)
-  if (!receipt || receipt.community.officeId !== session.officeId) {
+  const result = await getReceiptDetailQuery(id)
+  if (!result) {
     notFound()
   }
+
+  const { receipt, session } = result
 
   const isPayable = receipt.status === 'ISSUED' || receipt.status === 'PARTIALLY_PAID' || receipt.status === 'OVERDUE' || receipt.status === 'RETURNED'
 

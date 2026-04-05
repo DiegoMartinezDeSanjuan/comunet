@@ -1,23 +1,10 @@
-import { requireAuth } from '@/lib/auth'
-import { requirePermission } from '@/lib/permissions'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
+import { getBudgetFormDataQuery } from '@/modules/finances/server/queries'
 import { BudgetForm } from './budget-form'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewBudgetPage() {
-  const session = await requireAuth()
-  if (!requirePermission(session, 'finances.manage')) {
-    redirect('/dashboard')
-  }
-
-  // Get communities for the dropdown
-  const communities = await prisma.community.findMany({
-    where: { officeId: session.officeId },
-    select: { id: true, name: true, fiscalYear: true },
-    orderBy: { name: 'asc' }
-  })
+  const { communities } = await getBudgetFormDataQuery()
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

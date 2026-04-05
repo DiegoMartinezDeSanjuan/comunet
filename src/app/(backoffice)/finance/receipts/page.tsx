@@ -1,9 +1,9 @@
 import { requireAuth } from '@/lib/auth'
 import { requirePermission } from '@/lib/permissions'
 import {
-  findReceiptsPageByOffice,
+  listReceiptsPageQuery,
   type ReceiptFilters,
-} from '@/modules/finances/server/receipt-repository'
+} from '@/modules/finances/server/queries'
 import { ReceiptStatusBadge } from '@/components/ui/badge'
 import { getEffectiveReceiptStatus } from '@/lib/receipt-status'
 import Link from 'next/link'
@@ -61,10 +61,7 @@ export default async function ReceiptsPage({
 
   const filters: ReceiptFilters = { communityId, status }
 
-  const result = await findReceiptsPageByOffice(session.officeId, filters, {
-    page,
-    pageSize,
-  })
+  const result = await listReceiptsPageQuery(filters, { page, pageSize })
 
   const receipts = result.items
   const startItem = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1

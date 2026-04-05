@@ -12,53 +12,14 @@ import {
 } from 'lucide-react'
 import { Suspense } from 'react'
 
-import { requireAuth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
 import { formatCurrency } from '@/lib/formatters'
-import { computeOfficeFinanceKPIs } from '@/modules/finances/server/kpi-service'
-import { getIncidentDashboardSnapshotQuery } from '@/modules/incidents/server/queries'
+import { getDashboardDataQuery } from '@/modules/backoffice-dashboard/server/queries'
 
 import { KPICard } from '@/components/ui/kpi-card'
 import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
 import { DashboardCharts } from './_components/dashboard-charts'
 
 export const dynamic = 'force-dynamic'
-
-async function getGeneralStats(officeId: string) {
-  const [communitiesCount, ownersCount, pendingReceipts, upcomingMeetings] =
-    await Promise.all([
-      prisma.community.count({
-        where: { officeId, archivedAt: null },
-      }),
-      prisma.owner.count({
-        where: { officeId, archivedAt: null },
-      }),
-      prisma.receipt.count({
-        where: {
-          community: { officeId },
-          status: { in: ['ISSUED', 'OVERDUE'] },
-        },
-      }),
-      prisma.meeting.count({
-        where: {
-          community: { officeId },
-          scheduledAt: { gte: new Date() },
-          status: { in: ['DRAFT', 'SCHEDULED'] },
-        },
-      }),
-    ])
-
-  return { communitiesCount, ownersCount, pendingReceipts, upcomingMeetings }
-}
-
-async function getReceiptStatusBreakdown(officeId: string) {
-  const receipts = await prisma.receipt.groupBy({
-    by: ['status'],
-    where: { community: { officeId } },
-    _count: { id: true },
-  })
-  return receipts.map((r) => ({ status: r.status, count: r._count.id }))
-}
 
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
@@ -72,11 +33,8 @@ function timeAgo(date: Date): string {
 }
 
 export default async function DashboardPage() {
-  const session = await requireAuth()
+  const { financeKPIs, generalStats, receiptBreakdown, incidentSnapshot } = await getDashboardDataQuery()
 
-  const financeKPIs = await computeOfficeFinanceKPIs(session.officeId)
-
-  const receiptBreakdown = await getReceiptStatusBreakdown(session.officeId)
   const totalReceipts = receiptBreakdown.reduce((acc, d) => acc + d.count, 0)
   const paidCount = receiptBreakdown.find((r) => r.status === 'PAID')?.count ?? 0
   const paidPct = totalReceipts > 0 ? Math.round((paidCount / totalReceipts) * 100) : 0
@@ -146,7 +104,7 @@ export default async function DashboardPage() {
             </div>
           </div>
         }>
-          <IncidentsSection />
+          <IncidentsSection incidentSnapshot={incidentSnapshot} />
         </Suspense>
 
         {/* Right: Charts + stats — streamed */}
@@ -167,7 +125,7 @@ export default async function DashboardPage() {
             </div>
           </div>
         }>
-          <ChartsSection officeId={session.officeId} paidPct={paidPct} receiptBreakdown={receiptBreakdown} />
+          <ChartsSection generalStats={generalStats} paidPct={paidPct} receiptBreakdown={receiptBreakdown} />
         </Suspense>
       </div>
     </div>
@@ -176,8 +134,11 @@ export default async function DashboardPage() {
 
 /* ─── Streamed: Incidents Table ──────────────────────────────── */
 
-async function IncidentsSection() {
-  const incidentSnapshot = await getIncidentDashboardSnapshotQuery()
+async function IncidentsSection({
+  incidentSnapshot,
+}: {
+  incidentSnapshot: Awaited<ReturnType<typeof getDashboardDataQuery>>['incidentSnapshot']
+}) {
 
   return (
     <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
@@ -245,16 +206,16 @@ async function IncidentsSection() {
 
 /* ─── Streamed: Charts + Stats ───────────────────────────────── */
 
-async function ChartsSection({
-  officeId,
+function ChartsSection({
+  generalStats,
   paidPct,
   receiptBreakdown,
 }: {
-  officeId: string
+  generalStats: Awaited<ReturnType<typeof getDashboardDataQuery>>['generalStats']
   paidPct: number
   receiptBreakdown: { status: string; count: number }[]
 }) {
-  const stats = await getGeneralStats(officeId)
+  const stats = generalStats
 
   const chartData = receiptBreakdown.map((r) => ({
     name: r.status === 'PAID' ? 'Pagados' : r.status === 'ISSUED' ? 'Emitidos' : r.status === 'PARTIALLY_PAID' ? 'Parciales' : r.status === 'OVERDUE' ? 'Vencidos' : r.status === 'DRAFT' ? 'Borrador' : r.status,

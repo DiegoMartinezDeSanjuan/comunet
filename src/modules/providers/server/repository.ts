@@ -184,3 +184,35 @@ export async function updateProviderRecord(
         data,
     })
 }
+
+/**
+ * Minimal provider list for dropdowns (e.g. incident assignment, filters).
+ * Only active (non-archived) providers.
+ */
+export async function listProviderOptionsForOffice(officeId: string) {
+    return prisma.provider.findMany({
+        where: { officeId, archivedAt: null },
+        select: { id: true, name: true, category: true },
+        orderBy: { name: 'asc' },
+    })
+}
+
+/**
+ * Distinct categories from all providers in an office (including archived).
+ * Used for category pill filters on the providers listing page.
+ */
+export async function listProviderCategoriesForOffice(officeId: string) {
+    const providers = await prisma.provider.findMany({
+        where: { officeId },
+        select: { category: true },
+        orderBy: { name: 'asc' },
+    })
+
+    return Array.from(
+        new Set(
+            providers
+                .map((item) => item.category)
+                .filter((value): value is string => Boolean(value)),
+        ),
+    )
+}

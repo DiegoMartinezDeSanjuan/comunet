@@ -1,10 +1,9 @@
 import Link from 'next/link'
 import { Search, Filter } from 'lucide-react'
 
-import { requireAuth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { listIncidentsQuery, getIncidentFilterOptionsQuery } from '@/modules/incidents/server/queries'
 import { requirePermission } from '@/lib/permissions'
-import { listIncidentsQuery } from '@/modules/incidents/server/queries'
+import { requireAuth } from '@/lib/auth'
 import { PriorityBadge, StatusBadge } from '@/components/ui/badge'
 
 import { IncidentCreateDialog } from '@/modules/incidents/components/incident-create-dialog'
@@ -64,7 +63,7 @@ export default async function IncidentsPage({
   const page = parsePositiveInt(getParam(params.page), 1)
   const pageSize = 20
 
-  const [result, communities, providers, creators] = await Promise.all([
+  const [result, filterOptions] = await Promise.all([
     listIncidentsQuery(
       {
         search: q || undefined,
@@ -83,30 +82,10 @@ export default async function IncidentsPage({
       },
       { page, pageSize },
     ),
-    prisma.community.findMany({
-      where: { officeId: session.officeId, archivedAt: null },
-      select: {
-        id: true,
-        name: true,
-        units: {
-          where: { active: true },
-          select: { id: true, reference: true },
-          orderBy: { reference: 'asc' },
-        },
-      },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.provider.findMany({
-      where: { officeId: session.officeId, archivedAt: null },
-      select: { id: true, name: true, category: true },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.user.findMany({
-      where: { officeId: session.officeId, archivedAt: null },
-      select: { id: true, name: true, role: true },
-      orderBy: { name: 'asc' },
-    }),
+    getIncidentFilterOptionsQuery(),
   ])
+
+  const { communities, providers } = filterOptions
 
   const canManage = requirePermission(session, 'incidents.manage')
 

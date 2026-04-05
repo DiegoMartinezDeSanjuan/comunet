@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { requireAuth } from '@/lib/auth'
-import { prisma } from '@/lib/db'
 import { requirePermission } from '@/lib/permissions'
-import { listProvidersQuery } from '@/modules/providers/server/queries'
+import { listProvidersQuery, getProviderCategoriesQuery } from '@/modules/providers/server/queries'
 import { ProviderCreateForm } from './provider-create-form'
 import { ChevronLeft, ChevronRight, Mail, Phone, Search, Wrench } from 'lucide-react'
 
@@ -56,7 +55,7 @@ export default async function ProvidersPage({
         ? false
         : undefined
 
-  const [result, categories] = await Promise.all([
+  const [result, categoryOptions] = await Promise.all([
     listProvidersQuery(
       {
         search: q || undefined,
@@ -65,24 +64,12 @@ export default async function ProvidersPage({
       },
       { page, pageSize },
     ),
-    prisma.provider.findMany({
-      where: { officeId: session.officeId },
-      select: { category: true },
-      orderBy: { name: 'asc' },
-    }),
+    getProviderCategoriesQuery(),
   ])
 
   const canManage = requirePermission(session, 'providers.manage')
   const startItem = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1
   const endItem = result.total === 0 ? 0 : Math.min(result.page * result.pageSize, result.total)
-
-  const categoryOptions = Array.from(
-    new Set(
-      categories
-        .map((item) => item.category)
-        .filter((value): value is string => Boolean(value)),
-    ),
-  )
 
   const activeCount = result.items.filter(p => !p.archivedAt).length
 

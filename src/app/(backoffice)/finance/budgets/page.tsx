@@ -1,15 +1,11 @@
-import { requireAuth } from '@/lib/auth'
-
-import { findBudgetsByOffice } from '@/modules/finances/server/budget-repository'
+import { listBudgetsQuery } from '@/modules/finances/server/queries'
 import Link from 'next/link'
 import { Plus, Calculator } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function BudgetsPage() {
-  const session = await requireAuth()
-  
-  const budgets = await findBudgetsByOffice(session.officeId)
+  const { budgets, session } = await listBudgetsQuery()
 
   return (
     <div className="space-y-6">
