@@ -39,3 +39,6 @@ export const mfaVerifyLimiter = createLimiter('rl:mfa_verify', 20, 5 * 60_000)
 
 /** MFA Setup: 20 attempts per 5 minutes per IP/User */
 export const mfaSetupLimiter = createLimiter('rl:mfa_setup', 20, 5 * 60_000)
+
+/** Password Reset: 3 attempts per 15 minutes per IP */
+export const passwordResetLimiter = createLimiter('rl:pwd_reset', 3, 15 * 60_000)

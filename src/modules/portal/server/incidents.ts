@@ -2,7 +2,8 @@ import 'server-only'
 
 import type { IncidentPriority, IncidentStatus, Prisma } from '@prisma/client'
 
-import { requireAuth, type Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
+import { requireAuth } from '@/lib/auth'
 
 import { getIncidentsData, getIncidentDetailData } from './repository'
 import {

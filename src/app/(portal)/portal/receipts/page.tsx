@@ -10,7 +10,7 @@ import {
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { getPortalReceiptsPageQuery } from '@/modules/portal/server/receipts'
+import { getPortalReceiptsPageQuery } from '@/modules/portal/server/queries'
 
 interface PortalReceiptsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>

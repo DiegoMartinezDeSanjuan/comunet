@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { logoutAction } from '@/modules/auth/server/actions'
-import type { Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
 import { cn } from '@/lib/utils'
 import type { UserRole } from '@prisma/client'
 import {

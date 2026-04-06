@@ -12,8 +12,7 @@ import {
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { formatDate } from '@/lib/formatters'
-import { createPortalIncidentAction } from '@/modules/portal/server/actions'
-import { getPortalIncidentsPageQuery } from '@/modules/portal/server/incidents'
+import { getPortalIncidentsPageQuery } from '@/modules/portal/server/queries'
 import { PortalIncidentCreateForm } from './portal-incident-create-form'
 
 interface PortalIncidentsPageProps {
@@ -348,3 +347,4 @@ export default async function PortalIncidentsPage({ searchParams }: PortalIncide
     </div>
   )
 }
+

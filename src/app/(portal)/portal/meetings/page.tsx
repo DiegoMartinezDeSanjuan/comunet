@@ -8,7 +8,7 @@ import {
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { formatDateTime } from '@/lib/formatters'
-import { getPortalMeetingsPageQuery } from '@/modules/portal/server/content'
+import { getPortalMeetingsPageQuery } from '@/modules/portal/server/queries'
 
 function getMeetingStatusTone(status: string): 'neutral' | 'success' | 'warning' | 'danger' | 'info' {
   if (status === 'SCHEDULED') return 'info'

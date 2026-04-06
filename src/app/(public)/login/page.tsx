@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Building2, Mail, Lock, ChevronDown, ArrowRight } from 'lucide-react'
 
 import { loginAction } from './actions'
@@ -146,9 +147,9 @@ export default function LoginPage() {
                   <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Contraseña
                   </label>
-                  <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors">
+                  <Link href="/forgot-password" className="text-xs text-primary hover:text-primary/80 transition-colors">
                     ¿Olvidaste la contraseña?
-                  </button>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

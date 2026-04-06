@@ -7,7 +7,7 @@ import {
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { formatDate } from '@/lib/formatters'
-import { getPortalDocumentsPageQuery } from '@/modules/portal/server/content'
+import { getPortalDocumentsPageQuery } from '@/modules/portal/server/queries'
 
 const DOCUMENT_VISIBILITY_LABELS: Record<string, string> = {
   OWNERS: 'Propietarios',

@@ -7,15 +7,8 @@ import { UserRole, UserStatus } from '@prisma/client'
 import { getCache, cacheKey } from '@/lib/cache/config'
 import { redirect } from 'next/navigation'
 
-export interface Session {
-  userId: string
-  officeId: string
-  role: UserRole
-  name: string
-  email: string
-  linkedOwnerId: string | null
-  linkedProviderId: string | null
-}
+import type { Session, AuthResult } from './types'
+export type { Session, AuthResult }
 
 function getAuthSecret(): Uint8Array {
   const secret = process.env.AUTH_SECRET
@@ -230,11 +223,7 @@ export async function clearMfaSession(): Promise<void> {
 }
 
 
-export type AuthResult = 
-  | { type: 'success'; session: Session }
-  | { type: 'mfa_verify'; userId: string; role: UserRole }
-  | { type: 'mfa_setup'; userId: string; role: UserRole }
-  | { type: 'error'; message: string }
+
 
 export async function authenticate(email: string, password: string): Promise<AuthResult> {
   const user = await prisma.user.findUnique({

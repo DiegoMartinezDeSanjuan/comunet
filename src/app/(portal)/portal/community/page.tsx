@@ -1,4 +1,4 @@
-import { getPortalCommunitySummaryPageQuery } from '@/modules/portal/server/content'
+import { getPortalCommunitySummaryPageQuery } from '@/modules/portal/server/queries'
 import Link from 'next/link'
 import { KPICard } from '@/components/ui/kpi-card'
 import { AlertTriangle, Receipt } from 'lucide-react'

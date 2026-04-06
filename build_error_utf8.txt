@@ -1,0 +1,1000 @@
+﻿dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/api/exports/rece
+ipts/route.ts
+
+  Middleware:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/utils/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Command.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/proxy.ts
+
+  Server Component:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/utils/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Command.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/(public)/login/m
+fa/verify/page.tsx
+
+  Client Component Browser:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/utils/index.js [Client 
+Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Command.js [Client 
+Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component Browser]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component 
+Browser]
+    ./src/lib/cache/config.ts 
+[Client Component Browser]
+    ./src/lib/auth/index.ts 
+[Client Component Browser]
+    ./src/modules/portal/serve
+r/incidents.ts [Client 
+Component Browser]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/utils/index.js [Client 
+Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Command.js [Client 
+Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component SSR]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component SSR]
+    ./src/lib/cache/config.ts 
+[Client Component SSR]
+    ./src/lib/auth/index.ts 
+[Client Component SSR]
+    ./src/modules/portal/serve
+r/incidents.ts [Client 
+Component SSR]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messag
+es/module-not-found
+
+
+./node_modules/.pnpm/ioredis@5
+.10.1/node_modules/ioredis/bui
+lt/cluster/util.js:5:15
+Module not found: Can't 
+resolve 'net'
+  [90m3 |[0m 
+exports.getConnectionName = 
+exports.weightSrvRecords = 
+exports.groupSrvRecords = 
+exports.ge...
+  [90m4 |[0m [36mconst[0m 
+utils_1 = 
+require([32m"../utils"[0m);
+[31m[1m>[0m [90m5 |[0m 
+[36mconst[0m net_1 = 
+require([32m"net"[0m);
+  [90m  |[0m               
+[31m[1m^^^^^^^^^^^^^^[0m
+  [90m6 |[0m 
+[36mfunction[0m 
+getNodeKey(node) {
+  [90m7 |[0m     node.port 
+= node.port || [35m6379[0m;
+  [90m8 |[0m     node.host 
+= node.host || 
+[32m"127.0.0.1"[0m;
+
+
+
+Import traces:
+  App Route:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/util.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/api/exports/rece
+ipts/route.ts
+
+  Middleware:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/util.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/proxy.ts
+
+  Server Component:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/util.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    ./src/lib/auth/index.ts
+    ./src/app/(backoffice)/lay
+out.tsx
+
+  Client Component Browser:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/util.js 
+[Client Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/index.js 
+[Client Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component Browser]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component 
+Browser]
+    ./src/lib/cache/config.ts 
+[Client Component Browser]
+    ./src/lib/auth/index.ts 
+[Client Component Browser]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component Browser]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/util.js 
+[Client Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/cluster/index.js 
+[Client Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component SSR]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component SSR]
+    ./src/lib/cache/config.ts 
+[Client Component SSR]
+    ./src/lib/auth/index.ts 
+[Client Component SSR]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component SSR]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messag
+es/module-not-found
+
+
+./node_modules/.pnpm/ioredis@5
+.10.1/node_modules/ioredis/bui
+lt/connectors/SentinelConnecto
+r/index.js:4:15
+Module not found: Can't 
+resolve 'net'
+  [90m2 |[0m [33mObject[0m
+.defineProperty(exports, 
+[32m"__esModule"[0m, { 
+value: [36mtrue[0m });
+  [90m3 |[0m exports.[33mSe
+ntinelIterator[0m = 
+[36mvoid[0m [35m0[0m;
+[31m[1m>[0m [90m4 |[0m 
+[36mconst[0m net_1 = 
+require([32m"net"[0m);
+  [90m  |[0m               
+[31m[1m^^^^^^^^^^^^^^[0m
+  [90m5 |[0m [36mconst[0m 
+utils_1 = require([32m"../../
+utils"[0m);
+  [90m6 |[0m [36mconst[0m 
+tls_1 = 
+require([32m"tls"[0m);
+  [90m7 |[0m [36mconst[0m 
+[33mSentinelIterator_1[0m = 
+require([32m"./SentinelIterat
+or"[0m);
+
+
+
+Import traces:
+  App Route:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/api/exports/rece
+ipts/route.ts
+
+  Middleware:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/proxy.ts
+
+  Server Component:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    ./src/lib/auth/index.ts
+    ./src/app/(backoffice)/lay
+out.tsx
+
+  Client Component Browser:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js [Client 
+Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component Browser]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component 
+Browser]
+    ./src/lib/cache/config.ts 
+[Client Component Browser]
+    ./src/lib/auth/index.ts 
+[Client Component Browser]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component Browser]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js [Client 
+Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component SSR]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component SSR]
+    ./src/lib/cache/config.ts 
+[Client Component SSR]
+    ./src/lib/auth/index.ts 
+[Client Component SSR]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component SSR]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messag
+es/module-not-found
+
+
+./node_modules/.pnpm/ioredis@5
+.10.1/node_modules/ioredis/bui
+lt/connectors/StandaloneConnec
+tor.js:3:15
+Module not found: Can't 
+resolve 'net'
+  [90m1 |[0m [32m"use 
+strict"[0m;
+  [90m2 |[0m [33mObject[0m
+.defineProperty(exports, 
+[32m"__esModule"[0m, { 
+value: [36mtrue[0m });
+[31m[1m>[0m [90m3 |[0m 
+[36mconst[0m net_1 = 
+require([32m"net"[0m);
+  [90m  |[0m               
+[31m[1m^^^^^^^^^^^^^^[0m
+  [90m4 |[0m [36mconst[0m 
+tls_1 = 
+require([32m"tls"[0m);
+  [90m5 |[0m [36mconst[0m 
+utils_1 = 
+require([32m"../utils"[0m);
+  [90m6 |[0m [36mconst[0m 
+[33mAbstractConnector_1[0m 
+= require([32m"./AbstractConn
+ector"[0m);
+
+
+
+Import traces:
+  App Route:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/api/exports/rece
+ipts/route.ts
+
+  Middleware:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/proxy.ts
+
+  Server Component:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    ./src/lib/auth/index.ts
+    ./src/app/(backoffice)/lay
+out.tsx
+
+  Client Component Browser:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js [Client Component 
+Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js 
+[Client Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js [Client 
+Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component Browser]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component 
+Browser]
+    ./src/lib/cache/config.ts 
+[Client Component Browser]
+    ./src/lib/auth/index.ts 
+[Client Component Browser]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component Browser]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js [Client Component 
+SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js 
+[Client Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js [Client 
+Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component SSR]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component SSR]
+    ./src/lib/cache/config.ts 
+[Client Component SSR]
+    ./src/lib/auth/index.ts 
+[Client Component SSR]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component SSR]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messag
+es/module-not-found
+
+
+./node_modules/.pnpm/ioredis@5
+.10.1/node_modules/ioredis/bui
+lt/connectors/SentinelConnecto
+r/index.js:6:15
+Module not found: Can't 
+resolve 'tls'
+  [90m4 |[0m [36mconst[0m 
+net_1 = 
+require([32m"net"[0m);
+  [90m5 |[0m [36mconst[0m 
+utils_1 = require([32m"../../
+utils"[0m);
+[31m[1m>[0m [90m6 |[0m 
+[36mconst[0m tls_1 = 
+require([32m"tls"[0m);
+  [90m  |[0m               
+[31m[1m^^^^^^^^^^^^^^[0m
+  [90m7 |[0m [36mconst[0m 
+[33mSentinelIterator_1[0m = 
+require([32m"./SentinelIterat
+or"[0m);
+  [90m8 |[0m exports.[33mSe
+ntinelIterator[0m = [33mSent
+inelIterator_1[0m.[36mdefaul
+t[0m;
+  [90m9 |[0m [36mconst[0m 
+[33mAbstractConnector_1[0m 
+= require([32m"../AbstractCon
+nector"[0m);
+
+
+
+Import traces:
+  App Route:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/api/exports/rece
+ipts/route.ts
+
+  Middleware:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/proxy.ts
+
+  Server Component:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    ./src/lib/auth/index.ts
+    ./src/app/(backoffice)/lay
+out.tsx
+
+  Client Component Browser:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js [Client 
+Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component Browser]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component 
+Browser]
+    ./src/lib/cache/config.ts 
+[Client Component Browser]
+    ./src/lib/auth/index.ts 
+[Client Component Browser]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component Browser]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/SentinelConn
+ector/index.js [Client 
+Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component SSR]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component SSR]
+    ./src/lib/cache/config.ts 
+[Client Component SSR]
+    ./src/lib/auth/index.ts 
+[Client Component SSR]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component SSR]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messag
+es/module-not-found
+
+
+./node_modules/.pnpm/ioredis@5
+.10.1/node_modules/ioredis/bui
+lt/connectors/StandaloneConnec
+tor.js:4:15
+Module not found: Can't 
+resolve 'tls'
+  [90m2 |[0m [33mObject[0m
+.defineProperty(exports, 
+[32m"__esModule"[0m, { 
+value: [36mtrue[0m });
+  [90m3 |[0m [36mconst[0m 
+net_1 = 
+require([32m"net"[0m);
+[31m[1m>[0m [90m4 |[0m 
+[36mconst[0m tls_1 = 
+require([32m"tls"[0m);
+  [90m  |[0m               
+[31m[1m^^^^^^^^^^^^^^[0m
+  [90m5 |[0m [36mconst[0m 
+utils_1 = 
+require([32m"../utils"[0m);
+  [90m6 |[0m [36mconst[0m 
+[33mAbstractConnector_1[0m 
+= require([32m"./AbstractConn
+ector"[0m);
+  [90m7 |[0m [36mclass[0m 
+[33mStandaloneConnector[0m 
+[36mextends[0m [33mAbstract
+Connector_1[0m.[36mdefault[
+0m {
+
+
+
+Import traces:
+  App Route:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/app/api/exports/rece
+ipts/route.ts
+
+  Middleware:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    
+./src/lib/cache/rate-limit.ts
+    ./src/proxy.ts
+
+  Server Component:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js
+    ./src/lib/cache/drivers/re
+dis.ts
+    ./src/lib/cache/config.ts
+    ./src/lib/auth/index.ts
+    ./src/app/(backoffice)/lay
+out.tsx
+
+  Client Component Browser:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js [Client Component 
+Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js 
+[Client Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js [Client 
+Component Browser]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component Browser]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component 
+Browser]
+    ./src/lib/cache/config.ts 
+[Client Component Browser]
+    ./src/lib/auth/index.ts 
+[Client Component Browser]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component Browser]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+Browser]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/StandaloneCo
+nnector.js [Client Component 
+SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/connectors/index.js 
+[Client Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/Redis.js [Client 
+Component SSR]
+    ./node_modules/.pnpm/iored
+is@5.10.1/node_modules/ioredis
+/built/index.js [Client 
+Component SSR]
+    ./src/lib/cache/drivers/re
+dis.ts [Client Component SSR]
+    ./src/lib/cache/config.ts 
+[Client Component SSR]
+    ./src/lib/auth/index.ts 
+[Client Component SSR]
+    ./src/modules/portal/serve
+r/provider.ts [Client 
+Component SSR]
+    ./src/modules/portal/serve
+r/queries.ts [Client 
+Component SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Client Component 
+SSR]
+    ./src/app/(portal)/portal/
+incidents/portal-incident-crea
+te-form.tsx [Server Component]
+    ./src/app/(portal)/portal/
+incidents/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/messag
+es/module-not-found
+
+
+    at <unknown> 
+(./src/lib/auth/index.ts:2:1)
+    at <unknown> 
+(./src/lib/auth/index.ts:1:1)
+    at <unknown> 
+(./src/lib/email.ts:12:1)
+    at <unknown> (./src/module
+s/audit/server/services.ts:1:1
+)
+    at <unknown> (./src/module
+s/incidents/server/repository.
+ts:1:1)
+    at <unknown> (./src/module
+s/incidents/server/services.ts
+:1:1)
+    at <unknown> (./src/module
+s/notifications/server/reposit
+ory.ts:1:1)
+    at <unknown> (./src/module
+s/notifications/server/service
+s.ts:1:1)
+    at <unknown> (./src/module
+s/portal/server/content.ts:1:1
+)
+    at <unknown> (./src/module
+s/portal/server/dashboard.ts:1
+:1)
+    at <unknown> (./src/module
+s/portal/server/incidents.ts:1
+:1)
+    at <unknown> (./src/module
+s/portal/server/policy.ts:1:1)
+    at <unknown> (./src/module
+s/portal/server/provider.ts:1:
+1)
+    at <unknown> (./src/module
+s/portal/server/queries.ts:1:1
+)
+    at <unknown> (./src/module
+s/portal/server/receipts.ts:1:
+1)
+    at <unknown> (./src/module
+s/portal/server/repository.ts:
+1:1)
+    at <unknown> (./src/module
+s/portal/server/utils.ts:1:1)
+    ... collapsed 16 
+duplicate lines matching 
+above lines ...
+    at <unknown> (https://next
+js.org/docs/messages/module-no
+t-found)
+    ... collapsed 6 duplicate 
+lines matching above 1 lines 
+6 times...

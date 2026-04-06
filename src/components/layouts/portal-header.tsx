@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogOut, ShieldCheck, User } from 'lucide-react'
 
-import type { Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
 import { cn } from '@/lib/utils'
 import { logoutAction } from '@/modules/auth/server/actions'
 

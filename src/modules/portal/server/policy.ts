@@ -2,7 +2,7 @@ import 'server-only'
 
 import type { UserRole } from '@prisma/client'
 
-import type { Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
 import {
   getPortalOwnershipsDb,
   getPortalPresidentPositionsDb,

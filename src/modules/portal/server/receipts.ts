@@ -2,7 +2,8 @@ import 'server-only'
 
 import type { Prisma, ReceiptStatus } from '@prisma/client'
 
-import { requireAuth, type Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
+import { requireAuth } from '@/lib/auth'
 
 import { getPortalReceiptsDb, getPortalReceiptDetailDb } from './repository'
 

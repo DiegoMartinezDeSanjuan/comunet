@@ -166,6 +166,8 @@ enum AuditAction {
   MFA_VERIFY_FAIL
   MFA_DISABLE
   MFA_RESET
+  PASSWORD_RESET_REQUEST
+  PASSWORD_RESET_COMPLETE
 }
 
 // ─── MODELS ─────────────────────────────────────────────
@@ -208,19 +210,20 @@ model User {
   archivedAt       DateTime?
 
   // Lockout and Security state
-  mfaEnabled       Boolean    @default(false)
-  mfaSecret        String?
-  failedAttempts   Int        @default(0)
-  lockoutCount     Int        @default(0)
-  lockedUntil      DateTime?
+  mfaEnabled     Boolean   @default(false)
+  mfaSecret      String?
+  failedAttempts Int       @default(0)
+  lockoutCount   Int       @default(0)
+  lockedUntil    DateTime?
 
-  office           Office            @relation(fields: [officeId], references: [id])
-  linkedOwner      Owner?            @relation(fields: [linkedOwnerId], references: [id])
-  linkedProvider   Provider?         @relation(fields: [linkedProviderId], references: [id])
-  incidents        Incident[]        @relation("IncidentCreator")
-  incidentComments IncidentComment[]
-  documents        Document[]
-  notifications    Notification[]    @relation("NotificationRecipient")
+  office              Office               @relation(fields: [officeId], references: [id])
+  linkedOwner         Owner?               @relation(fields: [linkedOwnerId], references: [id])
+  linkedProvider      Provider?            @relation(fields: [linkedProviderId], references: [id])
+  incidents           Incident[]           @relation("IncidentCreator")
+  incidentComments    IncidentComment[]
+  documents           Document[]
+  notifications       Notification[]       @relation("NotificationRecipient")
+  passwordResetTokens PasswordResetToken[]
 
   @@index([officeId])
   @@index([email])
@@ -274,20 +277,20 @@ model Building {
 }
 
 model Unit {
-  id          String   @id @default(cuid())
-  communityId String
-  buildingId  String?
-  tenantId    String?
-  reference   String
-  type        UnitType @default(APARTMENT)
-  floor       String?
-  door        String?
-  areaM2      Float?
-  coefficient Float  @default(1.0)
-  quotaPercent Float @default(0.0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  communityId  String
+  buildingId   String?
+  tenantId     String?
+  reference    String
+  type         UnitType @default(APARTMENT)
+  floor        String?
+  door         String?
+  areaM2       Float?
+  coefficient  Float    @default(1.0)
+  quotaPercent Float    @default(0.0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   community   Community    @relation(fields: [communityId], references: [id])
   building    Building?    @relation(fields: [buildingId], references: [id])
@@ -354,20 +357,20 @@ model Tenant {
 }
 
 model Ownership {
-  id                    String    @id @default(cuid())
-  unitId                String
-  ownerId               String
-  ownershipPercent      Float   @default(100)
-  isPrimaryBillingContact Boolean @default(false)
-  startDate             DateTime  @default(now())
-  endDate               DateTime?
+  id                      String    @id @default(cuid())
+  unitId                  String
+  ownerId                 String
+  ownershipPercent        Float     @default(100)
+  isPrimaryBillingContact Boolean   @default(false)
+  startDate               DateTime  @default(now())
+  endDate                 DateTime?
 
   unit  Unit  @relation(fields: [unitId], references: [id])
   owner Owner @relation(fields: [ownerId], references: [id])
 
   @@index([unitId])
   @@index([ownerId])
-  @@index([ownerId, endDate])  // Portal: active ownerships lookup
+  @@index([ownerId, endDate]) // Portal: active ownerships lookup
   @@map("ownerships")
 }
 
@@ -413,7 +416,7 @@ model Budget {
   id          String       @id @default(cuid())
   communityId String
   year        Int
-  totalAmount Float      @default(0)
+  totalAmount Float        @default(0)
   status      BudgetStatus @default(DRAFT)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -431,7 +434,7 @@ model BudgetLine {
   budgetId    String
   concept     String
   category    String?
-  amount      Float  @default(0)
+  amount      Float    @default(0)
   periodicity String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -443,17 +446,17 @@ model BudgetLine {
 }
 
 model FeeRule {
-  id              String       @id @default(cuid())
+  id              String          @id @default(cuid())
   communityId     String
   name            String
-  frequency       FeeFrequency @default(MONTHLY)
-  startDate       DateTime     @default(now())
+  frequency       FeeFrequency    @default(MONTHLY)
+  startDate       DateTime        @default(now())
   calculationBase CalculationBase @default(FIXED)
   fixedAmount     Float?
   notes           String?
-  active          Boolean      @default(true)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  active          Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   community Community @relation(fields: [communityId], references: [id])
 
@@ -471,7 +474,7 @@ model Receipt {
   issueDate   DateTime      @default(now())
   dueDate     DateTime
   amount      Float
-  paidAmount  Float       @default(0)
+  paidAmount  Float         @default(0)
   status      ReceiptStatus @default(DRAFT)
   reference   String        @unique
   createdAt   DateTime      @default(now())
@@ -488,7 +491,7 @@ model Receipt {
   @@index([ownerId])
   @@index([status])
   @@index([dueDate])
-  @@index([ownerId, communityId])  // Portal: owner receipts by community
+  @@index([ownerId, communityId]) // Portal: owner receipts by community
   @@map("receipts")
 }
 
@@ -515,7 +518,7 @@ model Debt {
   ownerId     String
   receiptId   String?
   principal   Float
-  surcharge   Float    @default(0)
+  surcharge   Float      @default(0)
   status      DebtStatus @default(PENDING)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -528,8 +531,8 @@ model Debt {
   @@index([communityId])
   @@index([ownerId])
   @@index([status])
-  @@index([communityId, status])  // Reports: debt aggregation by community
-  @@index([ownerId, status])      // Portal: owner pending debts
+  @@index([communityId, status]) // Reports: debt aggregation by community
+  @@index([ownerId, status]) // Portal: owner pending debts
   @@map("debts")
 }
 
@@ -600,9 +603,9 @@ model Meeting {
 }
 
 model AgendaItem {
-  id          String @id @default(cuid())
+  id          String  @id @default(cuid())
   meetingId   String
-  sortOrder   Int    @default(0)
+  sortOrder   Int     @default(0)
   title       String
   description String?
 
@@ -614,13 +617,13 @@ model AgendaItem {
 }
 
 model Attendance {
-  id                String         @id @default(cuid())
-  meetingId         String
-  ownerId           String?
-  unitId            String?
-  attendeeName      String
-  coefficientPresent Float       @default(0)
-  attendanceType    AttendanceType @default(IN_PERSON)
+  id                 String         @id @default(cuid())
+  meetingId          String
+  ownerId            String?
+  unitId             String?
+  attendeeName       String
+  coefficientPresent Float          @default(0)
+  attendanceType     AttendanceType @default(IN_PERSON)
 
   meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
   owner   Owner?  @relation(fields: [ownerId], references: [id])
@@ -631,12 +634,12 @@ model Attendance {
 }
 
 model Vote {
-  id               String    @id @default(cuid())
-  agendaItemId     String
-  ownerId          String?
-  unitId           String?
-  vote             VoteValue @default(ABSTAIN)
-  coefficientWeight Float  @default(0)
+  id                String    @id @default(cuid())
+  agendaItemId      String
+  ownerId           String?
+  unitId            String?
+  vote              VoteValue @default(ABSTAIN)
+  coefficientWeight Float     @default(0)
 
   agendaItem AgendaItem @relation(fields: [agendaItemId], references: [id], onDelete: Cascade)
   owner      Owner?     @relation(fields: [ownerId], references: [id])
@@ -682,7 +685,7 @@ model Document {
 }
 
 model Notification {
-  id              String             @id @default(cuid())
+  id              String              @id @default(cuid())
   officeId        String
   communityId     String?
   recipientUserId String?
@@ -690,7 +693,7 @@ model Notification {
   title           String
   body            String?
   status          NotificationStatus  @default(PENDING)
-  createdAt       DateTime           @default(now())
+  createdAt       DateTime            @default(now())
   sentAt          DateTime?
 
   office    Office     @relation(fields: [officeId], references: [id])
@@ -710,7 +713,7 @@ model AuditLog {
   entityType String
   entityId   String
   action     AuditAction
-  metaJson   String?     // JSON string with additional metadata
+  metaJson   String? // JSON string with additional metadata
   createdAt  DateTime    @default(now())
 
   office Office @relation(fields: [officeId], references: [id])
@@ -720,4 +723,20 @@ model AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model PasswordResetToken {
+  id                 String    @id @default(cuid())
+  tokenHash          String    @unique
+  userId             String
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt          DateTime
+  usedAt             DateTime?
+  requestedIp        String?
+  requestedUserAgent String?
+  createdAt          DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }

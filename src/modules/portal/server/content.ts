@@ -1,6 +1,6 @@
 import 'server-only'
 
-import type { Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
 import { prisma } from '@/lib/db'
 
 import { getPortalAccessScope, isPortalOwnerPresidentRole } from './policy'

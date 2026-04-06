@@ -20,7 +20,7 @@ import {
 } from '@/modules/portal/components/ui'
 import { KPICard } from '@/components/ui/kpi-card'
 import { formatCurrency, formatDate } from '@/lib/formatters'
-import { getPortalDashboardPageQuery } from '@/modules/portal/server/dashboard'
+import { getPortalDashboardPageQuery } from '@/modules/portal/server/queries'
 
 export default async function PortalDashboardPage() {
   const { type, portalDashboard, providerDashboard, session } = await getPortalDashboardPageQuery()

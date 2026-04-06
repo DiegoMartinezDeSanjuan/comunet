@@ -2,7 +2,7 @@ import 'server-only'
 
 import { UserRole } from '@prisma/client'
 
-import type { Session } from '@/lib/auth'
+import type { Session } from '@/lib/auth/types'
 import { prisma } from '@/lib/db'
 import { createRequestCache } from '@/lib/cache/request-cache'
 
