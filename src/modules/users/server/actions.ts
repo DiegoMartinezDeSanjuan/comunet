@@ -12,7 +12,7 @@ import { UserRole, UserStatus } from '@prisma/client'
 
 const userFormSchema = z.object({
   name: z.string().min(3),
-  email: z.string().email(),
+  email: z.string().email().trim().toLowerCase(),
   role: z.nativeEnum(UserRole),
   status: z.nativeEnum(UserStatus).default('ACTIVE'),
   linkedOwnerId: z.string().optional().nullable(),

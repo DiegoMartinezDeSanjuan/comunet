@@ -136,7 +136,7 @@ export async function sendPasswordResetEmail(opts: {
   resetToken: string
   appUrl: string
 }) {
-  const resetUrl = `${opts.appUrl}/login/reset-password?token=${opts.resetToken}`
+  const resetUrl = `${opts.appUrl}/reset-password?token=${opts.resetToken}`
 
   return sendEmail({
     to: opts.to,

@@ -364,6 +364,8 @@ export function requirePermission(
     'audit.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
     
     'reports.read': ['SUPERADMIN', 'OFFICE_ADMIN'],
+
+    'dashboard.read': BACKOFFICE_READ_ROLES,
   }
 
   const allowedRoles = permissionMap[permission]

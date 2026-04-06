@@ -25,7 +25,7 @@ import { createUser, updateUser, archiveUser, resetUserPassword } from '@/module
 
 const userFormSchema = z.object({
   name: z.string().min(3, 'Mínimo 3 caracteres'),
-  email: z.string().email('Email no válido'),
+  email: z.string().email('Email no válido').trim().toLowerCase(),
   role: z.nativeEnum(UserRole),
   status: z.nativeEnum(UserStatus),
   linkedOwnerId: z.string().optional(),

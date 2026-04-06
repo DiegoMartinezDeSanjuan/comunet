@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 
 import { loginLimiter, apiLimiter } from '@/lib/cache/rate-limit'
 
-const PUBLIC_PATHS = ['/login', '/api/health']
+const PUBLIC_PATHS = ['/login', '/api/health', '/forgot-password', '/reset-password', '/api/auth/forgot-password', '/api/auth/reset-password']
 
 function getClientIp(request: NextRequest): string {
   return (
