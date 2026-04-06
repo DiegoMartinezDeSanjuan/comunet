@@ -33,8 +33,8 @@ export async function requestPasswordReset(email: string, ip: string, userAgent?
     include: { office: true },
   })
 
-  // We only permit ACTIVE or INACTIVE. NEVER BLOCKED or archived.
-  if (!user || user.archivedAt || user.status === 'BLOCKED' || !user.office) {
+  // We only permit ACTIVE. NEVER BLOCKED, INACTIVE or archived.
+  if (!user || user.archivedAt || user.status !== 'ACTIVE' || !user.office) {
     // Silently succeed to prevent enumeration, but do not send email.
     return { success: true }
   }
@@ -71,6 +71,12 @@ export async function requestPasswordReset(email: string, ip: string, userAgent?
 }
 
 export async function executePasswordReset(plainToken: string, newPassword: string, ip: string, userAgent?: string) {
+  // 1. Rate limiting check (we use a prefixed key to differentiate from request limit)
+  const rlResult = await passwordResetLimiter.check(`execute:${ip}`)
+  if (!rlResult.allowed) {
+    throw new Error('Demasiados intentos. Por favor, inténtelo de nuevo más tarde.')
+  }
+
   // Hash the incoming token
   const tokenHash = hashToken(plainToken)
 
@@ -82,7 +88,7 @@ export async function executePasswordReset(plainToken: string, newPassword: stri
   }
 
   const user = tokenRecord.user
-  if (!user || user.archivedAt || user.status === 'BLOCKED') {
+  if (!user || user.archivedAt || user.status !== 'ACTIVE') {
     throw new Error('Usuario inválido o bloqueado.')
   }
 

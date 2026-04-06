@@ -4,10 +4,12 @@ import { executePasswordReset } from '@/modules/auth/server/service'
 import { headers } from 'next/headers'
 import { z } from 'zod'
 
+import { passwordSchema } from '@/modules/auth/schema'
+
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token inválido'),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
-  confirmPassword: z.string().min(8, 'La confirmación debe tener al menos 8 caracteres'),
+  password: passwordSchema,
+  confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
