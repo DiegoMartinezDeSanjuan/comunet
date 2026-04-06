@@ -84,7 +84,7 @@
 
 ### v1.5 — UX Avanzada
 - [ ] PWA (Progressive Web App)
-- [ ] Recuperación de contraseña
+- [x] ~~Recuperación de contraseña~~ → Implementado: Flujo completo con tokens opacos (OWASP)
 - [ ] i18n (internacionalización)
 
 ### Testing Pendiente
