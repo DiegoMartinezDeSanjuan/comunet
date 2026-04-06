@@ -39,6 +39,12 @@ function ResetPasswordForm() {
     )
   }
 
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+
+  const isMatching = password && confirmPassword && password === confirmPassword
+  const isLengthValid = password.length >= 8
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setStatus('loading')
@@ -57,7 +63,6 @@ function ResetPasswordForm() {
       }
 
       if (result.success) {
-        // Redirigir al login despues de cambiar contraseña
         router.push('/login?reset=1')
       }
     } catch (err) {
@@ -79,10 +84,17 @@ function ResetPasswordForm() {
             id="password"
             name="password"
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             placeholder="••••••••"
             className="w-full rounded-lg border border-input bg-background pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring transition-all"
           />
+          {isLengthValid && (
+            <svg className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">La contraseña debe tener al menos 8 caracteres.</p>
       </div>
@@ -97,22 +109,31 @@ function ResetPasswordForm() {
             id="confirmPassword"
             name="confirmPassword"
             type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
             placeholder="••••••••"
-            className="w-full rounded-lg border border-input bg-background pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+            className={`w-full rounded-lg border bg-background pl-10 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-all ${
+              confirmPassword && !isMatching ? 'border-destructive/50 focus:border-destructive focus:ring-destructive/30' : 'border-input focus:border-transparent focus:ring-ring'
+            }`}
           />
+          {isMatching && (
+             <svg className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
         </div>
       </div>
 
       {status === 'error' ? (
-        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="animate-in fade-in slide-in-from-top-1 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {errorMessage}
         </div>
       ) : null}
 
       <button
         type="submit"
-        disabled={status === 'loading'}
+        disabled={status === 'loading' || !isMatching || !isLengthValid}
         data-testid="reset-submit"
         className="group w-full rounded-lg bg-gradient-to-r from-primary to-blue-600 px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
